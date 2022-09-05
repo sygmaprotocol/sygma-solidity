@@ -1,9 +1,13 @@
 {
-  "name": "@chainsafe/chainbridge-contracts",
+  "name": "@sygmaprotocol/sygma-contracts",
   "version": "3.1.0",
   "description": "",
   "main": "dist/index.js",
   "repository": "https://github.com/ChainSafe/chainbridge-solidity.git",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://npm.pkg.github.com"
+  },
   "files": [
     "dist",
     "build/contracts/Bridge.json",
