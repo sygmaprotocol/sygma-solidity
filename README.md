@@ -6,7 +6,13 @@ Sygma uses Solidity smart contracts to enable transfers to and from EVM compatib
 
 Read more [here](https://chainsafe.io/).
 
-A CLI to deploy and interact with these contracts can be found [here](https://github.com/ChainSafe/chainbridge-deploy/tree/master/cb-sol-cli).
+## Deployments
+
+To deploy contracts run `truffle migrate --network NETWORK_NAME`.\
+To add another network do the following:
+ * update `truffle-config.js` with the desired configuration
+ * add the required params to `networks_config.js` file in `migrations` directory
+ * create a deploy script in `migrations` directory
 
 ## Dependencies
 
@@ -33,10 +39,8 @@ Requires `nodejs` and `npm`.
 ## Reporting a Security Bug
 
 We take all security issues seriously, if you believe you have found a security issue within a ChainSafe
-project please notify us immediately. If an issue is confirmed, we will take all necessary precautions 
+project please notify us immediately. If an issue is confirmed, we will take all necessary precautions
 to ensure a statement and patch release is made in a timely manner.
 
 Please email us a description of the flaw and any related information (e.g. reproduction steps, version) to
 [security at chainsafe dot io](mailto:security@chainsafe.io).
-
-
