@@ -56,6 +56,18 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Deploy goerli
+        run: truffle migrate --network goerli
+        env:
+          INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
+          GOERLI_MNEMONIC: ${{ secrets.GOERLI_MNEMONIC }}
+
+      - name: Deploy mumbai
+        run: truffle migrate --network mumbai
+        env:
+          INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
+          GOERLI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
