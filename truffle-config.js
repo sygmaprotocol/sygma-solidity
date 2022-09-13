@@ -73,13 +73,6 @@ module.exports = {
       network_id: '5',
       gasPrice: 10000000,  // 10 gwei
     },
-    mainnet: {
-      provider: () => {
-        return new HDWalletProvider(process.env.MAINNET_MNEMONIC, 'https://mainnet.infura.io/v3/' + process.env.INFURA_API_KEY)
-      },
-      network_id: '1',
-      gasPrice: 50000000,  // 50 gwei,
-    },
     // Another network with more advanced options...
     // advanced: {
       // port: 8777,             // Custom port
