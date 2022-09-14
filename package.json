@@ -23,6 +23,7 @@
     "test": "test"
   },
   "scripts": {
+    "prepare": "env-prompt -d .env.sample",
     "compile": "truffle compile",
     "build": "rollup -c",
     "publish-package": "npm run compile && npm run generate-types && npm run build && npm publish",
@@ -42,6 +43,8 @@
     "@typechain/ethers-v5": "^9.0.0",
     "commander": "^9.0.0",
     "coveralls": "^3.1.1",
+    "dotenv": "^16.0.2",
+    "env-prompt": "^2.0.3",
     "eth-sig-util": "^3.0.1",
     "ethereumjs-wallet": "^1.0.2",
     "ethers": "^5.5.4",

@@ -3476,6 +3476,11 @@ dot-prop@^6.0.1:
   dependencies:
     is-obj "^2.0.0"
 
+dotenv@^16.0.2:
+  version "16.0.2"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.0.2.tgz#0b0f8652c016a3858ef795024508cddc4bffc5bf"
+  integrity sha512-JvpYKUmzQhYoIFgK2MOnF3bciIZoItIIoryihy0rIA+H4Jy0FmgyKYAHCTN98P5ybGSJcIFbh6QKeJdtZd1qhA==
+
 double-ended-queue@2.1.0-0:
   version "2.1.0-0"
   resolved "https://registry.yarnpkg.com/double-ended-queue/-/double-ended-queue-2.1.0-0.tgz#103d3527fd31528f40188130c841efdd78264e5c"
@@ -3614,6 +3619,11 @@ env-paths@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/env-paths/-/env-paths-2.2.1.tgz#420399d416ce1fbe9bc0a07c62fa68d67fd0f8f2"
   integrity sha512-+h1lkLKhZMTYjog1VEpJNG7NZJWcuc2DDk/qsqSTRRCOXiLjeQ1d1/udrUGhqMxUgAlwKNZ0cf2uqan5GLuS2A==
+
+env-prompt@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/env-prompt/-/env-prompt-2.0.3.tgz#359d6fc3d9911fd233f511daf0fcd21eaf6cf08f"
+  integrity sha512-shXfCgysWEhZ3Ba3dXuTW8u959ZE8uthiAQWNk+mPmP6HMUXBVYErFCfAu7NOLw4OrsnSH5UW5ptTuKtf21QEA==
 
 err-code@^2.0.0, err-code@^2.0.3:
   version "2.0.3"
