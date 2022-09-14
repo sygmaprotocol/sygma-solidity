@@ -11,3 +11,4 @@ src/web3
 ganache-cli/
 dist/
 .vscode/
+.env
