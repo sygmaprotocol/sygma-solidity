@@ -1,5 +1,5 @@
 {
-  "name": "@sygmaprotocol/sygma-contracts",
+  "name": "@buildwithsygma/sygma-contracts",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
