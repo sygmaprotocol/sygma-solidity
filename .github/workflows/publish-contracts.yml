@@ -57,7 +57,7 @@ jobs:
         run: yarn run build
 
       - name: Publish to npm registry
-        run: npm publish --ignore-scripts --no-git-tag-version --no-commit-hooks --non-interactive
+        run: yarn publish --ignore-scripts --no-git-tag-version --no-commit-hooks --non-interactive
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
