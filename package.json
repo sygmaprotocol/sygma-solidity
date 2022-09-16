@@ -1,6 +1,6 @@
 {
   "name": "@sygmaprotocol/sygma-contracts",
-  "version": "1.0.0",
+  "version": "0.0.9",
   "description": "",
   "main": "dist/index.js",
   "repository": "https://github.com/sygmaprotocol/sygma-solidity.git",
