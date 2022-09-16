@@ -35,12 +35,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '16'
-          registry-url: 'https://npm.pkg.github.com'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile --non-interactive --ignore-optional
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Compile contracts
         run: yarn run compile
@@ -54,7 +54,7 @@ jobs:
       - name: Publish to npm registry
         run: yarn publish --ignore-scripts --no-git-tag-version --no-commit-hooks --non-interactive
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create Release
         id: create_release
