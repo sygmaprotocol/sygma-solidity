@@ -4,10 +4,6 @@
   "description": "",
   "main": "dist/index.js",
   "repository": "https://github.com/sygmaprotocol/sygma-solidity.git",
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://npm.pkg.github.com"
-  },
   "files": [
     "dist",
     "build/contracts/Bridge.json",
