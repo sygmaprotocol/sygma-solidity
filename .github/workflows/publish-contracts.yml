@@ -58,12 +58,14 @@ jobs:
 
       - name: Deploy goerli
         run: truffle migrate --network goerli
+        if: ${{ needs.tag.outputs.tag }}
         env:
           INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
           GOERLI_MNEMONIC: ${{ secrets.GOERLI_MNEMONIC }}
 
       - name: Deploy mumbai
         run: truffle migrate --network mumbai
+        if: ${{ needs.tag.outputs.tag }}
         env:
           INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
           GOERLI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
