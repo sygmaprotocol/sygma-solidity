@@ -63,5 +63,8 @@
   },
   "peerDependencies": {
     "ethers": ">= 5.0.0"
+  },
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^2.0.14"
   }
 }
