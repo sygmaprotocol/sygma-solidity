@@ -86,11 +86,11 @@ module.exports = async function(deployer, network) {
     });
 
     /* setup contracts */
-    const tokenAmount = process.env.TOKEN_AMOUN || 10000;
-    const feeOracleAddress = process.env.FEE_ORACLE_ADDRESS || "0x70B7D7448982b15295150575541D1d3b862f7FE9";
-    const feeHandlerWithOracleGasUsed = process.env.FHWO_GAS_USED || 100000;
-    const feeHandlerWithOracleFeePercentage = process.env.FHWO_FEE_PERCENTAGE || 500; // 5%
-    const basicFeeHandlerFee = Ethers.utils.parseEther(process.env.BFH_FEE || "0.1");
+    const tokenAmount = process.env.TOKEN_AMOUNT;
+    const feeOracleAddress = process.env.FEE_ORACLE_ADDRESS;
+    const feeHandlerWithOracleGasUsed = process.env.FHWO_GAS_USED;
+    const feeHandlerWithOracleFeePercentage = process.env.FHWO_FEE_PERCENTAGE; // e.g. 500 means 5%
+    const basicFeeHandlerFee = Ethers.utils.parseEther(process.env.BFH_FEE);
 
     // setup ERC20
     await bridgeInstance.adminSetResource(erc20HandlerInstance.address, currentNetworkConfig.erc20ResourceID, erc20MinterPauserInstance.address);
