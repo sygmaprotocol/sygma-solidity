@@ -60,13 +60,12 @@ jobs:
         run: yarn run deploy:local:1
 
       - name: Push docker image to GitHub Packages
-        uses: docker/build-push-action@v1
+        uses: docker/build-push-action@v2
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.CR_WRITE_PAT }}
           registry: ghcr.io
-          repository: /sygma-solidity
-          tags: evm1:latest,evm1:${{ needs.tag.outputs.tag }}
+          tags: sygma-solidity/evm1:latest,sygma-solidity/evm1:${{ needs.tag.outputs.tag }}
           push: true
 
       - name: Remove data
@@ -76,13 +75,11 @@ jobs:
         run: yarn run deploy:local:2
 
       - name: Push docker image to GitHub Packages
-        uses: docker/build-push-action@v1
+        uses: docker/build-push-action@v2
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.CR_WRITE_PAT }}
-          registry: ghcr.io
-          repository: /sygma-solidity
-          tags: evm2:latest,evm2:${{ needs.tag.outputs.tag }}
+          tags: sygma-solidity/evm1:latest,sygma-solidity/evm1:${{ needs.tag.outputs.tag }}
           push: true
 
 #      - name: Deploy goerli
