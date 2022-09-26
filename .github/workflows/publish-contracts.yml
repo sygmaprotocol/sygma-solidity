@@ -70,7 +70,8 @@ jobs:
       - name: Push docker image to GitHub Packages
         uses: docker/build-push-action@v3
         with:
-          tags: sygmaprotocol/sygma-solidity/evm1:latest,sygmaprotocol/sygma-solidity/evm1:${{ needs.tag.outputs.tag }}
+          context: .
+          tags: ghcr.io/${{ github.repository }}:evm1-latest
           push: true
 
       - name: Remove data
@@ -82,7 +83,8 @@ jobs:
       - name: Push docker image to GitHub Packages
         uses: docker/build-push-action@v3
         with:
-          tags: sygmaprotocol/sygma-solidity/evm2:latest,sygmaprotocol/sygma-solidity/evm2:${{ needs.tag.outputs.tag }}
+          context: .
+          tags: ghcr.io/${{ github.repository }}:evm2-latest
           push: true
 
 #      - name: Deploy goerli
