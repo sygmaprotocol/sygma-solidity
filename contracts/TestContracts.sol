@@ -63,7 +63,7 @@ contract HandlerRevert is HandlerHelpers {
 
     function executeProposal(bytes32, bytes calldata) external view {
         if (_totalAmount == 0) {
-            revert('Something bad happened');
+            revert("Something bad happened");
         }
         return;
     }
