@@ -2,6 +2,7 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+ require('dotenv').config();
 
 /**
  * Use this file to configure your truffle project. It's seeded with some
@@ -23,7 +24,7 @@
  *
  */
 
-// const HDWalletProvider = require('truffle-hdwallet-provider');
+const HDWalletProvider = require('@truffle/hdwallet-provider');
 // const infuraKey = "fj4jll3k.....";
 //
 // const fs = require('fs');
@@ -47,19 +48,39 @@ module.exports = {
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal
     // tab if you use this network and you must also set the `host`, `port` and `network_id`
     // options below to some value.
+    networkCheckTimeout: 10000,
 
     geth: {
      host: "127.0.0.1",     // Localhost (default: none)
      port: 8545,            // Standard Ethereum port (default: none)
      network_id: "5",       // Any network (default: none)
     },
-
     test: {
       host: "127.0.0.1",     // Localhost (default: none)
       port: 8545,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
       disableConfirmationListener: true,
-     },
+    },
+    goerli: {
+      provider: () => {
+        return new HDWalletProvider({
+          mnemonic: process.env.GOERLI_MNEMONIC,
+          providerOrUrl: process.env.GOERLI_PROVIDER_URL + process.env.PROVIDER_API_KEY
+        })
+      },
+      network_id: '5',
+      gasPrice: 20000000000,  // 20 gwei
+    },
+    mumbai: {
+      provider: () => {
+        return new HDWalletProvider({
+          mnemonic: process.env.MUMBAI_MNEMONIC,
+          providerOrUrl: process.env.MUMBAI_PROVIDER_URL + process.env.MUMBAI_API_KEY
+        })
+      },
+      network_id: '80001',
+      gasPrice: 2000000000,  // 2 gwei
+    },
     // Another network with more advanced options...
     // advanced: {
       // port: 8777,             // Custom port

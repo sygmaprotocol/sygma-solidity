@@ -179,25 +179,26 @@ const decimalToPaddedBinary = (decimal) => {
   return decimal.toString(2).padStart(64,'0');
 }
 
+const accessControlFuncSignatures = [
+  "0x80ae1c28", // adminPauseTransfers
+  "0xffaac0eb", // adminUnpauseTransfers
+  "0xcb10f215", // adminSetResource
+  "0x5a1ad87c", // adminSetGenericResource
+  "0x8c0c2631", // adminSetBurnable
+  "0xedc20c3c", // adminSetDepositNonce
+  "0xd15ef64e", // adminSetForwarder
+  "0x9d33b6d4", // adminChangeAccessControl
+  "0x8b63aebf", // adminChangeFeeHandler
+  "0xbd2a1820", // adminWithdraw
+  "0x6ba6db6b", // startKeygen
+  "0xd2e5fae9", // endKeygen
+  "0xd8236744", // refreshKey
+  "0x366b4885", // retry
+];
+
 const deployBridge = async (domainID, admin) => {
     let accessControlInstance = await AccessControlSegregatorContract.new(
-        [
-            "0x80ae1c28", // adminPauseTransfers
-            "0xffaac0eb", // adminUnpauseTransfers
-            "0xcb10f215", // adminSetResource
-            "0x5a1ad87c", // adminSetGenericResource
-            "0x8c0c2631", // adminSetBurnable
-            "0xedc20c3c", // adminSetDepositNonce
-            "0xd15ef64e", // adminSetForwarder
-            "0x9d33b6d4", // adminChangeAccessControl
-            "0x8b63aebf", // adminChangeFeeHandler
-            "0xbd2a1820", // adminWithdraw
-            "0x6ba6db6b", // startKeygen
-            "0xd2e5fae9", // endKeygen
-            "0xd8236744", // refreshKey
-            "0x366b4885", // retry
-
-        ],
+        accessControlFuncSignatures,
         Array(14).fill(admin)
     )
     return await BridgeContract.new(domainID, accessControlInstance.address);
@@ -260,6 +261,7 @@ module.exports = {
     blankFunctionDepositorOffset,
     mpcAddress,
     mpcPrivateKey,
+    accessControlFuncSignatures,
     toHex,
     abiEncode,
     getFunctionSignature,
@@ -278,5 +280,5 @@ module.exports = {
     decimalToPaddedBinary,
     deployBridge,
     signTypedProposal,
-    mockSignTypedProposalWithInvalidChainID
+    mockSignTypedProposalWithInvalidChainID,
 };
