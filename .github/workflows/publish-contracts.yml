@@ -60,7 +60,7 @@ jobs:
         run: yarn run deploy:local:1
 
       - name: Push docker image to GitHub Packages
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v1
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.CR_WRITE_PAT }}
@@ -75,10 +75,11 @@ jobs:
         run: yarn run deploy:local:2
 
       - name: Push docker image to GitHub Packages
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v1
         with:
           username: ${{ github.actor }}
           password: ${{ secrets.CR_WRITE_PAT }}
+          registry: ghcr.io
           tags: sygma-solidity/evm1:latest,sygma-solidity/evm1:${{ needs.tag.outputs.tag }}
           push: true
 
