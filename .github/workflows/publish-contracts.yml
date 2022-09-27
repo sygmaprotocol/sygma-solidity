@@ -76,6 +76,9 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:evm2-${{ needs.tag.outputs.tag }}
           push: true
 
+      - name: Remove data
+        run: rm -r data/
+
       - name: Deploy goerli
         run: npx truffle migrate --network goerli
         env:
