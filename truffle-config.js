@@ -80,7 +80,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider({
           mnemonic: process.env.MUMBAI_MNEMONIC,
-          providerOrUrl: process.env.MUMBAI_PROVIDER_URL + process.env.MUMBAI_API_KEY
+          providerOrUrl: process.env.MUMBAI_PROVIDER_URL + process.env.PROVIDER_API_KEY
         })
       },
       network_id: '80001',

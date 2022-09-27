@@ -90,13 +90,13 @@ jobs:
       - name: Deploy goerli
         run: truffle migrate --network goerli
         env:
-          INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
+          PROVIDER_API_KEY: ${{ secrets.PROVIDER_API_KEY }}
           GOERLI_MNEMONIC: ${{ secrets.GOERLI_MNEMONIC }}
 
       - name: Deploy mumbai
         run: truffle migrate --network mumbai
         env:
-          INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
+          PROVIDER_API_KEY: ${{ secrets.PROVIDER_API_KEY }}
           GOERLI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
 
       - name: Create Release
