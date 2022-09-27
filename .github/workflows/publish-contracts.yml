@@ -56,16 +56,45 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Deploy local 1
+        run: yarn run deploy:local:1
+
+      - name: Login to ghcr
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.CR_WRITE_PAT }}
+
+
+      - name: Push docker image to GitHub Packages
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          tags: ghcr.io/${{ github.repository }}:evm1-${{ needs.tag.outputs.tag }}
+          push: true
+
+      - name: Remove data
+        run: rm -r data/
+
+      - name: Deploy local 2
+        run: yarn run deploy:local:2
+
+      - name: Push docker image to GitHub Packages
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          tags: ghcr.io/${{ github.repository }}:evm2-${{ needs.tag.outputs.tag }}
+          push: true
+
       - name: Deploy goerli
         run: truffle migrate --network goerli
-        if: ${{ needs.tag.outputs.tag }}
         env:
           INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
           GOERLI_MNEMONIC: ${{ secrets.GOERLI_MNEMONIC }}
 
       - name: Deploy mumbai
         run: truffle migrate --network mumbai
-        if: ${{ needs.tag.outputs.tag }}
         env:
           INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
           GOERLI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
@@ -78,6 +107,7 @@ jobs:
         with:
           tag_name: ${{ needs.tag.outputs.tag }}
           release_name: ${{ needs.tag.outputs.tag }}
+
       #in case of failure
       - name: Rollback on failure
         if: failure()
