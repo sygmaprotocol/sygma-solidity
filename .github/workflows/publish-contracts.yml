@@ -90,14 +90,14 @@ jobs:
       - name: Deploy goerli
         run: truffle migrate --network goerli
         env:
-          PROVIDER_API_KEY: ${{ secrets.PROVIDER_API_KEY }}
+          GOERLI_PROVIDER_URL: ${{ secrets.GOERLI_PROVIDER_URL }}
           GOERLI_MNEMONIC: ${{ secrets.GOERLI_MNEMONIC }}
 
       - name: Deploy mumbai
         run: truffle migrate --network mumbai
         env:
-          PROVIDER_API_KEY: ${{ secrets.PROVIDER_API_KEY }}
-          GOERLI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
+          MUMBAI_PROVIDER_URL: ${{ secrets.MUMBAI_PROVIDER_URL }}
+          MUMBAI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
 
       - name: Create Release
         id: create_release
