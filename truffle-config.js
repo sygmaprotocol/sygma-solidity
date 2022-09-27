@@ -70,7 +70,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider({
           mnemonic: process.env.GOERLI_MNEMONIC,
-          providerOrUrl: process.env.GOERLI_PROVIDER_URL + process.env.PROVIDER_API_KEY
+          providerOrUrl: process.env.GOERLI_PROVIDER_URL
         })
       },
       network_id: '5',
@@ -80,7 +80,7 @@ module.exports = {
       provider: () => {
         return new HDWalletProvider({
           mnemonic: process.env.MUMBAI_MNEMONIC,
-          providerOrUrl: process.env.MUMBAI_PROVIDER_URL + process.env.MUMBAI_API_KEY
+          providerOrUrl: process.env.MUMBAI_PROVIDER_URL
         })
       },
       network_id: '80001',
