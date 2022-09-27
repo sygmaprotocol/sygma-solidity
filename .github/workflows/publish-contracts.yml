@@ -45,16 +45,6 @@ jobs:
       - name: Compile contracts
         run: yarn run compile
 
-      - name: Generate types
-        run: yarn run generate-types
-
-      - name: Build packages
-        run: yarn run build
-
-      - name: Publish to npm registry
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Deploy local 1
         run: yarn run deploy:local:1
@@ -65,7 +55,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.CR_WRITE_PAT }}
-
 
       - name: Push docker image to GitHub Packages
         uses: docker/build-push-action@v3
@@ -87,6 +76,9 @@ jobs:
           tags: ghcr.io/${{ github.repository }}:evm2-${{ needs.tag.outputs.tag }}
           push: true
 
+      - name: Remove data
+        run: rm -r data/
+
       - name: Deploy goerli
         run: npx truffle migrate --network goerli
         env:
@@ -98,6 +90,17 @@ jobs:
         env:
           MUMBAI_PROVIDER_URL: ${{ secrets.MUMBAI_PROVIDER_URL }}
           MUMBAI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
+
+      - name: Generate types
+        run: yarn run generate-types
+
+      - name: Build packages
+        run: yarn run build
+
+      - name: Publish to npm registry
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create Release
         id: create_release
