@@ -73,8 +73,10 @@ module.exports = {
           providerOrUrl: process.env.GOERLI_PROVIDER_URL
         })
       },
+      networkCheckTimeout: 10000,
+      timeoutBlocks: 200,
       network_id: '5',
-      gasPrice: 20000000000,  // 20 gwei
+      gasPrice: 30000000000,  // 30 gwei
     },
     mumbai: {
       provider: () => {
@@ -83,8 +85,10 @@ module.exports = {
           providerOrUrl: process.env.MUMBAI_PROVIDER_URL
         })
       },
+      networkCheckTimeout: 10000,
+      timeoutBlocks: 200,
       network_id: '80001',
-      gasPrice: 2000000000,  // 2 gwei
+      gasPrice: 30000000000,  // 30 gwei
     },
     // Another network with more advanced options...
     // advanced: {
