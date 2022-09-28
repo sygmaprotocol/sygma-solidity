@@ -79,18 +79,6 @@ jobs:
       - name: Remove data
         run: rm -r data/
 
-      - name: Deploy goerli
-        run: npx truffle migrate --network goerli
-        env:
-          GOERLI_PROVIDER_URL: ${{ secrets.GOERLI_PROVIDER_URL }}
-          GOERLI_MNEMONIC: ${{ secrets.GOERLI_MNEMONIC }}
-
-      - name: Deploy mumbai
-        run: npx truffle migrate --network mumbai
-        env:
-          MUMBAI_PROVIDER_URL: ${{ secrets.MUMBAI_PROVIDER_URL }}
-          MUMBAI_MNEMONIC: ${{ secrets.MUMBAI_MNEMONIC }}
-
       - name: Generate types
         run: yarn run generate-types
 
