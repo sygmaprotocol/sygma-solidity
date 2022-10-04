@@ -92,6 +92,18 @@ const createGenericDepositData = (hexMetaData) => {
         hexMetaData.substr(2)
 };
 
+const createGenericDepositDataV1 = (executeFunctionSignature, executeContractAddress, maxFee, depositor, executionData) => {
+    const metaData = toHex(depositor, 32).substr(2) + executionData.substr(2) + toHex(depositor, 32).substr(2); // append depositor address for destination chain check
+    const metaDataLength = metaData.length / 2;
+
+    return '0x' +
+        toHex(metaDataLength, 32).substr(2) +           // len(metaData) (32 bytes)
+        toHex(executeFunctionSignature,32).substr(2) +  // bytes4        (padded to 32 bytes)
+        toHex(executeContractAddress, 32).substr(2) +   // address       (padded to 32 bytes)
+        toHex(maxFee, 32).substr(2) +                   // uint256
+        metaData                                        // bytes
+};
+
 const createResourceID = (contractAddress, domainID) => {
     return toHex(contractAddress + toHex(domainID, 1).substr(2), 32)
 };
@@ -272,6 +284,7 @@ module.exports = {
     createERC1155DepositProposalData,
     createERC1155WithdrawData,
     createGenericDepositData,
+    createGenericDepositDataV1,
     createERC721DepositProposalData,
     createResourceID,
     assertObjectsMatch,
