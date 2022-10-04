@@ -18,6 +18,7 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
     const depositorAddress = accounts[1];
     const relayer1Address = accounts[2];
     const relayer2Address = accounts[3];
+    const invalidExecutionContractAddress = accounts[4];
 
     const feeData = '0x';
     const destinationMaxFee = 2000000;
@@ -115,4 +116,47 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
         assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset),
             'Centrifuge Asset was not successfully stored');
     });
+
+    it('ProposalExecution should be emitted even if handler execution fails', async () => {
+      const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
+      // execution contract address
+      const invalidDepositData =
+      Helpers.createGenericDepositDataV1(
+        depositFunctionSignature,
+        invalidExecutionContractAddress,
+        destinationMaxFee,
+        depositorAddress,
+        hashOfCentrifugeAsset
+    );
+
+    const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+
+    await TruffleAssert.passes(BridgeInstance.deposit(
+        originDomainID,
+        resourceID,
+        invalidDepositData,
+        feeData,
+        { from: depositorAddress }
+    ));
+
+    // relayer1 executes the proposal
+    const executeTx = await BridgeInstance.executeProposal(
+        proposal,
+        proposalSignedData,
+        { from: relayer1Address }
+    );
+
+    // check that ProposalExecution event is emitted
+    TruffleAssert.eventEmitted(executeTx, 'ProposalExecution', (event) => {
+        return event.originDomainID.toNumber() === originDomainID &&
+            event.depositNonce.toNumber() === expectedDepositNonce &&
+            event.dataHash === depositDataHash
+    });
+
+    // check that deposit nonce isn't unmarked as used in bitmap
+    assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainID, expectedDepositNonce));
+
+    // Check that asset isn't marked as stored in CentrifugeAssetInstance
+    assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset));
+  });
 });
