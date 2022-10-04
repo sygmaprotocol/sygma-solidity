@@ -21,6 +21,7 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
 
     const feeData = '0x';
     const destinationMaxFee = 2000000;
+    const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
 
     let BridgeInstance;
     let CentrifugeAssetInstance;
@@ -29,7 +30,6 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
     let depositFunctionSignature;
     let GenericHandlerInstance;
     let depositData;
-    let asset;
 
     beforeEach(async () => {
         await Promise.all([
@@ -39,21 +39,14 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
             ReturnDataContract.new().then(instance => ReturnDataInstance = instance),
         ]);
 
-        initialResourceIDs = [
-          Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID),
-          Helpers.createResourceID(WithDepositorInstance.address, originDomainID),
-          Helpers.createResourceID(ReturnDataInstance.address, originDomainID),
-        ];
-
-        asset = "0x0000000000000000000000000000000000000000000000000000000000000123";
+        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[0], CentrifugeAssetInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
+        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
 
-        depositFunctionSignature = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store');
-        executionData = Helpers.abiEncode(['bytes32'], [asset]);
+        depositFunctionSignature = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'storeWithDepositor');
 
 
         depositData = Helpers.createGenericDepositDataV1(
@@ -61,7 +54,7 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
           CentrifugeAssetInstance.address,
           destinationMaxFee,
           depositorAddress,
-          executionData
+          hashOfCentrifugeAsset
         );
 
         // set MPC address to unpause the Bridge
@@ -71,7 +64,7 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
     it('deposit can be made successfully', async () => {
         await TruffleAssert.passes(BridgeInstance.deposit(
             destinationDomainID,
-            initialResourceIDs[0],
+            resourceID,
             depositData,
             feeData,
             { from: depositorAddress }
@@ -81,7 +74,7 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
     it('depositEvent is emitted with expected values', async () => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
-            initialResourceIDs[0],
+            resourceID,
             depositData,
             feeData,
             { from: depositorAddress }
@@ -89,11 +82,43 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
 
         TruffleAssert.eventEmitted(depositTx, 'Deposit', (event) => {
             return event.destinationDomainID.toNumber() === destinationDomainID &&
-                event.resourceID === initialResourceIDs[0].toLowerCase() &&
+                event.resourceID === resourceID.toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositorAddress &&
                 event.data === depositData &&
                 event.handlerResponse === null
         });
+    });
+
+    it('deposit data should be of required length', async () => {
+      const invalidDepositData = "0x" + "02a3d".repeat(31);
+
+      await TruffleAssert.reverts(BridgeInstance.deposit(
+          destinationDomainID,
+          resourceID,
+          invalidDepositData,
+          feeData,
+          { from: depositorAddress }
+      ), "Incorrect data length");
+    });
+
+    it('deposit data should be of required length', async () => {
+      const invalidDepositorAddress = accounts[2];
+
+      const invalidDepositData = Helpers.createGenericDepositDataV1(
+        depositFunctionSignature,
+        CentrifugeAssetInstance.address,
+        destinationMaxFee,
+        invalidDepositorAddress,
+        hashOfCentrifugeAsset
+      );
+
+      await TruffleAssert.reverts(BridgeInstance.deposit(
+          destinationDomainID,
+          resourceID,
+          invalidDepositData,
+          feeData,
+          { from: depositorAddress }
+      ), "incorrect depositor in deposit data");
     });
 });
