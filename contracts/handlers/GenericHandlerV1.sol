@@ -106,7 +106,6 @@ contract GenericHandlerV1 is IGenericHandler {
         contractAddress   = address(uint160(executeContractAddress));
 
         bytes memory callData = abi.encodePacked(functionSignature, metadata);
-        (bool success, ) = contractAddress.call(callData);
-        require(success, "delegatecall to contractAddress failed");
+        contractAddress.call(callData);
     }
 }
