@@ -57,7 +57,7 @@ contract GenericHandlerV1 is IGenericHandler {
           executeContractAddress       address   padded to 32 bytes   bytes 64  - 96
           maxFee:                      uint256                        bytes 96  - 128
           metaData:
-            metadataDepositor:         address   padded to 32 bytes   bytes 128 - 156
+            metadataDepositor:         address   padded to 32 bytes   bytes 128 - 160
             executionData:             bytes                          bytes 128 - len(metaData)
      */
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external returns (bytes memory) {
