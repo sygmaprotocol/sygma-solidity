@@ -7,7 +7,7 @@ const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const GenericHandlerContract = artifacts.require("GenericHandlerV1");
 
 contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
@@ -22,10 +22,10 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
 
     const feeData = '0x';
     const destinationMaxFee = 2000000;
-    const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
+    const hashOfTestStore = Ethers.utils.keccak256('0xc0ffee');
 
     let BridgeInstance;
-    let CentrifugeAssetInstance;
+    let TestStoreInstance;
 
     let resourceID;
     let depositFunctionSignature;
@@ -36,25 +36,25 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             BridgeInstance = await Helpers.deployBridge(destinationDomainID, accounts[0]),
-            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
+            TestStoreContract.new().then(instance => TestStoreInstance = instance)
         ]);
 
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID);
+        resourceID = Helpers.createResourceID(TestStoreInstance.address, originDomainID);
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
+        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, TestStoreInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
 
-        depositFunctionSignature = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'storeWithDepositor');
+        depositFunctionSignature = Helpers.getFunctionSignature(TestStoreInstance, 'storeWithDepositor');
 
         depositData =
          Helpers.createGenericDepositDataV1(
           depositFunctionSignature,
-          CentrifugeAssetInstance.address,
+          TestStoreInstance.address,
           destinationMaxFee,
           depositorAddress,
-          hashOfCentrifugeAsset
+          hashOfTestStore
         );
 
         proposal = {
@@ -85,8 +85,8 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
           { from: relayer1Address }
       ));
 
-      // Verifying asset was marked as stored in CentrifugeAssetInstance
-      assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset));
+      // Verifying asset was marked as stored in TestStoreInstance
+      assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore));
   });
 
     it('AssetStored event should be emitted', async () => {
@@ -108,12 +108,12 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
             { from: relayer2Address }
         );
 
-        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeTx.tx);
+        const internalTx = await TruffleAssert.createTransactionResult(TestStoreInstance, executeTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'AssetStored', event => {
-          return event.asset === hashOfCentrifugeAsset;
+          return event.asset === hashOfTestStore;
         });
 
-        assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset),
+        assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore),
             'Centrifuge Asset was not successfully stored');
     });
 
@@ -126,7 +126,7 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
         invalidExecutionContractAddress,
         destinationMaxFee,
         depositorAddress,
-        hashOfCentrifugeAsset
+        hashOfTestStore
     );
 
     const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
@@ -156,7 +156,7 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
     // check that deposit nonce isn't unmarked as used in bitmap
     assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainID, expectedDepositNonce));
 
-    // Check that asset isn't marked as stored in CentrifugeAssetInstance
-    assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset));
+    // Check that asset isn't marked as stored in TestStoreInstance
+    assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore));
   });
 });

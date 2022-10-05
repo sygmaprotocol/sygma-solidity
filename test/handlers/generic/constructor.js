@@ -10,19 +10,19 @@ const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
 const GenericHandlerContract = artifacts.require("GenericHandler");
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 
 contract('GenericHandler - [constructor]', async (accounts) => {
     const domainID = 1;
-    const centrifugeAssetMinCount = 1;
+    const TestStoreMinCount = 1;
     const blankFunctionSig = '0x00000000';
     const blankFunctionDepositorOffset = 0;
-    const centrifugeAssetStoreFuncSig = 'store(bytes32)';
+    const TestStoreStoreFuncSig = 'store(bytes32)';
 
     let BridgeInstance;
-    let CentrifugeAssetInstance1;
-    let CentrifugeAssetInstance2;
-    let CentrifugeAssetInstance3;
+    let TestStoreInstance1;
+    let TestStoreInstance2;
+    let TestStoreInstance3;
     let initialResourceIDs;
     let initialContractAddresses;
     let initialDepositFunctionSignatures;
@@ -32,19 +32,19 @@ contract('GenericHandler - [constructor]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]),
-            CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance1 = instance),
-            CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance2 = instance),
-            CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance3 = instance)
+            TestStoreContract.new(TestStoreMinCount).then(instance => TestStoreInstance1 = instance),
+            TestStoreContract.new(TestStoreMinCount).then(instance => TestStoreInstance2 = instance),
+            TestStoreContract.new(TestStoreMinCount).then(instance => TestStoreInstance3 = instance)
         ]);
 
         initialResourceIDs = [
-            Helpers.createResourceID(CentrifugeAssetInstance1.address, domainID),
-            Helpers.createResourceID(CentrifugeAssetInstance2.address, domainID),
-            Helpers.createResourceID(CentrifugeAssetInstance3.address, domainID)
+            Helpers.createResourceID(TestStoreInstance1.address, domainID),
+            Helpers.createResourceID(TestStoreInstance2.address, domainID),
+            Helpers.createResourceID(TestStoreInstance3.address, domainID)
         ];
-        initialContractAddresses = [CentrifugeAssetInstance1.address, CentrifugeAssetInstance2.address, CentrifugeAssetInstance3.address];
+        initialContractAddresses = [TestStoreInstance1.address, TestStoreInstance2.address, TestStoreInstance3.address];
 
-        const executeProposalFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(centrifugeAssetStoreFuncSig))).substr(0, 10);
+        const executeProposalFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(TestStoreStoreFuncSig))).substr(0, 10);
 
         initialDepositFunctionSignatures = [blankFunctionSig, blankFunctionSig, blankFunctionSig];
         initialDepositFunctionDepositorOffsets = [blankFunctionDepositorOffset, blankFunctionDepositorOffset, blankFunctionDepositorOffset];

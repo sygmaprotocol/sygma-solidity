@@ -10,7 +10,7 @@ const Helpers = require('../test/helpers');
 const networksConfig = JSON.parse(fs.readFileSync("./networks_config.json"));
 
 const BridgeContract = artifacts.require("Bridge");
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const GenericHandlerV1Contract = artifacts.require("GenericHandlerV1");
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
@@ -22,7 +22,7 @@ module.exports = async function(deployer, network) {
 
     // fetch deployed contracts addresses
     const bridgeInstance = await BridgeContract.deployed();
-    const centrifugeAssetInstance = await CentrifugeAssetContract.deployed();
+    const TestStoreInstance = await TestStoreContract.deployed();
     const feeRouterInstance = await FeeRouterContract.deployed();
     const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
 
@@ -33,7 +33,7 @@ module.exports = async function(deployer, network) {
     console.log("Generic handler v1 resourceID:", "\t", currentNetworkConfig.genericV1ResourceID);
 
     // setup generic handler v1
-    await bridgeInstance.adminSetGenericResource(genericHandlerV1Instance.address, currentNetworkConfig.genericV1ResourceID, centrifugeAssetInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.getFunctionSignature(centrifugeAssetInstance, 'storeWithDepositor'));
+    await bridgeInstance.adminSetGenericResource(genericHandlerV1Instance.address, currentNetworkConfig.genericV1ResourceID, TestStoreInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.getFunctionSignature(TestStoreInstance, 'storeWithDepositor'));
 
     // set resourceID for every network except current from networks config
     delete networksConfig[currentNetworkName]

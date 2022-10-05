@@ -7,7 +7,7 @@ const TruffleAssert = require('truffle-assertions');
 const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const GenericHandlerContract = artifacts.require("GenericHandlerV1");
 const WithDepositorContract = artifacts.require("WithDepositor");
 const ReturnDataContract = artifacts.require("ReturnData");
@@ -21,10 +21,10 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
 
     const feeData = '0x';
     const destinationMaxFee = 2000000;
-    const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
+    const hashOfTestStore = Ethers.utils.keccak256('0xc0ffee');
 
     let BridgeInstance;
-    let CentrifugeAssetInstance;
+    let TestStoreInstance;
 
     let resourceID;
     let depositFunctionSignature;
@@ -34,27 +34,27 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
-            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
+            TestStoreContract.new().then(instance => TestStoreInstance = instance),
             WithDepositorContract.new().then(instance => WithDepositorInstance = instance),
             ReturnDataContract.new().then(instance => ReturnDataInstance = instance),
         ]);
 
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)
+        resourceID = Helpers.createResourceID(TestStoreInstance.address, originDomainID)
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
+        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, TestStoreInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
 
-        depositFunctionSignature = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'storeWithDepositor');
+        depositFunctionSignature = Helpers.getFunctionSignature(TestStoreInstance, 'storeWithDepositor');
 
 
         depositData = Helpers.createGenericDepositDataV1(
           depositFunctionSignature,
-          CentrifugeAssetInstance.address,
+          TestStoreInstance.address,
           destinationMaxFee,
           depositorAddress,
-          hashOfCentrifugeAsset
+          hashOfTestStore
         );
 
         // set MPC address to unpause the Bridge
@@ -107,10 +107,10 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
 
       const invalidDepositData = Helpers.createGenericDepositDataV1(
         depositFunctionSignature,
-        CentrifugeAssetInstance.address,
+        TestStoreInstance.address,
         destinationMaxFee,
         invalidDepositorAddress,
-        hashOfCentrifugeAsset
+        hashOfTestStore
       );
 
       await TruffleAssert.reverts(BridgeInstance.deposit(
