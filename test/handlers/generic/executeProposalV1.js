@@ -114,7 +114,7 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
         });
 
         assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore),
-            'Centrifuge Asset was not successfully stored');
+            'TestStore asset was not successfully stored');
     });
 
     it('ProposalExecution should be emitted even if handler execution fails', async () => {

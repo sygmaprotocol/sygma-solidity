@@ -102,7 +102,7 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
       ), "Incorrect data length");
     });
 
-    it('deposit data should be of required length', async () => {
+    it('should revert if metadata encoded depositor does not match deposit depositor', async () => {
       const invalidDepositorAddress = accounts[2];
 
       const invalidDepositData = Helpers.createGenericDepositDataV1(

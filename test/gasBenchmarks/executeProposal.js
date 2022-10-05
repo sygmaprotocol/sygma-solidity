@@ -201,7 +201,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         });
     });
 
-    it('Should execute Generic deposit proposal - Centrifuge asset', async () => {
+    it('Should execute Generic deposit proposal - TestStore asset', async () => {
         const depositNonce = 4;
         const hashOfTestStore = Ethers.utils.keccak256('0xc0ffee');
         const depositData = Helpers.createGenericDepositData(hashOfTestStore);
@@ -210,7 +210,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
         const executeTx = await execute(originDomainID, depositNonce, depositData, TestStoreResourceID);
 
         gasBenchmarks.push({
-            type: 'Generic - Centrifuge Asset',
+            type: 'Generic - TestStore Asset',
             gasUsed: executeTx.receipt.gasUsed
         });
     });

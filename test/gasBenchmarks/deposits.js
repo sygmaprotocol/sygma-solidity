@@ -187,7 +187,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         });
     });
 
-    it('Should make Generic deposit - Centrifuge asset', async () => {
+    it('Should make Generic deposit - TestStore asset', async () => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             TestStoreResourceID,
@@ -197,7 +197,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         );
 
         gasBenchmarks.push({
-            type: 'Generic - Centrifuge Asset',
+            type: 'Generic - TestStore asset',
             gasUsed: depositTx.receipt.gasUsed
         });
     });
