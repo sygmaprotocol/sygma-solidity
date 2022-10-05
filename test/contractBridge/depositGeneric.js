@@ -8,7 +8,7 @@ const TruffleAssert = require('truffle-assertions');
 const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('Bridge - [deposit - Generic]', async (accounts) => {
@@ -30,16 +30,16 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
 
     beforeEach(async () => {
         await Promise.all([
-            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
+            TestStoreContract.new().then(instance => TestStoreInstance = instance),
             BridgeInstance = await Helpers.deployBridge(originDomainID, adminAddress)
         ]);
 
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID)
+        resourceID = Helpers.createResourceID(TestStoreInstance.address, originDomainID)
         initialResourceIDs = [resourceID];
-        initialContractAddresses = [CentrifugeAssetInstance.address];
+        initialContractAddresses = [TestStoreInstance.address];
         initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
         initialDepositFunctionDepositorOffsets = [Helpers.blankFunctionDepositorOffset];
-        initialExecuteFunctionSignatures = [Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store')];
+        initialExecuteFunctionSignatures = [Helpers.getFunctionSignature(TestStoreInstance, 'store')];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address);

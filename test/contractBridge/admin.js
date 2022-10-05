@@ -11,7 +11,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const GenericHandlerContract = artifacts.require('GenericHandler');
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 
 // This test does NOT include all getter methods, just
 // getters that should work with only the constructor called
@@ -150,13 +150,13 @@ contract('Bridge - [admin]', async (accounts) => {
     // Set Generic Resource
 
     it('Should set a Generic Resource ID and contract address', async () => {
-        const CentrifugeAssetInstance = await CentrifugeAssetContract.new();
-        const resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, domainID);
+        const TestStoreInstance = await TestStoreContract.new();
+        const resourceID = Helpers.createResourceID(TestStoreInstance.address, domainID);
         const GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address);
 
-        await TruffleAssert.passes(BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, CentrifugeAssetInstance.address, '0x00000000', 0, '0x00000000'));
-        assert.equal(await GenericHandlerInstance._resourceIDToContractAddress.call(resourceID), CentrifugeAssetInstance.address);
-        assert.equal(await GenericHandlerInstance._contractAddressToResourceID.call(CentrifugeAssetInstance.address), resourceID.toLowerCase());
+        await TruffleAssert.passes(BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, TestStoreInstance.address, '0x00000000', 0, '0x00000000'));
+        assert.equal(await GenericHandlerInstance._resourceIDToContractAddress.call(resourceID), TestStoreInstance.address);
+        assert.equal(await GenericHandlerInstance._contractAddressToResourceID.call(TestStoreInstance.address), resourceID.toLowerCase());
     });
 
     it('Should require admin role to set a Generic Resource ID and contract address', async () => {

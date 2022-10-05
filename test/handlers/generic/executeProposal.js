@@ -9,7 +9,7 @@ const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('GenericHandler - [Execute Proposal]', async (accounts) => {
@@ -21,12 +21,12 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
 
     const depositorAddress = accounts[1];
 
-    const centrifugeAssetMinCount = 10;
-    const hashOfCentrifugeAsset = Ethers.utils.keccak256('0xc0ffee');
+    const TestStoreMinCount = 10;
+    const hashOfTestStore = Ethers.utils.keccak256('0xc0ffee');
     const feeData = '0x';
 
     let BridgeInstance;
-    let CentrifugeAssetInstance;
+    let TestStoreInstance;
     let initialResourceIDs;
     let initialContractAddresses;
     let initialDepositFunctionSignatures;
@@ -41,24 +41,24 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             BridgeInstance = await Helpers.deployBridge(destinationDomainID, accounts[0]),
-            CentrifugeAssetContract.new(centrifugeAssetMinCount).then(instance => CentrifugeAssetInstance = instance)
+            TestStoreContract.new(TestStoreMinCount).then(instance => TestStoreInstance = instance)
         ]);
 
-        const centrifugeAssetFuncSig = Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store');
+        const TestStoreFuncSig = Helpers.getFunctionSignature(TestStoreInstance, 'store');
 
-        resourceID = Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID);
+        resourceID = Helpers.createResourceID(TestStoreInstance.address, originDomainID);
         initialResourceIDs = [resourceID];
-        initialContractAddresses = [CentrifugeAssetInstance.address];
+        initialContractAddresses = [TestStoreInstance.address];
         initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
         initialDepositFunctionDepositorOffsets = [Helpers.blankFunctionDepositorOffset];
-        initialExecuteFunctionSignatures = [centrifugeAssetFuncSig];
+        initialExecuteFunctionSignatures = [TestStoreFuncSig];
 
         GenericHandlerInstance = await GenericHandlerContract.new(
             BridgeInstance.address);
 
         await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositorOffsets[0], initialExecuteFunctionSignatures[0]);
 
-        depositData = Helpers.createGenericDepositData(hashOfCentrifugeAsset);
+        depositData = Helpers.createGenericDepositData(hashOfTestStore);
         depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
 
         proposal = {
@@ -90,8 +90,8 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             { from: relayer1Address }
         ));
 
-        // Verifying asset was marked as stored in CentrifugeAssetInstance
-        assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset));
+        // Verifying asset was marked as stored in TestStoreInstance
+        assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore));
     });
 
     it('AssetStored event should be emitted', async () => {
@@ -112,12 +112,12 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
             proposalSignedData,
             { from: relayer2Address }
         );
-        const internalTx = await TruffleAssert.createTransactionResult(CentrifugeAssetInstance, executeTx.tx);
+        const internalTx = await TruffleAssert.createTransactionResult(TestStoreInstance, executeTx.tx);
         TruffleAssert.eventEmitted(internalTx, 'AssetStored', event => {
-          return event.asset === hashOfCentrifugeAsset;
+          return event.asset === hashOfTestStore;
         });
 
-        assert.isTrue(await CentrifugeAssetInstance._assetsStored.call(hashOfCentrifugeAsset),
-            'Centrifuge Asset was not successfully stored');
+        assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore),
+            'TestStore asset was not successfully stored');
     });
 });

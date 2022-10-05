@@ -8,7 +8,7 @@ const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 const NoArgumentContract = artifacts.require("NoArgument");
 const OneArgumentContract = artifacts.require("OneArgument");
@@ -26,7 +26,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     const feeData = '0x';
 
     let BridgeInstance;
-    let CentrifugeAssetInstance;
+    let TestStoreInstance;
     let NoArgumentInstance;
     let OneArgumentInstance;
     let TwoArgumentsInstance;
@@ -45,7 +45,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
     beforeEach(async () => {
         await Promise.all([
             BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
-            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance),
+            TestStoreContract.new().then(instance => TestStoreInstance = instance),
             NoArgumentContract.new().then(instance => NoArgumentInstance = instance),
             OneArgumentContract.new().then(instance => OneArgumentInstance = instance),
             TwoArgumentsContract.new().then(instance => TwoArgumentsInstance = instance),
@@ -54,7 +54,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             ReturnDataContract.new().then(instance => ReturnDataInstance = instance),
         ]);
         initialResourceIDs = [
-            Helpers.createResourceID(CentrifugeAssetInstance.address, originDomainID),
+            Helpers.createResourceID(TestStoreInstance.address, originDomainID),
             Helpers.createResourceID(NoArgumentInstance.address, originDomainID),
             Helpers.createResourceID(OneArgumentInstance.address, originDomainID),
             Helpers.createResourceID(TwoArgumentsInstance.address, originDomainID),
@@ -63,7 +63,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.createResourceID(ReturnDataInstance.address, originDomainID),
         ];
         initialContractAddresses = [
-            CentrifugeAssetInstance.address,
+            TestStoreInstance.address,
             NoArgumentInstance.address,
             OneArgumentInstance.address,
             TwoArgumentsInstance.address,
@@ -90,7 +90,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.blankFunctionDepositorOffset,
         ];
         initialExecuteFunctionSignatures = [
-            Helpers.getFunctionSignature(CentrifugeAssetInstance, 'store'),
+            Helpers.getFunctionSignature(TestStoreInstance, 'store'),
             Helpers.blankFunctionSig,
             Helpers.blankFunctionSig,
             Helpers.blankFunctionSig,

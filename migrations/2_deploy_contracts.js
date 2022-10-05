@@ -13,7 +13,7 @@ const networksConfig = JSON.parse(fs.readFileSync("./networks_config.json"));
 const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
 const PausableContract = artifacts.require("Pausable");
 const BridgeContract = artifacts.require("Bridge");
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const ERC20MinterPauserContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20LockReleaseContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20SafeContract = artifacts.require("ERC20Safe");
@@ -42,7 +42,7 @@ module.exports = async function(deployer, network) {
 
     // deploy main contracts
     const bridgeInstance = await deployer.deploy(BridgeContract, currentNetworkConfig.domainID, accessControlSegregatorInstance.address);
-    const centrifugeAssetInstance = await deployer.deploy(CentrifugeAssetContract);
+    const TestStoreInstance = await deployer.deploy(TestStoreContract);
     const erc20MinterPauserInstance = await deployer.deploy(ERC20MinterPauserContract, currentNetworkConfig.erc20Name, currentNetworkConfig.erc20Symbol);
     await deployer.deploy(ERC20SafeContract);
     const erc20LockReleaseInstance = await deployer.deploy(ERC20LockReleaseContract, currentNetworkConfig.erc20LRName, currentNetworkConfig.erc20LRSymbol);
@@ -68,7 +68,7 @@ module.exports = async function(deployer, network) {
         "Deployer Address": deployerAddress,
         "Domain ID": domainID,
         "Bridge Address": bridgeInstance.address,
-        "centrifugeAssetAddress": centrifugeAssetInstance.address,
+        "TestStore Address": TestStoreInstance.address,
         "ERC20 Address": erc20MinterPauserInstance.address,
         "ERC20LockRelease Address": erc20LockReleaseInstance.address,
         "ERC721 Address": erc721MinterBurnerPauserInstance.address,
@@ -107,7 +107,7 @@ module.exports = async function(deployer, network) {
     await bridgeInstance.adminSetBurnable(erc721HandlerInstance.address, erc721MinterBurnerPauserInstance.address);
 
     // setup generic
-    await bridgeInstance.adminSetGenericResource(genericHandlerInstance.address, currentNetworkConfig.genericResourceID, centrifugeAssetInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.getFunctionSignature(centrifugeAssetInstance, 'store'));
+    await bridgeInstance.adminSetGenericResource(genericHandlerInstance.address, currentNetworkConfig.genericResourceID, TestStoreInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.getFunctionSignature(TestStoreInstance, 'store'));
 
     // setup fee router and fee handlers
     await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);

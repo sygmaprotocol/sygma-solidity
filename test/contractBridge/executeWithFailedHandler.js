@@ -13,7 +13,7 @@ const ERC721RevertMintableContract = artifacts.require("ERC721MinterBurnerPauser
 const ERC721RevertHandlerContract = artifacts.require("HandlerRevert");
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("HandlerRevert");
-const CentrifugeAssetContract = artifacts.require("CentrifugeAsset");
+const TestStoreContract = artifacts.require("TestStore");
 const GenericHandlerContract = artifacts.require("GenericHandler");
 
 contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
@@ -40,7 +40,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     let ERC721RevertHandlerInstance;
     let ERC1155MintableInstance;
     let ERC1155HandlerInstance;
-    let CentrifugeAssetInstance;
+    let TestStoreInstance;
     let GenericHandlerInstance;
 
 
@@ -74,7 +74,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
             ERC721MintableContract.new("token721", "TOK721", "").then(instance => ERC721MintableInstance = instance),
             ERC721RevertMintableContract.new("Rtoken721", "RTOK721", "").then(instance => ERC721RevertMintableInstance = instance),
             ERC1155MintableContract.new("TOK1155").then(instance => ERC1155MintableInstance = instance),
-            CentrifugeAssetContract.new().then(instance => CentrifugeAssetInstance = instance)
+            TestStoreContract.new().then(instance => TestStoreInstance = instance)
         ]);
 
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
