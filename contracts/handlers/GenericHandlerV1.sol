@@ -58,7 +58,7 @@ contract GenericHandlerV1 is IGenericHandler {
           maxFee:                      uint256                        bytes 96  - 128
           metaData:
             metadataDepositor:         address   padded to 32 bytes   bytes 128 - 160
-            executionData:             bytes                          bytes 128 - len(metaData)
+            executionData:             bytes                          bytes 160 - (128 + len(metaData))
      */
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external returns (bytes memory) {
         require(data.length > 160, "Incorrect data length");
@@ -88,7 +88,7 @@ contract GenericHandlerV1 is IGenericHandler {
           maxFee:                      uint256                        bytes 96  - 128
           metadata:
             metadataDepositor:         address   padded to 32 bytes   bytes 128 - 160
-            executionData:             bytes                          bytes 128 - len(metaData)
+            executionData:             bytes                          bytes 160 - (128 + len(metaData))
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external {
         uint256        lenMetadata;
