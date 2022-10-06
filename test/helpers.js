@@ -92,8 +92,14 @@ const createGenericDepositData = (hexMetaData) => {
         hexMetaData.substr(2)
 };
 
-const createGenericDepositDataV1 = (executeFunctionSignature, executeContractAddress, maxFee, depositor, executionData) => {
-    const metaData = toHex(depositor, 32).substr(2) + executionData.substr(2) + toHex(depositor, 32).substr(2); // append depositor address for destination chain check
+const createGenericDepositDataV1 = (executeFunctionSignature, executeContractAddress, maxFee, depositor, executionData, depositorCheck = true) => {
+    let metaData = toHex(depositor, 32).substr(2) + executionData.substr(2);
+
+    if(depositorCheck) {
+      // if "depositorCheck" is true -> append depositor address for destination chain check
+      metaData = metaData.concat(toHex(depositor, 32).substr(2));
+    }
+
     const metaDataLength = metaData.length / 2;
 
     return '0x' +
