@@ -90,6 +90,18 @@ module.exports = {
       network_id: '80001',
       gasPrice: 30000000000,  // 30 gwei
     },
+    moonbase: {
+      provider: () => {
+        return new HDWalletProvider({
+          mnemonic: process.env.MOONBASE_MNEMONIC,
+          providerOrUrl: process.env.MOONBASE_PROVIDER_URL
+        })
+      },
+      networkCheckTimeout: 10000,
+      timeoutBlocks: 200,
+      network_id: '1287',
+      gasPrice: 30000000000,  // 30 gwei
+    }
     // Another network with more advanced options...
     // advanced: {
       // port: 8777,             // Custom port
