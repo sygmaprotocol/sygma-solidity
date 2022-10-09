@@ -41,7 +41,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address bridgeAddress, address feeHandlerRouterAddress) public {
+    constructor(address bridgeAddress, address feeHandlerRouterAddress) {
         _bridgeAddress = bridgeAddress;
         _feeHandlerRouterAddress = feeHandlerRouterAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);

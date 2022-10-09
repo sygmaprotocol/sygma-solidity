@@ -25,7 +25,7 @@ contract Forwarder is EIP712 {
 
     mapping(address => uint256) private _nonces;
 
-    constructor() EIP712("Forwarder", "0.0.1") public {}
+    constructor() EIP712("Forwarder", "0.0.1") {}
 
     function getNonce(address from) public view returns (uint256) {
         return _nonces[from];
