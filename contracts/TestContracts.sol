@@ -58,7 +58,7 @@ contract HandlerRevert is HandlerHelpers {
 
     constructor(
         address          bridgeAddress
-    ) public HandlerHelpers(bridgeAddress) {
+    ) HandlerHelpers(bridgeAddress) {
     }
 
     function executeProposal(bytes32, bytes calldata) external view {
