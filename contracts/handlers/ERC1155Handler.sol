@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol
 contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155Holder {
     using ERC165Checker for address;
 
-    bytes4 private constant _INTERFACE_ERC1155_METADATA = 0x0e89341c;
     bytes private constant EMPTY_BYTES = "";
 
     /**
