@@ -60,13 +60,14 @@ contract('Bridge - [execute proposal - XC20]', async (accounts) => {
         burnableContractAddresses = [];
 
         XC20HandlerInstance = await XC20HandlerContract.new(BridgeInstance.address);
-        await ERC20MintableInstance.grantRole(await ERC20MintableInstance.MINTER_ROLE(), XC20HandlerInstance.address);
 
         await Promise.all([
             ERC20MintableInstance.mint(depositorAddress, initialTokenAmount),
             BridgeInstance.adminSetResource(XC20HandlerInstance.address, resourceID, XC20TestInstance.address)
         ]);
-        await BridgeInstance.adminSetBurnable(XC20HandlerInstance.address, XC20TestInstance.address);
+        await ERC20MintableInstance.approve(XC20TestInstance.address, initialTokenAmount, {from: depositorAddress});
+        await XC20TestInstance.depositFor(depositorAddress, initialTokenAmount, {from: depositorAddress});
+        await XC20TestInstance.transfer(XC20HandlerInstance.address, depositAmount, {from: depositorAddress});
 
         data = Helpers.createERCDepositData(
           depositAmount,
@@ -94,8 +95,6 @@ contract('Bridge - [execute proposal - XC20]', async (accounts) => {
     it("isProposalExecuted returns false if depositNonce is not used", async () => {
         const destinationDomainID = await BridgeInstance._domainID();
 
-        await ERC20MintableInstance.approve(XC20TestInstance.address, depositAmount, {from: depositorAddress});
-        await XC20TestInstance.depositFor(depositorAddress, depositAmount, {from: depositorAddress});
         assert.isFalse(await BridgeInstance.isProposalExecuted(destinationDomainID, expectedDepositNonce));
       });
 
