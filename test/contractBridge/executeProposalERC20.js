@@ -12,7 +12,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
-contract('Bridge - [execute proposal]', async (accounts) => {
+contract('Bridge - [execute proposal - ERC20]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const invalidDestinationDomainID = 3;
@@ -109,7 +109,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
         ));
 
         // check that deposit nonce has been marked as used in bitmap
-        assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainID, expectedDepositNonce));
+        assert.isTrue(await BridgeInstance.isProposalExecuted(originDomainID, 999));
 
         // check that tokens are transferred to recipient address
         const recipientBalance = await ERC20MintableInstance.balanceOf(recipientAddress);
@@ -175,7 +175,7 @@ contract('Bridge - [execute proposal]', async (accounts) => {
 
         // check that tokens are transferred to recipient address
         const recipientBalance = await ERC20MintableInstance.balanceOf(recipientAddress);
-        assert.strictEqual(recipientBalance.toNumber(), depositAmount);
+        assert.strictEqual(recipientBalance.toNumber(), 444);
     });
 
     it('should fail to executeProposal if signed Proposal has different chainID than the one on which it should be executed', async () => {
