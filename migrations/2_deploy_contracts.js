@@ -4,12 +4,10 @@
  */
 
 const Ethers = require("ethers");
-const fs = require("fs");
 
 const Helpers = require('../test/helpers');
 const Utils = require('./utils');
 
-const networksConfig = JSON.parse(fs.readFileSync("./devnet_config.json"));
 
 const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
 const PausableContract = artifacts.require("Pausable");
@@ -27,6 +25,7 @@ const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
 
 module.exports = async function(deployer, network) {
+    const networksConfig = Utils.getNetworksConfig()
     // fetch deployer address
     const deployerAddress = await deployer['networks'][deployer['network']]['from'];
     // assign addresses for access segregation
@@ -64,21 +63,48 @@ module.exports = async function(deployer, network) {
     await feeHandlerWithOracleInstance.setFeeProperties(currentNetworkConfig.fee.oracle.gasUsed, currentNetworkConfig.fee.oracle.feePercentage);
     await basicFeeHandlerInstance.changeFee(Ethers.utils.parseEther(currentNetworkConfig.fee.basic.fee).toString());
 
+    console.table({
+      "Deployer Address": deployerAddress,
+      "Domain ID": currentNetworkConfig.domainID,
+      "Bridge Address": bridgeInstance.address,
+      "ERC20Handler Address": erc20HandlerInstance.address,
+      "ERC721Handler Address": erc721HandlerInstance.address,
+      "GenericHandler Address": genericHandlerInstance.address,
+      "FeeRouterContract Address": feeRouterInstance.address,
+      "BasicFeeHandler Address": basicFeeHandlerInstance.address,
+      "FeeHandlerWithOracle Address": feeHandlerWithOracleInstance.address,
+  });
+
     // setup erc20 tokens
     for (const erc20 of currentNetworkConfig.erc20) {
       await setupErc20(deployer, erc20, bridgeInstance, erc20HandlerInstance);
       await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance, erc20);
+
+      console.log("-------------------------------------------------------------------------------")
+      console.log("ERC20 address:", "\t", erc20.address);
+      console.log("ResourceID:", "\t", erc20.resourceID);
+      console.log("-------------------------------------------------------------------------------")
     }
 
     // setup erc721 tokens
     for (const erc721 of currentNetworkConfig.erc721) {
       await setupErc721(deployer, erc721, bridgeInstance, erc721HandlerInstance);
       await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance, erc721);
+
+      console.log("-------------------------------------------------------------------------------")
+      console.log("ERC721 address:", "\t", erc721.address);
+      console.log("ResourceID:", "\t", erc721.resourceID);
+      console.log("-------------------------------------------------------------------------------")
     }
 
     for (const generic of currentNetworkConfig.permissionedGeneric) {
       await setupGeneric(deployer, generic, bridgeInstance, genericHandlerInstance);
       await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance);
+
+      console.log("-------------------------------------------------------------------------------")
+      console.log("Generic contract address:", "\t", generic.address);
+      console.log("ResourceID:", "\t", generic.resourceID);
+      console.log("-------------------------------------------------------------------------------")
     }
 
     // set MPC address
@@ -135,17 +161,17 @@ async function setupGeneric(deployer, generic, bridgeInstance, genericHandlerIns
   if (!generic.address) {
     const testStoreInstance = await deployer.deploy(TestStoreContract);
     generic.address = testStoreInstance.address;
-    generic.functionSignature = Helpers.blankFunctionSig;
+    generic.depositFunctionSig = Helpers.blankFunctionSig;
     generic.depositorOffset = Helpers.blankFunctionDepositorOffset;
-    generic.functionSig = Helpers.getFunctionSignature(testStoreInstance, "store");
+    generic.executeFunctionSig = Helpers.getFunctionSignature(testStoreInstance, "store");
   }
 
   await bridgeInstance.adminSetGenericResource(
     genericHandlerInstance.address,
     generic.resourceID,
     generic.address,
-    Helpers.blankFunctionSig,
-    Helpers.blankFunctionDepositorOffset,
-    Helpers.getFunctionSignature(TestStoreInstance, 'store')
+    generic.depositFunctionSig,
+    generic.depositorOffset,
+    generic.executeFunctionSig
   );
 }

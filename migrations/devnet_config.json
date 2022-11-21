@@ -1,0 +1,53 @@
+{
+  "test": {
+    "domainID": "2",
+    "MPCAddress": "0x1c5541A79AcC662ab2D2647F3B141a3B7Cdb2Ae4",
+    "fee": {
+      "oracle": {
+        "gasUsed": "100000",
+        "feePercentage": 100,
+        "address": "0x70B7D7448982b15295150575541D1d3b862f7FE9"
+      },
+      "basic": {
+        "fee": "0.001"
+      }
+    },
+    "erc721": [
+      {
+        "name": "ERC721Test",
+        "symbol": "ERC721TST",
+        "uri": "metadata.test",
+        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000200",
+        "feeType": "basic"
+      }
+    ],
+    "erc20": [
+      {
+        "name": "ERC20Test",
+        "symbol": "ERC20LRTST",
+        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "feeType": "oracle",
+        "strategy": "lr"
+      },
+      {
+        "address": "0x52B95a2788A0b415032F37E5fc985FEdfE8a9fb0",
+        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
+        "feeType": "basic",
+        "strategy": "mb"
+      }
+    ],
+    "permissionedGeneric": [
+      {
+        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
+        "feeType": "basic",
+        "depositFunctionSig": "0x00000000",
+        "depositorOffset": 0,
+        "executeFunctionSig": "store"
+      }
+    ],
+    "permissionlessGeneric": {
+      "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
+      "feeType": "basic"
+    }
+  }
+}
