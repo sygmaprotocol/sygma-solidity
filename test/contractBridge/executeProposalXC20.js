@@ -53,7 +53,7 @@ contract('Bridge - [execute proposal - XC20]', async (accounts) => {
 
         await XC20TestContract.new(ERC20MintableInstance.address).then(instance => XC20TestInstance = instance),
 
-        resourceID = Helpers.createResourceID(XC20TestContract.address, destinationDomainID);
+        resourceID = Helpers.createResourceID(XC20TestInstance.address, destinationDomainID);
 
         initialResourceIDs = [resourceID];
         initialContractAddresses = [ERC20MintableInstance.address];
