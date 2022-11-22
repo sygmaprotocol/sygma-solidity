@@ -12,6 +12,14 @@
         "fee": "0.001"
       }
     },
+    "access": {
+      "feeHandlerAdmin": "0x70B7D7448982b15295150575541D1d3b862f7FE9",
+      "feeRouterAdmin": "0x70B7D7448982b15295150575541D1d3b862f7FE9",
+      "accessControl": {
+        "functions": ["0x80ae1c28"],
+        "admins": ["0x70B7D7448982b15295150575541D1d3b862f7FE9"]
+      }
+    },
     "erc721": [
       {
         "name": "ERC721Test",
@@ -28,12 +36,6 @@
         "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
         "feeType": "oracle",
         "strategy": "lr"
-      },
-      {
-        "address": "0x52B95a2788A0b415032F37E5fc985FEdfE8a9fb0",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
-        "feeType": "basic",
-        "strategy": "mb"
       }
     ],
     "permissionedGeneric": [
