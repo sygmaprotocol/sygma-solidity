@@ -1,8 +1,15 @@
 const parseArgs = require('minimist')
 const fs = require("fs");
 
+const DEFAULT_CONFIG_PATH = "./migrations/local.json"
+
 function getNetworksConfig() {
-  return JSON.parse(fs.readFileSync(parseArgs(process.argv.slice(2))["file"]));
+  let path = parseArgs(process.argv.slice(2))["file"]
+  if (path == undefined) {
+    path = DEFAULT_CONFIG_PATH
+  }
+
+  return JSON.parse(fs.readFileSync(path));
 }
 
 

@@ -8,10 +8,10 @@ Read more [here](https://chainsafe.io/).
 
 ## Deployments
 
-To deploy contracts run `truffle migrate --network NETWORK_NAME`.\
+To deploy contracts run `truffle migrate --network NETWORK_NAME --file <path_to_env_config>`.\
 To add another network do the following:
  * update `truffle-config.js` with the desired configuration
- * add the required params to `networks_config.js` file in `migrations` directory
+ * add the required params to config file for the desired environment (local,dev,testnet,mainnet)
  * create a deploy script in `migrations` directory
 
 ## Dependencies
