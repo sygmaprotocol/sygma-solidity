@@ -34,7 +34,7 @@ module.exports = async function(deployer, network) {
     console.log("-------------------------------------------------------------------------------")
 
     // setup generic handler v1
-    if (currentNetworkConfig.permissionlessGeneric?.resourceID) {
+    if (currentNetworkConfig.permissionlessGeneric && currentNetworkConfig.permissionlessGeneric.resourceID) {
       await bridgeInstance.adminSetGenericResource(genericHandlerV1Instance.address, currentNetworkConfig.permissionlessGeneric.resourceID, bridgeInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
       await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance, currentNetworkConfig.permissionlessGeneric);
     }
