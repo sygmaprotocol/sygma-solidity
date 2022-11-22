@@ -99,7 +99,7 @@ module.exports = async function(deployer, network) {
 
     for (const generic of currentNetworkConfig.permissionedGeneric) {
       await setupGeneric(deployer, generic, bridgeInstance, genericHandlerInstance);
-      await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance);
+      await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance, generic);
 
       console.log("-------------------------------------------------------------------------------")
       console.log("Generic contract address:", "\t", generic.address);
