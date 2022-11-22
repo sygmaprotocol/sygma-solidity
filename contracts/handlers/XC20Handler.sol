@@ -7,7 +7,7 @@ import "./HandlerHelpers.sol";
 import "../XC20Safe.sol";
 
 /**
-    @title Handles XCC20 deposits and deposit executions.
+    @title Handles XC20 deposits and deposit executions.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
