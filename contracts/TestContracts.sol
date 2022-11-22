@@ -144,16 +144,18 @@ contract TestStore {
   }
 }
 /**
-  @dev This contract mocks XC20 assets.
-      _mint() and _burn() functions are not overriden as in the example
+  @dev This contract mocks XC20 assets based on this example:
       https://github.com/AstarNetwork/astar-frame/blob/674356e7b611e561aaf9bf581452cab965cf8e87/examples/assets-erc20/XcBurrito.sol#L12
-      because they would target wront mint() and burn() functions in the mock, while in production they target methods on Asset pallet
 */
-contract XC20Test is ERC20Wrapper {
+contract XC20Test is ERC20 {
 
-    constructor(IERC20 _erc20Test) ERC20("XC20Test", "XC20TST") ERC20Wrapper(_erc20Test) {}
+    constructor() ERC20("XC20Test", "XC20TST") {}
 
-	  function decimals() public view override(ERC20) returns (uint8) {
-        return IERC20Plus(address(this)).decimals();
+    function mint(address to, uint256 amount) public {
+      _mint(to, amount);
+    }
+
+    function burn(address from, uint256 amount) public {
+      _burn(from, amount);
     }
 }
