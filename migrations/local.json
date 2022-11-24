@@ -13,10 +13,7 @@
       }
     },
     "access": {
-      "accessControl": {
-        "functions": [],
-        "admins": []
-      }
+      "accessControl": {}
     },
     "erc721": [
       {

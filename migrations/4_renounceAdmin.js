@@ -37,10 +37,7 @@ module.exports = async function(deployer, network) {
       await feeRouterInstance.renounceRole("0x00", await deployer['networks'][deployer['network']]['from']);
     }
 
-    for (let i = 0; i < currentNetworkConfig.access.accessControl.functions.length; i++) {
-      const func = currentNetworkConfig.access.accessControl.functions[i]
-      const admin = currentNetworkConfig.access.accessControl.admins[i]
-
+    for (let [func, admin] of Object.entries(currentNetworkConfig.access.accessControl)) {
       console.log("Granting access for function %s to %s", func, admin)
 
       await accessControlInstance.grantAccess(func, admin);
