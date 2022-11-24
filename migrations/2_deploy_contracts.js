@@ -130,6 +130,7 @@ async function setupErc20(
 
   await bridgeInstance.adminSetResource(erc20HandlerInstance.address, erc20.resourceID, erc20Instance.address);
 
+  // strategy can be either mb (mint/burn) or lr (lock/release)
   if (erc20.strategy == "mb") {
     await erc20Instance.grantRole(await erc20Instance.MINTER_ROLE(), erc20HandlerInstance.address);
     await bridgeInstance.adminSetBurnable(erc20HandlerInstance.address, erc20Instance.address);
