@@ -53,10 +53,6 @@ module.exports = async function(deployer, network) {
     const basicFeeHandlerInstance = await deployer.deploy(BasicFeeHandlerContract, bridgeInstance.address, feeRouterInstance.address);
     const feeHandlerWithOracleInstance = await deployer.deploy(FeeHandlerWithOracleContract, bridgeInstance.address, feeRouterInstance.address);
 
-    // deploy safe contracts
-    await deployer.deploy(ERC20SafeContract);
-    await deployer.deploy(ERC721SafeContract);
-
     // setup fee router and fee handlers
     await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);
     await feeHandlerWithOracleInstance.setFeeOracle(currentNetworkConfig.fee.oracle.address);
