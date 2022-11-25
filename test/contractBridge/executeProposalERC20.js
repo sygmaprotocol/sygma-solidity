@@ -12,7 +12,7 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
-contract('Bridge - [execute proposal]', async (accounts) => {
+contract('Bridge - [execute proposal - ERC20]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const invalidDestinationDomainID = 3;
