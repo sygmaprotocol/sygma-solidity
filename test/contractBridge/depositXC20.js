@@ -34,17 +34,13 @@ contract('Bridge - [deposit - XRC20]', async (accounts) => {
           XC20TestContract.new().then(instance => OriginXC20TestInstance = instance)
       ]);
 
-
       resourceID = Helpers.createResourceID(OriginXC20TestInstance.address, originDomainID);
 
       OriginXC20HandlerInstance = await XC20HandlerContract.new(BridgeInstance.address);
 
-      console.log("pitanje svih pitanja", OriginXC20TestInstance.address)
-
       await Promise.all([
           BridgeInstance.adminSetResource(OriginXC20HandlerInstance.address, resourceID, OriginXC20TestInstance.address),
           OriginXC20TestInstance.mint(depositorAddress, originChainInitialTokenAmount),
-          // OriginXC20TestInstance.mint(OriginXC20HandlerInstance.address, originChainInitialTokenAmount),
       ]);
       await OriginXC20TestInstance.approve(OriginXC20HandlerInstance.address, depositAmount * 2, { from: depositorAddress });
 
