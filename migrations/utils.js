@@ -1,6 +1,8 @@
 const parseArgs = require('minimist')
 const fs = require("fs");
 
+const Helpers = require('../test/helpers');
+
 const TestStoreContract = artifacts.require("TestStore");
 const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser");
 const ERC721MinterBurnerPauserContract = artifacts.require("ERC721MinterBurnerPauser");
