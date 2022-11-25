@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import "./handlers/HandlerHelpers.sol";
+import "./interfaces/IERC20Plus.sol";
 
 contract NoArgument {
     event NoArgumentCalled();
@@ -140,4 +142,20 @@ contract TestStore {
       _assetsStored[asset] = true;
       emit AssetStored(asset);
   }
+}
+/**
+  @dev This contract mocks XC20 assets based on this example:
+      https://github.com/AstarNetwork/astar-frame/blob/674356e7b611e561aaf9bf581452cab965cf8e87/examples/assets-erc20/XcBurrito.sol#L12
+*/
+contract XC20Test is ERC20 {
+
+    constructor() ERC20("XC20Test", "XC20TST") {}
+
+    function mint(address to, uint256 amount) public {
+        _mint(to, amount);
+    }
+
+    function burn(address from, uint256 amount) public {
+        _burn(from, amount);
+    }
 }
