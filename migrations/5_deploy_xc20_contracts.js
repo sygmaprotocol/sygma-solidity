@@ -12,7 +12,7 @@ module.exports = async function (deployer, network) {
     // trim suffix from network name and fetch current network config
     let currentNetworkName = network.split("-")[0];
 
-    if(currentNetworkName === "astar"){
+    if(currentNetworkName === "astar" || "shiden" || "shibuya"){
 
         // fetch deployed contracts addresses
         const bridgeInstance = await BridgeContract.deployed();
