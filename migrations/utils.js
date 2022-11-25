@@ -1,6 +1,10 @@
 const parseArgs = require('minimist')
 const fs = require("fs");
 
+const TestStoreContract = artifacts.require("TestStore");
+const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser");
+const ERC721MinterBurnerPauserContract = artifacts.require("ERC721MinterBurnerPauser");
+
 const DEFAULT_CONFIG_PATH = "./migrations/local.json"
 
 function getNetworksConfig() {
