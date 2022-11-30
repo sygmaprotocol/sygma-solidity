@@ -64,7 +64,7 @@ module.exports = async function(deployer, network) {
       "FeeRouterContract Address": feeRouterInstance.address,
       "BasicFeeHandler Address": basicFeeHandlerInstance.address,
       "FeeHandlerWithOracle Address": feeHandlerWithOracleInstance.address,
-  });
+    });
 
     // setup erc20 tokens
     for (const erc20 of currentNetworkConfig.erc20) {
@@ -101,5 +101,5 @@ module.exports = async function(deployer, network) {
     // set MPC address
     if (currentNetworkConfig.MPCAddress) await bridgeInstance.endKeygen(currentNetworkConfig.MPCAddress);
 
-    console.log("🎉🎉🎉 Sygma bridge successfully configured 🎉🎉🎉","\n");
+    console.log("🎉🎉🎉 Sygma bridge successfully configured 🎉🎉🎉", "\n");
 }
