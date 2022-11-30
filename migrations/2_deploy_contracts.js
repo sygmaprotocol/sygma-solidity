@@ -28,7 +28,7 @@ module.exports = async function(deployer, network) {
 
     // trim suffix from network name and fetch current network config
     let currentNetworkName = network.split("-")[0]
-    let currentNetworkConfig = networksConfig[network.split("-")[0]]
+    let currentNetworkConfig = networksConfig[currentNetworkName]
     delete networksConfig[currentNetworkName]
 
     // deploy utils contracts

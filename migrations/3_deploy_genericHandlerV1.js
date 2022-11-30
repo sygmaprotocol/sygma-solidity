@@ -16,7 +16,7 @@ module.exports = async function(deployer, network) {
     const networksConfig = Utils.getNetworksConfig()
     // trim suffix from network name and fetch current network config
     let currentNetworkName = network.split("-")[0];
-    let currentNetworkConfig = networksConfig[network.split("-")[0]];
+    let currentNetworkConfig = networksConfig[currentNetworkName];
     delete networksConfig[currentNetworkName]
 
     // fetch deployed contracts addresses
