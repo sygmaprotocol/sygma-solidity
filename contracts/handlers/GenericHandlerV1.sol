@@ -58,35 +58,23 @@ contract GenericHandlerV1 is IGenericHandler {
           len(executeContractAddress):  uint8    bytes  34 + len(executeFuncSignature)                                                              -  35 + len(executeFuncSignature)
           executeContractAddress        bytes    bytes  35 + len(executeFuncSignature)                                                              -  35 + len(executeFuncSignature) + len(executeContractAddress)
           len(executionDataDepositor):  uint8    bytes  35 + len(executeFuncSignature) + len(executeContractAddress)                                -  36 + len(executeFuncSignature) + len(executeContractAddress)
-          executionDataDepositor:       bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)                                -  48 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)
-          executionData:                bytes    bytes  48 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)  -  END
+          executionDataDepositor:       bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)                                -  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)
+          executionData:                bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)  -  END
      */
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external returns (bytes memory) {
         require(data.length > 81, "Incorrect data length");
 
-        uint256        maxFee;
         uint16         lenExecuteFuncSignature;
-        bytes   memory executeFuncSignature;
         uint8          lenExecuteContractAddress;
-        bytes   memory executeContractAddress;
         uint8          lenExecutionDataDepositor;
-        bytes   memory executionDataDepositor;
-        address        executionDataDepositorAddress;
+        address        executionDataDepositor;
 
-        (maxFee) = abi.decode(data, (uint256));
         lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
-        executeFuncSignature              = bytes(data[34:34 + lenExecuteFuncSignature]);
         lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
-        executeContractAddress            = bytes(data[35 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature + lenExecuteContractAddress]);
         lenExecutionDataDepositor         = uint8(bytes1(data[35 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress]));
-        // bytes 36 - 48 are skipped because address is padded to 32 bytes
-        executionDataDepositor            = bytes(data[48 + lenExecuteFuncSignature + lenExecuteContractAddress:48 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor]);
+        executionDataDepositor            = abi.decode(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor], (address));
 
-        assembly {
-            executionDataDepositorAddress := mload(add(executionDataDepositor, lenExecutionDataDepositor))
-        }
-
-        require(depositor == address(executionDataDepositorAddress), 'incorrect depositor in deposit data');
+        require(depositor == executionDataDepositor, 'incorrect depositor in deposit data');
     }
 
     /**
@@ -102,27 +90,19 @@ contract GenericHandlerV1 is IGenericHandler {
           executionDataDepositorWithData:     bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)  -  END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external {
-        uint256        maxFee;
         uint16         lenExecuteFuncSignature;
         bytes4         executeFuncSignature;
         uint8          lenExecuteContractAddress;
-        bytes   memory executeContractAddress;
+        address        executeContractAddress;
         bytes   memory executionDataDepositorWithData;
-        address        contractAddress;
 
-        (maxFee) = abi.decode(data, (uint256));
         lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
         executeFuncSignature              = bytes4(data[34:34 + lenExecuteFuncSignature]);
         lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
-        executeContractAddress            = bytes(data[35 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature + lenExecuteContractAddress]);
+        executeContractAddress            = address(uint160(bytes20(data[35 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature + lenExecuteContractAddress])));
         executionDataDepositorWithData    = bytes(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:]);
 
-
-        assembly {
-            contractAddress := mload(add(executeContractAddress, lenExecuteContractAddress))
-        }
-
         bytes memory callData = abi.encodePacked(executeFuncSignature, executionDataDepositorWithData);
-        address(contractAddress).call(callData);
+        executeContractAddress.call(callData);
     }
 }
