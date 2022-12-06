@@ -3,10 +3,10 @@
 pragma solidity 0.8.11;
 
 /**
-    @title Interface for handler contracts that support deposits and deposit executions.
+    @title Interface for handler that handles generic deposits and deposit executions.
     @author ChainSafe Systems.
  */
-interface IDepositExecute {
+interface IHandler {
     /**
         @notice It is intended that deposit are made using the Bridge contract.
         @param resourceID ResourceID used to find address of handler to be used for deposit.
@@ -21,4 +21,14 @@ interface IDepositExecute {
         @param data Consists of additional data needed for a specific deposit execution.
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external;
+
+    /**
+        @notice Correlates {_resourceIDToContractAddress} with {contractAddress}, {_contractAddressToResourceID} with {resourceID} and marks
+        {_contractWhitelist} to true for {contractAddress} in HandlerHelpers contract.
+        @param handlerAddress Address of handler resource will be set for.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param args Additional data to be passed to specified handler.
+     */
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external;
 }
