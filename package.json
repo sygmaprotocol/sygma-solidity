@@ -11,7 +11,8 @@
     "build/contracts/ERC20Handler.json",
     "build/contracts/ERC721Handler.json",
     "build/contracts/ERC1155Handler.json",
-    "build/contracts/GenericHandler.json",
+    "build/contracts/PermissionedGenericHandler.json",
+    "build/contracts/PermissionlessGenericHandler.json",
     "build/contracts/BasicFeeHandler.json",
     "build/contracts/FeeHandlerWithOracle.json"
   ],
