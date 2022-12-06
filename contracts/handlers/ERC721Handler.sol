@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IDepositExecute.sol";
+import "../interfaces/IHandler.sol";
 import "./HandlerHelpers.sol";
 import "../ERC721Safe.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
+contract ERC721Handler is IHandler, HandlerHelpers, ERC721Safe {
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
@@ -127,5 +127,18 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         (tokenAddress, recipient, tokenID) = abi.decode(data, (address, address, uint));
 
         releaseERC721(tokenAddress, address(this), recipient, tokenID);
+    }
+
+    /**
+        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
+        {_contractAddressToResourceID} with {resourceID} and
+        {_contractWhitelist} to true for {contractAddress} in HandlerHelpers contract.
+        @param handlerAddress Address of handler resource will be set for.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param args Additional data to be passed to specified handler.
+     */
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external override onlyBridge {
+        _setResource(resourceID, contractAddress);
     }
 }

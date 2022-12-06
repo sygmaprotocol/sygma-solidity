@@ -43,18 +43,6 @@ contract HandlerHelpers is IERCHandler {
     }
 
     /**
-        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
-        {_contractAddressToResourceID} with {resourceID},
-        and {_contractWhitelist} to true for {contractAddress}.
-        @param resourceID ResourceID to be used when making deposits.
-        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-     */
-    function setResource(bytes32 resourceID, address contractAddress) external override onlyBridge {
-
-        _setResource(resourceID, contractAddress);
-    }
-
-    /**
         @notice First verifies {contractAddress} is whitelisted, then sets {_burnList}[{contractAddress}]
         to true.
         @param contractAddress Address of contract to be used when making or executing deposits.

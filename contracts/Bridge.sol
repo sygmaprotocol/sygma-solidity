@@ -8,9 +8,8 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "./utils/Pausable.sol";
 
 
-import "./interfaces/IDepositExecute.sol";
 import "./interfaces/IERCHandler.sol";
-import "./interfaces/IGenericHandler.sol";
+import "./interfaces/IHandler.sol";
 import "./interfaces/IFeeHandler.sol";
 import "./interfaces/IAccessControlSegregator.sol";
 
@@ -140,36 +139,12 @@ contract Bridge is Pausable, Context, EIP712 {
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param args Additional data to be passed to specified handler.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress) external onlyAllowed {
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress, bytes calldata args) external onlyAllowed {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
-        IERCHandler handler = IERCHandler(handlerAddress);
-        handler.setResource(resourceID, tokenAddress);
-    }
-
-    /**
-        @notice Sets a new resource for handler contracts that use the IGenericHandler interface,
-        and maps the {handlerAddress} to {resourceID} in {_resourceIDToHandlerAddress}.
-        @notice Only callable by address that has the right to call the specific function,
-        which is mapped in {functionAccess} in AccessControlSegregator contract.
-        @param handlerAddress Address of handler resource will be set for.
-        @param resourceID ResourceID to be used when making deposits.
-        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
-        @param depositFunctionDepositorOffset Depositor address position offset in the metadata, in bytes.
-        @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
-     */
-    function adminSetGenericResource(
-        address handlerAddress,
-        bytes32 resourceID,
-        address contractAddress,
-        bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositorOffset,
-        bytes4 executeFunctionSig
-    ) external onlyAllowed {
-        _resourceIDToHandlerAddress[resourceID] = handlerAddress;
-        IGenericHandler handler = IGenericHandler(handlerAddress);
-        handler.setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositorOffset, executeFunctionSig);
+        IHandler handler = IHandler(handlerAddress);
+        handler.adminSetResource(handlerAddress, resourceID, tokenAddress, args);
     }
 
     /**
@@ -254,7 +229,8 @@ contract Bridge is Pausable, Context, EIP712 {
         @notice Emits {Deposit} event with all necessary parameters and a handler response.
         - ERC20Handler: responds with an empty data.
         - ERC721Handler: responds with the deposited token metadata acquired by calling a tokenURI method in the token contract.
-        - GenericHandler: responds with the raw bytes returned from the call to the target contract.
+        - PermissionedGenericHandler: responds with the raw bytes returned from the call to the target contract.
+        - PermissionlessGenericHandler: responds with an empty data.
      */
     function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external payable whenNotPaused {
         require(destinationDomainID != _domainID, "Can't deposit to current domain");
@@ -266,13 +242,12 @@ contract Bridge is Pausable, Context, EIP712 {
             // Reverts on failure
             _feeHandler.collectFee{value: msg.value}(sender, _domainID, destinationDomainID, resourceID, depositData, feeData);
         }
-
         address handler = _resourceIDToHandlerAddress[resourceID];
         require(handler != address(0), "resourceID not mapped to handler");
 
         uint64 depositNonce = ++_depositCounts[destinationDomainID];
 
-        IDepositExecute depositHandler = IDepositExecute(handler);
+        IHandler depositHandler = IHandler(handler);
         bytes memory handlerResponse = depositHandler.deposit(resourceID, sender, depositData);
 
         emit Deposit(destinationDomainID, resourceID, depositNonce, sender, depositData, handlerResponse);
@@ -288,9 +263,9 @@ contract Bridge is Pausable, Context, EIP712 {
         - data Data originally provided when deposit was made.
         @param signature bytes memory signature composed of MPC key shares
         @notice Emits {ProposalExecution} event.
-        @notice Behaviour of this function is different for {GenericHandler} and other specific ERC handlers.
+        @notice Behaviour of this function is different for {PermissionedGenericHandler} and other specific ERC handlers.
         In the case of ERC handler, when execution fails, the handler will terminate the function with revert.
-        In the case of {GenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
+        In the case of {PermissionedGenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
      */
     function executeProposal(Proposal memory proposal, bytes calldata signature) public {
         Proposal[] memory proposalArray = new Proposal[](1);
@@ -309,9 +284,9 @@ contract Bridge is Pausable, Context, EIP712 {
         - data Data originally provided when deposit was made.
         @param signature bytes memory signature for the whole array composed of MPC key shares
         @notice Emits {ProposalExecution} event for each proposal in the batch.
-        @notice Behaviour of this function is different for {GenericHandler} and other specific ERC handlers.
+        @notice Behaviour of this function is different for {PermissionedGenericHandler} and other specific handlers.
         In the case of ERC handler, when execution fails, the handler will terminate the function with revert.
-        In the case of {GenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
+        In the case of {PermissionedGenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
      */
     function executeProposals(Proposal[] memory proposals, bytes calldata signature) public whenNotPaused {
         require(proposals.length > 0, "Proposals can't be an empty array");
@@ -325,7 +300,7 @@ contract Bridge is Pausable, Context, EIP712 {
             address handler = _resourceIDToHandlerAddress[proposals[i].resourceID];
             bytes32 dataHash = keccak256(abi.encodePacked(handler, proposals[i].data));
 
-            IDepositExecute depositHandler = IDepositExecute(handler);
+            IHandler depositHandler = IHandler(handler);
 
             usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] |= 1 << (proposals[i].depositNonce % 256);
 
@@ -382,7 +357,7 @@ contract Bridge is Pausable, Context, EIP712 {
         @notice Only callable by address that has the right to call the specific function,
         which is mapped in {functionAccess} in AccessControlSegregator contract.
         @param txHash Transaction hash which contains deposit that should be retried
-        @notice This is not applicable for failed executions on {GenericHandler}
+        @notice This is not applicable for failed executions on {PermissionedGenericHandler}
      */
     function retry(string memory txHash) external onlyAllowed {
         emit Retry(txHash);

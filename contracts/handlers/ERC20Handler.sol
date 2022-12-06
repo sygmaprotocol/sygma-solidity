@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IDepositExecute.sol";
+import "../interfaces/IHandler.sol";
 import "./HandlerHelpers.sol";
 import "../ERC20Safe.sol";
 
@@ -11,7 +11,7 @@ import "../ERC20Safe.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
+contract ERC20Handler is IHandler, HandlerHelpers, ERC20Safe {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
@@ -102,5 +102,18 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
         releaseERC20(tokenAddress, recipient, amount);
+    }
+
+    /**
+        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
+        {_contractAddressToResourceID} with {resourceID} and
+        {_contractWhitelist} to true for {contractAddress} in HandlerHelpers contract.
+        @param handlerAddress Address of handler resource will be set for.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param args Additional data to be passed to specified handler.
+     */
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external override onlyBridge {
+        _setResource(resourceID, contractAddress);
     }
 }

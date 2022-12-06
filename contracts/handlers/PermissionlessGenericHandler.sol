@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IGenericHandler.sol";
+import "../interfaces/IHandler.sol";
 
 /**
     @title Handles generic deposits and deposit executions.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract GenericHandlerV1 is IGenericHandler {
+contract PermissionlessGenericHandler is IHandler {
     address public immutable _bridgeAddress;
 
     modifier onlyBridge() {
@@ -31,21 +31,18 @@ contract GenericHandlerV1 is IGenericHandler {
     }
 
     /**
-        @notice Temporary doesn't do anything, required in IGenericHandler.
-        @notice Sets {_resourceIDToContractAddress} with {contractAddress}
+        @notice Blank function, required in IHandler.
+        @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
-        @param depositFunctionDepositorOffset Depositor address position offset in the metadata, in bytes.
-        @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
+        @param args Additional data to be passed to specified handler.
      */
-    function setResource(
+    function adminSetResource(
+        address handlerAddress,
         bytes32 resourceID,
         address contractAddress,
-        bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositorOffset,
-        bytes4 executeFunctionSig
-    ) external onlyBridge override {}
+        bytes calldata args
+    ) external override onlyBridge {}
 
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.

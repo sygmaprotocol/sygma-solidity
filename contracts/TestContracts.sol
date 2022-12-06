@@ -73,6 +73,10 @@ contract HandlerRevert is HandlerHelpers {
     function virtualIncreaseBalance(uint amount) external {
         _totalAmount = amount;
     }
+
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external {
+        _setResource(resourceID, contractAddress);
+    }
 }
 
 contract TestForwarder {
