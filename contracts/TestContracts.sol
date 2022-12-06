@@ -129,15 +129,10 @@ contract TestStore {
     @notice {asset} must not have already been stored.
     @notice Emits {AssetStored} event.
    */
-  function storeWithDepositor(bytes32 depositor, bytes32 asset, bytes32 depositorCheck) external {
-      address depositorAddress;
-      address depositorCheckAddress;
-
+  function storeWithDepositor(address depositor, bytes32 asset, address depositorCheck) external {
       require(!_assetsStored[asset], "asset is already stored");
 
-      depositorAddress   = address(uint160(uint256(depositor)));
-      depositorCheckAddress   = address(uint160(uint256(depositorCheck)));
-      require(depositorAddress == depositorCheckAddress, "invalid depositor address");
+      require(depositor == depositorCheck, "invalid depositor address");
 
       _assetsStored[asset] = true;
       emit AssetStored(asset);
