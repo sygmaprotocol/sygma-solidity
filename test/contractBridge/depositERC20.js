@@ -22,6 +22,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const feeData = '0x';
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let OriginERC20MintableInstance;
@@ -39,7 +40,7 @@ contract('Bridge - [deposit - ERC20]', async (accounts) => {
         OriginERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
-            BridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, resourceID, OriginERC20MintableInstance.address),
+            BridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, resourceID, OriginERC20MintableInstance.address, emptySetResourceData),
             OriginERC20MintableInstance.mint(depositorAddress, originChainInitialTokenAmount)
         ]);
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount * 2, { from: depositorAddress });

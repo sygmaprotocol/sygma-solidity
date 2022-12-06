@@ -20,6 +20,7 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
     const tokenID = 1;
     const tokenAmount = 100;
     const feeData = '0x';
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let ERC1155MintableInstance;
@@ -49,7 +50,7 @@ contract('ERC1155Handler - [Deposit ERC1155]', async (accounts) => {
 
         await Promise.all([
             ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositorAddress }),
-            BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, resourceID, ERC1155MintableInstance.address)
+            BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, resourceID, ERC1155MintableInstance.address, emptySetResourceData)
         ]);
 
         depositData = Helpers.createERC1155DepositData([tokenID], [tokenAmount]);

@@ -19,6 +19,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
 
     const tokenID = 1;
     const feeData = '0x';
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let ERC721MintableInstance;
@@ -47,7 +48,7 @@ contract('ERC721Handler - [Deposit ERC721]', async (accounts) => {
 
         await Promise.all([
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, { from: depositorAddress }),
-            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID, ERC721MintableInstance.address)
+            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, resourceID, ERC721MintableInstance.address, emptySetResourceData)
         ]);
 
         // set MPC address to unpause the Bridge

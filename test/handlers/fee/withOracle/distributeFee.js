@@ -22,6 +22,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
     const depositorAddress = accounts[1];
 
     const tokenAmount = feeAmount = Ethers.utils.parseEther("1");
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;
@@ -51,7 +52,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
         ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, emptySetResourceData),
             ERC20MintableInstance.mint(depositorAddress, tokenAmount.add(feeAmount)),
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositorAddress }),
             ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, tokenAmount, { from: depositorAddress }),

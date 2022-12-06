@@ -9,14 +9,12 @@ const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
-const GenericHandlerContract = artifacts.require("GenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
 const TestStoreContract = artifacts.require("TestStore");
 
-contract('GenericHandler - [constructor]', async (accounts) => {
+contract('PermissionedGenericHandler - [constructor]', async (accounts) => {
     const domainID = 1;
     const TestStoreMinCount = 1;
-    const blankFunctionSig = '0x00000000';
-    const blankFunctionDepositorOffset = 0;
     const TestStoreStoreFuncSig = 'store(bytes32)';
 
     let BridgeInstance;
@@ -25,9 +23,7 @@ contract('GenericHandler - [constructor]', async (accounts) => {
     let TestStoreInstance3;
     let initialResourceIDs;
     let initialContractAddresses;
-    let initialDepositFunctionSignatures;
-    let initialDepositFunctionDepositorOffsets;
-    let initialExecuteFunctionSignatures;
+    let PermissionedGenericHandlerSetResourceData
 
     beforeEach(async () => {
         await Promise.all([
@@ -46,40 +42,45 @@ contract('GenericHandler - [constructor]', async (accounts) => {
 
         const executeProposalFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(TestStoreStoreFuncSig))).substr(0, 10);
 
-        initialDepositFunctionSignatures = [blankFunctionSig, blankFunctionSig, blankFunctionSig];
-        initialDepositFunctionDepositorOffsets = [blankFunctionDepositorOffset, blankFunctionDepositorOffset, blankFunctionDepositorOffset];
-        initialExecuteFunctionSignatures = [executeProposalFuncSig, executeProposalFuncSig, executeProposalFuncSig];
+        PermissionedGenericHandlerSetResourceData = [
+          Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, executeProposalFuncSig),
+          Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, executeProposalFuncSig),
+          Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, executeProposalFuncSig),
+      ];
     });
 
     it('[sanity] contract should be deployed successfully', async () => {
         await TruffleAssert.passes(
-            GenericHandlerContract.new(
+            PermissionedGenericHandlerContract.new(
                 BridgeInstance.address));
     });
 
     it('contract mappings were set with expected values', async () => {
-        const GenericHandlerInstance = await GenericHandlerContract.new(
+        const PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(
             BridgeInstance.address);
 
         for (let i = 0; i < initialResourceIDs.length; i++) {
-            await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], initialDepositFunctionSignatures[i], initialDepositFunctionDepositorOffsets[i], initialExecuteFunctionSignatures[i]);
+            await BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], PermissionedGenericHandlerSetResourceData[i]);
         }
 
         for (let i = 0; i < initialResourceIDs.length; i++) {
-            const retrievedTokenAddress = await GenericHandlerInstance._resourceIDToContractAddress.call(initialResourceIDs[i]);
+            const retrievedTokenAddress = await PermissionedGenericHandlerInstance._resourceIDToContractAddress.call(initialResourceIDs[i]);
             assert.strictEqual(initialContractAddresses[i].toLowerCase(), retrievedTokenAddress.toLowerCase());
 
-            const retrievedResourceID = await GenericHandlerInstance._contractAddressToResourceID.call(initialContractAddresses[i]);
+            const retrievedResourceID = await PermissionedGenericHandlerInstance._contractAddressToResourceID.call(initialContractAddresses[i]);
             assert.strictEqual(initialResourceIDs[i].toLowerCase(), retrievedResourceID.toLowerCase());
 
-            const retrievedDepositFunctionSig = await GenericHandlerInstance._contractAddressToDepositFunctionSignature.call(initialContractAddresses[i]);
-            assert.strictEqual(initialDepositFunctionSignatures[i].toLowerCase(), retrievedDepositFunctionSig.toLowerCase());
+            const retrievedDepositFunctionSig = await PermissionedGenericHandlerInstance._contractAddressToDepositFunctionSignature.call(initialContractAddresses[i]);
+            // compare bytes 0-4 from PermissionedGenericHandlerSetResourceData
+            assert.strictEqual(PermissionedGenericHandlerSetResourceData[i].substr(0,10).toLowerCase(), retrievedDepositFunctionSig.toLowerCase());
 
-            const retrievedDepositFunctionDepositorOffset = await GenericHandlerInstance._contractAddressToDepositFunctionDepositorOffset.call(initialContractAddresses[i]);
-            assert.strictEqual(initialDepositFunctionDepositorOffsets[i], retrievedDepositFunctionDepositorOffset.toNumber());
+            const retrievedDepositFunctionDepositorOffset = await PermissionedGenericHandlerInstance._contractAddressToDepositFunctionDepositorOffset.call(initialContractAddresses[i]);
+            // compare bytes 4 - 36 from PermissionedGenericHandlerSetResourceData
+            assert.strictEqual("0x" + PermissionedGenericHandlerSetResourceData[i].substr(10,64), Helpers.toHex(retrievedDepositFunctionDepositorOffset.toNumber(), 32));
 
-            const retrievedExecuteFunctionSig = await GenericHandlerInstance._contractAddressToExecuteFunctionSignature.call(initialContractAddresses[i]);
-            assert.strictEqual(initialExecuteFunctionSignatures[i].toLowerCase(), retrievedExecuteFunctionSig.toLowerCase());
+            const retrievedExecuteFunctionSig = await PermissionedGenericHandlerInstance._contractAddressToExecuteFunctionSignature.call(initialContractAddresses[i]);
+            // compare bytes 36 - 40 from PermissionedGenericHandlerSetResourceData
+            assert.strictEqual("0x" + PermissionedGenericHandlerSetResourceData[i].substr(74, 8).toLowerCase(), retrievedExecuteFunctionSig.toLowerCase());
         }
     });
 });

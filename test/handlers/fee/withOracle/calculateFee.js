@@ -21,6 +21,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
     const recipientAddress = accounts[1];
     const gasUsed = 100000;
     const feePercent = 500;
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;
@@ -64,7 +65,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
         await Promise.all([
             FeeHandlerWithOracleInstance.setFeeOracle(oracle.address),
             FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, emptySetResourceData),
             BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
             FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, FeeHandlerWithOracleInstance.address ),
         ]);

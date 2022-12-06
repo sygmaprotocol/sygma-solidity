@@ -19,6 +19,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
     const relayer = accounts[0];
     const recipientAddress = accounts[1];
     const feeData = "0x0";
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let BasicFeeHandlerInstance;
@@ -48,7 +49,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
         depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
 
         await Promise.all([
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, emptySetResourceData),
             BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
             FeeHandlerRouterInstance.adminSetResourceHandler(destinationDomainID, resourceID, BasicFeeHandlerInstance.address),
         ]);

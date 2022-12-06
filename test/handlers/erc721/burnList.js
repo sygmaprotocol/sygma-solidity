@@ -13,6 +13,7 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Burn ERC721]', async (accounts) => {
     const domainID = 1;
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let ERC721MintableInstance1;
@@ -45,7 +46,7 @@ contract('ERC721Handler - [Burn ERC721]', async (accounts) => {
         const ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
 
         for (i = 0; i < initialResourceIDs.length; i++) {
-            await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC721HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i]));
+            await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC721HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], emptySetResourceData));
         }
 
         for (i = 0; i < burnableContractAddresses.length; i++) {
@@ -62,7 +63,7 @@ contract('ERC721Handler - [Burn ERC721]', async (accounts) => {
         const ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
 
         for (i = 0; i < initialResourceIDs.length; i++) {
-            await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC721HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i]));
+            await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC721HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], emptySetResourceData));
         }
 
         for (i = 0; i < burnableContractAddresses.length; i++) {
@@ -77,7 +78,7 @@ contract('ERC721Handler - [Burn ERC721]', async (accounts) => {
         const ERC721HandlerInstance = await ERC721HandlerContract.new(BridgeInstance.address);
 
         for (i = 0; i < initialResourceIDs.length; i++) {
-            await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC721HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i]));
+            await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC721HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], emptySetResourceData));
         }
 
         for (i = 0; i < burnableContractAddresses.length; i++) {

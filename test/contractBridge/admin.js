@@ -10,7 +10,7 @@ const Helpers = require('../helpers');
 const BridgeContract = artifacts.require("Bridge");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
-const GenericHandlerContract = artifacts.require('GenericHandler');
+const PermissionedGenericHandlerContract = artifacts.require('PermissionedGenericHandler');
 const TestStoreContract = artifacts.require("TestStore");
 
 // This test does NOT include all getter methods, just
@@ -29,6 +29,8 @@ contract('Bridge - [admin]', async (accounts) => {
     let ADMIN_ROLE;
 
     let BridgeInstance;
+    let TestStoreInstance;
+    let genericHandlerSetResourceData;
 
     let withdrawData = '';
 
@@ -37,7 +39,16 @@ contract('Bridge - [admin]', async (accounts) => {
     };
 
     beforeEach(async () => {
-        BridgeInstance = await Helpers.deployBridge(domainID, expectedBridgeAdmin);
+        await Promise.all([
+            BridgeInstance = await Helpers.deployBridge(domainID, expectedBridgeAdmin),
+            TestStoreContract.new().then(instance => TestStoreInstance = instance),
+        ]);
+
+        genericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+            Helpers.blankFunctionSig,
+            Helpers.blankFunctionDepositorOffset,
+            Helpers.blankFunctionSig
+        );
     });
 
     // Testing pauseable methods
@@ -126,7 +137,7 @@ contract('Bridge - [admin]', async (accounts) => {
 
         assert.equal(await BridgeInstance._resourceIDToHandlerAddress.call(resourceID), Ethers.constants.AddressZero);
 
-        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
+        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, genericHandlerSetResourceData));
         assert.equal(await BridgeInstance._resourceIDToHandlerAddress.call(resourceID), ERC20HandlerInstance.address);
     });
 
@@ -138,29 +149,28 @@ contract('Bridge - [admin]', async (accounts) => {
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
         await TruffleAssert.passes(BridgeInstance.adminSetResource(
-            ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
+            ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, genericHandlerSetResourceData));
         assert.equal(await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(resourceID), ERC20MintableInstance.address);
         assert.equal(await ERC20HandlerInstance._tokenContractAddressToResourceID.call(ERC20MintableInstance.address), resourceID.toLowerCase());
     });
 
     it('Should require admin role to set a ERC20 Resource ID and contract address', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminSetResource, someAddress, bytes32, someAddress);
+        await assertOnlyAdmin(BridgeInstance.adminSetResource, someAddress, bytes32, someAddress, genericHandlerSetResourceData);
     });
 
     // Set Generic Resource
 
     it('Should set a Generic Resource ID and contract address', async () => {
-        const TestStoreInstance = await TestStoreContract.new();
         const resourceID = Helpers.createResourceID(TestStoreInstance.address, domainID);
-        const GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address);
+        const PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(BridgeInstance.address);
 
-        await TruffleAssert.passes(BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, TestStoreInstance.address, '0x00000000', 0, '0x00000000'));
-        assert.equal(await GenericHandlerInstance._resourceIDToContractAddress.call(resourceID), TestStoreInstance.address);
-        assert.equal(await GenericHandlerInstance._contractAddressToResourceID.call(TestStoreInstance.address), resourceID.toLowerCase());
+        await TruffleAssert.passes(BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, resourceID, TestStoreInstance.address, genericHandlerSetResourceData));
+        assert.equal(await PermissionedGenericHandlerInstance._resourceIDToContractAddress.call(resourceID), TestStoreInstance.address);
+        assert.equal(await PermissionedGenericHandlerInstance._contractAddressToResourceID.call(TestStoreInstance.address), resourceID.toLowerCase());
     });
 
     it('Should require admin role to set a Generic Resource ID and contract address', async () => {
-        await assertOnlyAdmin(BridgeInstance.adminSetGenericResource, someAddress, bytes32, someAddress, '0x00000000', 0, '0x00000000');
+        await assertOnlyAdmin(BridgeInstance.adminSetResource, someAddress, bytes32, someAddress, genericHandlerSetResourceData);
     });
 
     // Set burnable
@@ -170,7 +180,7 @@ contract('Bridge - [admin]', async (accounts) => {
         const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
-        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
+        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, genericHandlerSetResourceData));
         await TruffleAssert.passes(BridgeInstance.adminSetBurnable(ERC20HandlerInstance.address, ERC20MintableInstance.address));
         assert.isTrue(await ERC20HandlerInstance._burnList.call(ERC20MintableInstance.address));
     });
@@ -192,7 +202,7 @@ contract('Bridge - [admin]', async (accounts) => {
         const resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
 
-        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address));
+        await TruffleAssert.passes(BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, genericHandlerSetResourceData));
 
         await ERC20MintableInstance.mint(tokenOwner, numTokens);
         ownerBalance = await ERC20MintableInstance.balanceOf(tokenOwner);

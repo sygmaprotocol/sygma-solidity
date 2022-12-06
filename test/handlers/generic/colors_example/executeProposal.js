@@ -8,9 +8,9 @@ const Ethers = require('ethers');
 const Helpers = require('../../../helpers');
 
 const ColorsContract = artifacts.require("Colors");
-const GenericHandlerContract = artifacts.require("GenericHandlerV1");
+const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 
-contract('GenericHandlerV1 colors example - [Execute Proposal]', async (accounts) => {
+contract('PermissionlessGenericHandler colors example - [Execute Proposal]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
@@ -22,13 +22,14 @@ contract('GenericHandlerV1 colors example - [Execute Proposal]', async (accounts
     const feeData = '0x';
     const destinationMaxFee = 2000000;
     const hexRedColor = Helpers.toHex("0xD2042D", 32);
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let ColorsInstance;
 
     let resourceID;
     let depositFunctionSignature;
-    let GenericHandlerInstance;
+    let PermissionlessGenericHandlerInstance;
     let depositData;
     let proposal;
 
@@ -40,21 +41,20 @@ contract('GenericHandlerV1 colors example - [Execute Proposal]', async (accounts
 
         resourceID = Helpers.createResourceID(ColorsInstance.address, originDomainID);
 
-        GenericHandlerInstance = await GenericHandlerContract.new(
+        PermissionlessGenericHandlerInstance = await PermissionlessGenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, ColorsInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
+        await BridgeInstance.adminSetResource(PermissionlessGenericHandlerInstance.address, resourceID, ColorsInstance.address, emptySetResourceData);
 
         depositFunctionSignature = Helpers.getFunctionSignature(ColorsInstance, 'setColor');
 
-        depositData =
-        Helpers.createGenericDepositDataV1(
-          depositFunctionSignature,
-          ColorsInstance.address,
-          destinationMaxFee,
-          depositorAddress,
-          hexRedColor,
-          false // don't append depositor for destination chain check
+        depositData = Helpers.createPermissionlessGenericDepositData(
+            depositFunctionSignature,
+            ColorsInstance.address,
+            destinationMaxFee,
+            depositorAddress,
+            hexRedColor,
+            false // don't append depositor for destination chain check
         );
 
         proposal = {

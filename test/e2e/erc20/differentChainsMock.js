@@ -22,6 +22,7 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const feeData = '0x';
+    const emptySetResourceData = "0x";
 
     let OriginBridgeInstance;
     let OriginERC20MintableInstance;
@@ -78,9 +79,9 @@ contract('E2E ERC20 - Two EVM Chains', async accounts => {
         await OriginERC20MintableInstance.approve(OriginERC20HandlerInstance.address, depositAmount, { from: depositorAddress }),
         await OriginERC20MintableInstance.grantRole(await OriginERC20MintableInstance.MINTER_ROLE(), OriginERC20HandlerInstance.address),
         await DestinationERC20MintableInstance.grantRole(await DestinationERC20MintableInstance.MINTER_ROLE(), DestinationERC20HandlerInstance.address),
-        await OriginBridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, originResourceID, OriginERC20MintableInstance.address),
+        await OriginBridgeInstance.adminSetResource(OriginERC20HandlerInstance.address, originResourceID, OriginERC20MintableInstance.address, emptySetResourceData),
         await OriginBridgeInstance.adminSetBurnable(OriginERC20HandlerInstance.address, originBurnableContractAddresses[0]),
-        await DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address),
+        await DestinationBridgeInstance.adminSetResource(DestinationERC20HandlerInstance.address, destinationResourceID, DestinationERC20MintableInstance.address, emptySetResourceData),
         await DestinationBridgeInstance.adminSetBurnable(DestinationERC20HandlerInstance.address, destinationBurnableContractAddresses[0])
 
         originDepositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);

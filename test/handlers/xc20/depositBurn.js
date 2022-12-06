@@ -20,6 +20,7 @@ contract('XC20Handler - [Deposit Burn XC20]', async (accounts) => {
     const initialTokenAmount = 100;
     const depositAmount = 10;
     const feeData = '0x';
+    const emptySetResourceData = "0x";
 
     let BridgeInstance;
     let ERC20MintableInstance1;
@@ -52,8 +53,8 @@ contract('XC20Handler - [Deposit Burn XC20]', async (accounts) => {
 
         await Promise.all([
             ERC20MintableInstance1.approve(XC20HandlerInstance.address, depositAmount, { from: depositorAddress }),
-            BridgeInstance.adminSetResource(XC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address),
-            BridgeInstance.adminSetResource(XC20HandlerInstance.address, resourceID2, ERC20MintableInstance2.address),
+            BridgeInstance.adminSetResource(XC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address, emptySetResourceData),
+            BridgeInstance.adminSetResource(XC20HandlerInstance.address, resourceID2, ERC20MintableInstance2.address, emptySetResourceData),
             BridgeInstance.adminSetBurnable(XC20HandlerInstance.address, ERC20MintableInstance1.address)
         ]);
 

@@ -20,6 +20,7 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
     const tokenID = 1;
     const expectedDepositNonce = 1;
     const feeData = '0x';
+    const emptySetResourceData = "0x";
 
     let OriginBridgeInstance;
     let OriginERC721MintableInstance;
@@ -71,8 +72,8 @@ contract('E2E ERC721 - Two EVM Chains', async accounts => {
         await Promise.all([
             OriginERC721MintableInstance.approve(OriginERC721HandlerInstance.address, tokenID, { from: depositorAddress }),
             DestinationERC721MintableInstance.grantRole(await DestinationERC721MintableInstance.MINTER_ROLE(), DestinationERC721HandlerInstance.address),
-            OriginBridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address),
-            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address),
+            OriginBridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address, emptySetResourceData),
+            DestinationBridgeInstance.adminSetResource(DestinationERC721HandlerInstance.address, destinationResourceID, DestinationERC721MintableInstance.address, emptySetResourceData),
             DestinationBridgeInstance.adminSetBurnable(DestinationERC721HandlerInstance.address, destinationBurnableContractAddresses[0])
         ]);
 
