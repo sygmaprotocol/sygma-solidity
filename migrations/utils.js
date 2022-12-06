@@ -8,6 +8,8 @@ const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser");
 const ERC721MinterBurnerPauserContract = artifacts.require("ERC721MinterBurnerPauser");
 
 const DEFAULT_CONFIG_PATH = "./migrations/local.json"
+const emptySetResourceData = "0x";
+
 
 function getNetworksConfig() {
   let path = parseArgs(process.argv.slice(2))["file"]
@@ -50,7 +52,7 @@ async function setupErc20(
     erc20Instance.contract.setProvider(deployer.provider)
   }
 
-  await bridgeInstance.adminSetResource(erc20HandlerInstance.address, erc20.resourceID, erc20Instance.address);
+  await bridgeInstance.adminSetResource(erc20HandlerInstance.address, erc20.resourceID, erc20Instance.address, emptySetResourceData);
 
   // strategy can be either mb (mint/burn) or lr (lock/release)
   if (erc20.strategy == "mb") {
@@ -74,13 +76,14 @@ async function setupErc721(
     erc721Instance.contract.setProvider(deployer.provider)
   }
 
-  await bridgeInstance.adminSetResource(erc721HandlerInstance.address, erc721.resourceID, erc721.address);
+  await bridgeInstance.adminSetResource(erc721HandlerInstance.address, erc721.resourceID, erc721.address, emptySetResourceData);
 
   await erc721Instance.grantRole(await erc721Instance.MINTER_ROLE(), erc721HandlerInstance.address);
   await bridgeInstance.adminSetBurnable(erc721HandlerInstance.address, erc721Instance.address);
 }
 
 async function setupGeneric(deployer, generic, bridgeInstance, genericHandlerInstance) {
+  let genericHandlerSetResourceData = "";
   if (!generic.address) {
     const testStoreInstance = await deployer.deploy(TestStoreContract);
     generic.address = testStoreInstance.address;
@@ -89,13 +92,17 @@ async function setupGeneric(deployer, generic, bridgeInstance, genericHandlerIns
     generic.executeFunctionSig = Helpers.getFunctionSignature(testStoreInstance, "store");
   }
 
-  await bridgeInstance.adminSetGenericResource(
+    genericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+      generic.depositFunctionSig,
+      generic.depositorOffset,
+      generic.executeFunctionSig
+      );
+
+  await bridgeInstance.adminSetResource(
     genericHandlerInstance.address,
     generic.resourceID,
     generic.address,
-    generic.depositFunctionSig,
-    generic.depositorOffset,
-    generic.executeFunctionSig
+    genericHandlerSetResourceData
   );
 }
 

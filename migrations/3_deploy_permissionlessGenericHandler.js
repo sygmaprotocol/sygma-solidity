@@ -7,7 +7,7 @@ const Helpers = require('../test/helpers');
 const Utils = require('./utils');
 
 const BridgeContract = artifacts.require("Bridge");
-const GenericHandlerV1Contract = artifacts.require("GenericHandlerV1");
+const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
@@ -26,16 +26,21 @@ module.exports = async function(deployer, network) {
     const feeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.deployed();
 
     // deploy generic handler
-    const genericHandlerV1Instance = await deployer.deploy(GenericHandlerV1Contract, bridgeInstance.address);
+    const permissionlessGenericHandlerInstance = await deployer.deploy(PermissionlessGenericHandlerContract, bridgeInstance.address);
 
     console.log("-------------------------------------------------------------------------------")
-    console.log("Generic handler v1 address:", "\t", genericHandlerV1Instance.address);
-    console.log("Generic handler v1 resourceID:", "\t", currentNetworkConfig.permissionlessGeneric.resourceID);
+    console.log("Permissionless generic handler address:", "\t", permissionlessGenericHandlerInstance.address);
+    console.log("Permissionless generic handler resourceID:", "\t", currentNetworkConfig.permissionlessGeneric.resourceID);
     console.log("-------------------------------------------------------------------------------")
 
-    // setup generic handler v1
+    // setup permissionless generic handler
     if (currentNetworkConfig.permissionlessGeneric && currentNetworkConfig.permissionlessGeneric.resourceID) {
-      await bridgeInstance.adminSetGenericResource(genericHandlerV1Instance.address, currentNetworkConfig.permissionlessGeneric.resourceID, bridgeInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
+      const genericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+        Helpers.blankFunctionSig,
+        Helpers.blankFunctionDepositorOffset,
+        Helpers.blankFunctionSig
+      );
+      await bridgeInstance.adminSetResource(permissionlessGenericHandlerInstance.address, currentNetworkConfig.permissionlessGeneric.resourceID, bridgeInstance.address, genericHandlerSetResourceData);
       await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance, currentNetworkConfig.permissionlessGeneric);
     }
 }
