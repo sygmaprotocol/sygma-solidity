@@ -3,13 +3,13 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
-import "./HandlerHelpers.sol";
+import "./ERCHandlerHelpers.sol";
 import "../ERC1155Safe.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
-contract ERC1155Handler is IHandler, HandlerHelpers, ERC1155Safe, ERC1155Holder {
+contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Holder {
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC1155_METADATA = 0x0e89341c;
@@ -20,7 +20,7 @@ contract ERC1155Handler is IHandler, HandlerHelpers, ERC1155Safe, ERC1155Holder 
      */
     constructor(
         address bridgeAddress
-    ) HandlerHelpers(bridgeAddress) {
+    ) ERCHandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -106,7 +106,7 @@ contract ERC1155Handler is IHandler, HandlerHelpers, ERC1155Safe, ERC1155Holder 
     /**
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID} and
-        {_contractWhitelist} to true for {contractAddress} in HandlerHelpers contract.
+        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.

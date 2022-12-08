@@ -3,7 +3,7 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
-import "./HandlerHelpers.sol";
+import "./ERCHandlerHelpers.sol";
 import "../ERC20Safe.sol";
 
 /**
@@ -11,13 +11,13 @@ import "../ERC20Safe.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC20Handler is IHandler, HandlerHelpers, ERC20Safe {
+contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(
         address          bridgeAddress
-    ) HandlerHelpers(bridgeAddress) {
+    ) ERCHandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -107,7 +107,7 @@ contract ERC20Handler is IHandler, HandlerHelpers, ERC20Safe {
     /**
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID} and
-        {_contractWhitelist} to true for {contractAddress} in HandlerHelpers contract.
+        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.

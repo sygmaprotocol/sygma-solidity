@@ -3,7 +3,7 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
-import "./HandlerHelpers.sol";
+import "./ERCHandlerHelpers.sol";
 import "../ERC721Safe.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC721Handler is IHandler, HandlerHelpers, ERC721Safe {
+contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
@@ -24,7 +24,7 @@ contract ERC721Handler is IHandler, HandlerHelpers, ERC721Safe {
      */
     constructor(
         address bridgeAddress
-    ) HandlerHelpers(bridgeAddress) {
+    ) ERCHandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -132,7 +132,7 @@ contract ERC721Handler is IHandler, HandlerHelpers, ERC721Safe {
     /**
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID} and
-        {_contractWhitelist} to true for {contractAddress} in HandlerHelpers contract.
+        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.

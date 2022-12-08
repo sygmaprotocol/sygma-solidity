@@ -24,7 +24,7 @@ interface IHandler {
 
     /**
         @notice Correlates {_resourceIDToContractAddress} with {contractAddress}, {_contractAddressToResourceID} with {resourceID} and marks
-        {_contractWhitelist} to true for {contractAddress} in HandlerHelpers contract.
+        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
