@@ -49,7 +49,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
     let initialGenericDepositFunctionSignature;
     let initialGenericDepositFunctionDepositorOffset;
     let initialGenericExecuteFunctionSignature;
-    let PermissionedGenericHandlerSetResourceData;
+    let permissionedGenericHandlerSetResourceData;
 
     let erc20ResourceID;
     let erc721ResourceID;
@@ -97,7 +97,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
         initialGenericDepositFunctionDepositorOffset = Helpers.blankFunctionDepositorOffset;
         initialGenericExecuteFunctionSignature = Helpers.getFunctionSignature(ERC20MintableContract, 'mint');
 
-        PermissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+        permissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
             initialGenericDepositFunctionSignature,
             initialGenericDepositFunctionDepositorOffset,
             initialGenericExecuteFunctionSignature
@@ -114,7 +114,7 @@ contract('Bridge - [execute - FailedHandlerExecution]', async accounts => {
             BridgeInstance.adminSetResource(ERC721RevertHandlerInstance.address, erc721RevertResourceID, ERC721RevertMintableInstance.address, emptySetResourceData),
             ERC1155MintableInstance.mintBatch(depositorAddress, [tokenID], [initialTokenAmount], "0x0"),
             BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address, emptySetResourceData),
-            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, genericResourceID, initialGenericContractAddress, PermissionedGenericHandlerSetResourceData)
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, genericResourceID, initialGenericContractAddress, permissionedGenericHandlerSetResourceData)
         ]);
 
         await Promise.all([

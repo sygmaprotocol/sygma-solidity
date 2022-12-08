@@ -23,7 +23,7 @@ contract('PermissionedGenericHandler - [constructor]', async (accounts) => {
     let TestStoreInstance3;
     let initialResourceIDs;
     let initialContractAddresses;
-    let PermissionedGenericHandlerSetResourceData
+    let permissionedGenericHandlerSetResourceData
 
     beforeEach(async () => {
         await Promise.all([
@@ -42,7 +42,7 @@ contract('PermissionedGenericHandler - [constructor]', async (accounts) => {
 
         const executeProposalFuncSig = Ethers.utils.keccak256(Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes(TestStoreStoreFuncSig))).substr(0, 10);
 
-        PermissionedGenericHandlerSetResourceData = [
+        permissionedGenericHandlerSetResourceData = [
           Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, executeProposalFuncSig),
           Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, executeProposalFuncSig),
           Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, executeProposalFuncSig),
@@ -60,7 +60,7 @@ contract('PermissionedGenericHandler - [constructor]', async (accounts) => {
             BridgeInstance.address);
 
         for (let i = 0; i < initialResourceIDs.length; i++) {
-            await BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], PermissionedGenericHandlerSetResourceData[i]);
+            await BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], permissionedGenericHandlerSetResourceData[i]);
         }
 
         for (let i = 0; i < initialResourceIDs.length; i++) {
@@ -71,16 +71,16 @@ contract('PermissionedGenericHandler - [constructor]', async (accounts) => {
             assert.strictEqual(initialResourceIDs[i].toLowerCase(), retrievedResourceID.toLowerCase());
 
             const retrievedDepositFunctionSig = await PermissionedGenericHandlerInstance._contractAddressToDepositFunctionSignature.call(initialContractAddresses[i]);
-            // compare bytes 0-4 from PermissionedGenericHandlerSetResourceData
-            assert.strictEqual(PermissionedGenericHandlerSetResourceData[i].substr(0,10).toLowerCase(), retrievedDepositFunctionSig.toLowerCase());
+            // compare bytes 0-4 from permissionedGenericHandlerSetResourceData
+            assert.strictEqual(permissionedGenericHandlerSetResourceData[i].substr(0,10).toLowerCase(), retrievedDepositFunctionSig.toLowerCase());
 
             const retrievedDepositFunctionDepositorOffset = await PermissionedGenericHandlerInstance._contractAddressToDepositFunctionDepositorOffset.call(initialContractAddresses[i]);
-            // compare bytes 4 - 36 from PermissionedGenericHandlerSetResourceData
-            assert.strictEqual("0x" + PermissionedGenericHandlerSetResourceData[i].substr(10,64), Helpers.toHex(retrievedDepositFunctionDepositorOffset.toNumber(), 32));
+            // compare bytes 4 - 36 from permissionedGenericHandlerSetResourceData
+            assert.strictEqual("0x" + permissionedGenericHandlerSetResourceData[i].substr(10,64), Helpers.toHex(retrievedDepositFunctionDepositorOffset.toNumber(), 32));
 
             const retrievedExecuteFunctionSig = await PermissionedGenericHandlerInstance._contractAddressToExecuteFunctionSignature.call(initialContractAddresses[i]);
-            // compare bytes 36 - 40 from PermissionedGenericHandlerSetResourceData
-            assert.strictEqual("0x" + PermissionedGenericHandlerSetResourceData[i].substr(74, 8).toLowerCase(), retrievedExecuteFunctionSig.toLowerCase());
+            // compare bytes 36 - 40 from permissionedGenericHandlerSetResourceData
+            assert.strictEqual("0x" + permissionedGenericHandlerSetResourceData[i].substr(74, 8).toLowerCase(), retrievedExecuteFunctionSig.toLowerCase());
         }
     });
 });

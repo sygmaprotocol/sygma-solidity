@@ -88,7 +88,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             ThreeArgumentsInstance.address
         ];
 
-        const PermissionedGenericHandlerSetResourceData = [
+        const permissionedGenericHandlerSetResourceData = [
             Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.getFunctionSignature(TestStoreInstance, 'store')),
             Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(NoArgumentInstance, 'noArgument'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
             Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(OneArgumentInstance, 'oneArgument'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
@@ -113,11 +113,11 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address, emptySetResourceData),
             BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address, emptySetResourceData),
             BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address, emptySetResourceData),
-            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, TestStoreResourceID, genericInitialContractAddresses[0], PermissionedGenericHandlerSetResourceData[0]),
-            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, noArgumentResourceID, genericInitialContractAddresses[1], PermissionedGenericHandlerSetResourceData[1]),
-            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, oneArgumentResourceID, genericInitialContractAddresses[2], PermissionedGenericHandlerSetResourceData[2]),
-            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, twoArgumentsResourceID, genericInitialContractAddresses[3], PermissionedGenericHandlerSetResourceData[3]),
-            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, threeArgumentsResourceID, genericInitialContractAddresses[4], PermissionedGenericHandlerSetResourceData[4])
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, TestStoreResourceID, genericInitialContractAddresses[0], permissionedGenericHandlerSetResourceData[0]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, noArgumentResourceID, genericInitialContractAddresses[1], permissionedGenericHandlerSetResourceData[1]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, oneArgumentResourceID, genericInitialContractAddresses[2], permissionedGenericHandlerSetResourceData[2]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, twoArgumentsResourceID, genericInitialContractAddresses[3], permissionedGenericHandlerSetResourceData[3]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, threeArgumentsResourceID, genericInitialContractAddresses[4], permissionedGenericHandlerSetResourceData[4])
         ]);
 
         // set MPC address to unpause the Bridge

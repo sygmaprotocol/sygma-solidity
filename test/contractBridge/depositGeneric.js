@@ -27,7 +27,7 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     let initialDepositFunctionSignatures;
     let initialDepositFunctionDepositorOffsets;
     let initialExecuteFunctionSignatures;
-    let PermissionedGenericHandlerSetResourceData;
+    let permissionedGenericHandlerSetResourceData;
 
     beforeEach(async () => {
         await Promise.all([
@@ -45,13 +45,13 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
         PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(
             BridgeInstance.address);
 
-        PermissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+        permissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
             initialDepositFunctionSignatures[0],
             initialDepositFunctionDepositorOffsets[0],
             initialExecuteFunctionSignatures[0]
         );
 
-        await BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, resourceID,  initialContractAddresses[0], PermissionedGenericHandlerSetResourceData);
+        await BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, resourceID,  initialContractAddresses[0], permissionedGenericHandlerSetResourceData);
 
         depositData = Helpers.createPermissionedGenericDepositData('0xdeadbeef');
 

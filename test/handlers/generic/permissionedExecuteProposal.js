@@ -56,7 +56,7 @@ contract('PermissionedGenericHandler - [Execute Proposal]', async (accounts) => 
         PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(
             BridgeInstance.address);
 
-        const PermissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+        const permissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
             initialDepositFunctionSignatures[0],
             initialDepositFunctionDepositorOffsets[0],
             initialExecuteFunctionSignatures[0]
@@ -66,7 +66,7 @@ contract('PermissionedGenericHandler - [Execute Proposal]', async (accounts) => 
           PermissionedGenericHandlerInstance.address,
           resourceID,
           TestStoreInstance.address,
-          PermissionedGenericHandlerSetResourceData
+          permissionedGenericHandlerSetResourceData
         );
 
         depositData = Helpers.createPermissionedGenericDepositData(hashOfTestStore);
