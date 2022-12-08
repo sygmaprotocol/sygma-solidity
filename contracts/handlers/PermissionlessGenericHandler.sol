@@ -56,7 +56,7 @@ contract PermissionlessGenericHandler is IHandler {
           executionDataDepositor:       bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)                                -  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)
           executionData:                bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)  -  END
      */
-    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view onlyBridge returns (bytes memory) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view returns (bytes memory) {
         require(data.length > 81, "Incorrect data length");
 
         uint16         lenExecuteFuncSignature;
