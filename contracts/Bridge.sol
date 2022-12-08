@@ -138,13 +138,13 @@ contract Bridge is Pausable, Context, EIP712 {
         which is mapped in {functionAccess} in AccessControlSegregator contract.
         @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
-        @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address tokenAddress, bytes calldata args) external onlyAllowed {
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external onlyAllowed {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IHandler handler = IHandler(handlerAddress);
-        handler.adminSetResource(handlerAddress, resourceID, tokenAddress, args);
+        handler.adminSetResource(handlerAddress, resourceID, contractAddress, args);
     }
 
     /**
