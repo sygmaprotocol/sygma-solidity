@@ -23,6 +23,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
 
     const tokenAmount = feeAmount = Ethers.utils.parseEther("1");
     const emptySetResourceData = '0x';
+    const msgGasLimit = 0;
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;
@@ -68,7 +69,8 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
             expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
             fromDomainID: originDomainID,
             toDomainID: destinationDomainID,
-            resourceID
+            resourceID,
+            msgGasLimit
         };
 
         feeData = Helpers.createOracleFeeData(oracleResponse, oracle.privateKey, tokenAmount);
