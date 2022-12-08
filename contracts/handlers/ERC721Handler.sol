@@ -44,10 +44,11 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
         @return metaData : the deposited token metadata acquired by calling a {tokenURI} method in the token contract.
      */
-    function deposit(bytes32    resourceID,
-                    address     depositor,
-                    bytes       calldata data
-                    ) external override onlyBridge returns (bytes memory metaData) {
+    function deposit(
+        bytes32    resourceID,
+        address     depositor,
+        bytes       calldata data
+    ) external override onlyBridge returns (bytes memory metaData) {
         uint         tokenID;
 
         (tokenID) = abi.decode(data, (uint));
