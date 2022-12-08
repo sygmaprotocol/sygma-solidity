@@ -14,7 +14,8 @@
     "build/contracts/PermissionedGenericHandler.json",
     "build/contracts/PermissionlessGenericHandler.json",
     "build/contracts/BasicFeeHandler.json",
-    "build/contracts/FeeHandlerWithOracle.json"
+    "build/contracts/FeeHandlerWithOracle.json",
+    "contracts/interfaces"
   ],
   "directories": {
     "test": "test"
