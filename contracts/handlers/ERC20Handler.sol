@@ -113,7 +113,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external override onlyBridge {
+    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
         _setResource(resourceID, contractAddress);
     }
 }
