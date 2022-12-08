@@ -35,7 +35,7 @@ contract('Gas Benchmark - [Execute Proposal]', async (accounts) => {
     const erc1155TokenID = 1;
     const erc1155TokenAmount = 100;
     const feeData = '0x';
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;

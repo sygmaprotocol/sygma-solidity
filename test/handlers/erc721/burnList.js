@@ -13,7 +13,7 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
 contract('ERC721Handler - [Burn ERC721]', async (accounts) => {
     const domainID = 1;
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC721MintableInstance1;

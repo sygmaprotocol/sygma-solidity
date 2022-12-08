@@ -22,7 +22,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async accounts => {
     const depositorAddress = accounts[1];
 
     const tokenAmount = feeAmount = Ethers.utils.parseEther("1");
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;

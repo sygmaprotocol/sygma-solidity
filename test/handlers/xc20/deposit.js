@@ -18,7 +18,7 @@ contract('XC20Handler - [Deposit ERC20]', async (accounts) => {
 
     const tokenAmount = 100;
     const feeData = '0x';
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;

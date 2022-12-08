@@ -19,7 +19,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
     const relayer = accounts[0];
     const recipientAddress = accounts[1];
     const feeData = "0x0";
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let BasicFeeHandlerInstance;

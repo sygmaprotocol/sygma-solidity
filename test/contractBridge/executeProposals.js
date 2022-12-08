@@ -31,7 +31,7 @@
      const depositAmount = 10;
      const expectedDepositNonces = [1,2,3];
      const feeData = '0x';
-     const emptySetResourceData = "0x";
+     const emptySetResourceData = '0x';
 
      let BridgeInstance;
      let ERC20MintableInstance;

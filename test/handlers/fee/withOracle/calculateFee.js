@@ -21,7 +21,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async accounts => {
     const recipientAddress = accounts[1];
     const gasUsed = 100000;
     const feePercent = 500;
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let FeeHandlerWithOracleInstance;

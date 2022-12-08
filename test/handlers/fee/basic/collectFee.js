@@ -27,7 +27,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     const depositAmount = 10;
     const feeData = "0x0";
     const tokenID = 1;
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
 
     let BridgeInstance;

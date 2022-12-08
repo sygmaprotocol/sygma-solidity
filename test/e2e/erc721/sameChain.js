@@ -20,7 +20,7 @@ contract('E2E ERC721 - Same Chain', async accounts => {
     const depositMetadata = "0xc0ff33";
     const expectedDepositNonce = 1;
     const feeData = '0x';
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC721MintableInstance;

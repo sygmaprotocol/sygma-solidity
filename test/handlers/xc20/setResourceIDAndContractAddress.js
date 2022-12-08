@@ -15,7 +15,7 @@ contract('XC20Handler - [setResourceIDAndContractAddress]', async (accounts) => 
     const AbiCoder = new Ethers.utils.AbiCoder();
 
     const domainID = 1;
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance1;

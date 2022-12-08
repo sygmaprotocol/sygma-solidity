@@ -29,7 +29,7 @@ contract('Bridge - [execute proposal - XC20]', async (accounts) => {
   const depositAmount = 10;
   const expectedDepositNonce = 1;
   const feeData = '0x';
-  const emptySetResourceData = "0x";
+  const emptySetResourceData = '0x';
 
   let BridgeInstance;
   let XC20TestInstance;

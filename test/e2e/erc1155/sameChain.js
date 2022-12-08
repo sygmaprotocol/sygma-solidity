@@ -22,7 +22,7 @@ contract('E2E ERC1155 - Same Chain', async accounts => {
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const feeData = '0x';
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC1155MintableInstance;

@@ -23,7 +23,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
     const depositAmount = 10;
     const feeData = "0x0";
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     const assertOnlyAdmin = (method, ...params) => {
         return TruffleAssert.reverts(method(...params, {from: accounts[1]}), "sender doesn't have admin role");

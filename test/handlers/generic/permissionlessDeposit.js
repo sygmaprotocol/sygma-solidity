@@ -22,7 +22,7 @@ contract('PermissionlessGenericHandler - [deposit]', async (accounts) => {
     const feeData = '0x';
     const destinationMaxFee = 2000000;
     const hashOfTestStore = Ethers.utils.keccak256('0xc0ffee');
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
 
     let BridgeInstance;

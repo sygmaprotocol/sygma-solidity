@@ -20,7 +20,7 @@ contract('XC20Handler - [Deposit Burn XC20]', async (accounts) => {
     const initialTokenAmount = 100;
     const depositAmount = 10;
     const feeData = '0x';
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance1;

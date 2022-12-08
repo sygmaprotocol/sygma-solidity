@@ -8,7 +8,7 @@ const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser");
 const ERC721MinterBurnerPauserContract = artifacts.require("ERC721MinterBurnerPauser");
 
 const DEFAULT_CONFIG_PATH = "./migrations/local.json"
-const emptySetResourceData = "0x";
+const emptySetResourceData = '0x';
 
 
 function getNetworksConfig() {

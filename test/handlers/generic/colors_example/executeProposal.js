@@ -22,7 +22,7 @@ contract('PermissionlessGenericHandler colors example - [Execute Proposal]', asy
     const feeData = '0x';
     const destinationMaxFee = 2000000;
     const hexRedColor = Helpers.toHex("0xD2042D", 32);
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ColorsInstance;

@@ -21,7 +21,7 @@ contract('ERC721Handler - [Deposit Burn ERC721]', async (accounts) => {
     const tokenID = 1;
 
     const feeData = '0x';
-    const emptySetResourceData = "0x";
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC721MintableInstance1;
