@@ -32,17 +32,15 @@ contract PermissionlessGenericHandler is IHandler {
 
     /**
         @notice Blank function, required in IHandler.
-        @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
      */
-    function adminSetResource(
-        address handlerAddress,
+    function setResource(
         bytes32 resourceID,
         address contractAddress,
         bytes calldata args
-    ) external override onlyBridge {}
+    ) external onlyBridge {}
 
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.
@@ -58,7 +56,7 @@ contract PermissionlessGenericHandler is IHandler {
           executionDataDepositor:       bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)                                -  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)
           executionData:                bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)  -  END
      */
-    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external onlyBridge returns (bytes memory) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view onlyBridge returns (bytes memory) {
         require(data.length > 81, "Incorrect data length");
 
         uint16         lenExecuteFuncSignature;

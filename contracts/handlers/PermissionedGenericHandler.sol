@@ -57,7 +57,6 @@ contract PermissionedGenericHandler is IHandler {
         {_contractAddressToDepositFunctionDepositorOffset} with {depositFunctionDepositorOffset},
         {_contractAddressToExecuteFunctionSignature} with {executeFunctionSig},
         and {_contractWhitelist} to true for {contractAddress}.
-        @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
@@ -66,12 +65,11 @@ contract PermissionedGenericHandler is IHandler {
           depositFunctionDepositorOffset:  uint256  bytes 4  - 36
           executeFunctionSig:              bytes4   bytes 36 - 40
      */
-    function adminSetResource(
-        address handlerAddress,
+    function setResource(
         bytes32 resourceID,
         address contractAddress,
         bytes calldata args
-    ) external override onlyBridge {
+    ) external onlyBridge {
         bytes4   depositFunctionSig = bytes4(args[0:4]);
         uint256  depositFunctionDepositorOffset = uint256(bytes32(args[4:36]));
         bytes4   executeFunctionSig = bytes4(args[36:40]);
@@ -118,7 +116,7 @@ contract PermissionedGenericHandler is IHandler {
         if (sig != bytes4(0)) {
             bytes memory callData = abi.encodePacked(sig, metadata);
             (bool success, bytes memory handlerResponse) = contractAddress.call(callData);
-            // require(success, "call to contractAddress failed");
+            require(success, "call to contractAddress failed");
             return handlerResponse;
         }
     }

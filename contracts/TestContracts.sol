@@ -74,7 +74,7 @@ contract HandlerRevert is ERCHandlerHelpers {
         _totalAmount = amount;
     }
 
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external {
+    function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external {
         _setResource(resourceID, contractAddress);
     }
 }

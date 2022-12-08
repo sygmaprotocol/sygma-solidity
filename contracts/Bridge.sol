@@ -144,7 +144,7 @@ contract Bridge is Pausable, Context, EIP712 {
     function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external onlyAllowed {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IHandler handler = IHandler(handlerAddress);
-        handler.adminSetResource(handlerAddress, resourceID, contractAddress, args);
+        handler.setResource(resourceID, contractAddress, args);
     }
 
     /**

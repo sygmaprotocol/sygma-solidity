@@ -108,12 +108,11 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID} and
         {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
-        @param handlerAddress Address of handler resource will be set for.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+    function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
         _setResource(resourceID, contractAddress);
     }
 }
