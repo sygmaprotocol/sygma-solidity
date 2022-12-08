@@ -29,6 +29,7 @@ contract('Bridge - [execute proposal - XC20]', async (accounts) => {
   const depositAmount = 10;
   const expectedDepositNonce = 1;
   const feeData = '0x';
+  const emptySetResourceData = '0x';
 
   let BridgeInstance;
   let XC20TestInstance;
@@ -60,7 +61,7 @@ contract('Bridge - [execute proposal - XC20]', async (accounts) => {
       XC20HandlerInstance = await XC20HandlerContract.new(BridgeInstance.address);
 
       await Promise.all([
-        BridgeInstance.adminSetResource(XC20HandlerInstance.address, resourceID, XC20TestInstance.address),
+        BridgeInstance.adminSetResource(XC20HandlerInstance.address, resourceID, XC20TestInstance.address, emptySetResourceData),
         XC20TestInstance.mint(depositorAddress, initialTokenAmount),
         // XC20TestInstance.mint(XC20HandlerInstance.address, initialTokenAmount),
       ]);

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IDepositExecute.sol";
-import "./HandlerHelpers.sol";
+import "../interfaces/IHandler.sol";
+import "./ERCHandlerHelpers.sol";
 import "../ERC20Safe.sol";
 
 /**
@@ -11,13 +11,13 @@ import "../ERC20Safe.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
+contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(
         address          bridgeAddress
-    ) HandlerHelpers(bridgeAddress) {
+    ) ERCHandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -102,5 +102,17 @@ contract ERC20Handler is IDepositExecute, HandlerHelpers, ERC20Safe {
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
         releaseERC20(tokenAddress, recipient, amount);
+    }
+
+    /**
+        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
+        {_contractAddressToResourceID} with {resourceID} and
+        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param args Additional data to be passed to specified handler.
+     */
+    function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        _setResource(resourceID, contractAddress);
     }
 }

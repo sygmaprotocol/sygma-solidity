@@ -8,11 +8,11 @@ const Ethers = require('ethers');
 const Helpers = require('../../../helpers');
 
 const ColorsContract = artifacts.require("Colors");
-const GenericHandlerContract = artifacts.require("GenericHandlerV1");
+const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 const WithDepositorContract = artifacts.require("WithDepositor");
 const ReturnDataContract = artifacts.require("ReturnData");
 
-contract('GenericHandlerV1 colors example - [deposit]', async (accounts) => {
+contract('PermissionlessGenericHandler colors example - [deposit]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
@@ -22,13 +22,14 @@ contract('GenericHandlerV1 colors example - [deposit]', async (accounts) => {
     const feeData = '0x';
     const destinationMaxFee = 2000000;
     const hexRedColor = Helpers.toHex("0xD2042D", 32);
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ColorsInstance;
 
     let resourceID;
     let depositFunctionSignature;
-    let GenericHandlerInstance;
+    let PermissionlessGenericHandlerInstance;
     let depositData;
 
     beforeEach(async () => {
@@ -41,21 +42,21 @@ contract('GenericHandlerV1 colors example - [deposit]', async (accounts) => {
 
         resourceID = Helpers.createResourceID(ColorsInstance.address, originDomainID)
 
-        GenericHandlerInstance = await GenericHandlerContract.new(
+        PermissionlessGenericHandlerInstance = await PermissionlessGenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, ColorsInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
+        await BridgeInstance.adminSetResource(PermissionlessGenericHandlerInstance.address, resourceID, ColorsInstance.address, emptySetResourceData);
 
         depositFunctionSignature = Helpers.getFunctionSignature(ColorsInstance, 'setColor');
 
 
-        depositData = Helpers.createGenericDepositDataV1(
-          depositFunctionSignature,
-          ColorsInstance.address,
-          destinationMaxFee,
-          depositorAddress,
-          hexRedColor,
-          false // don't append depositor for destination chain check
+        depositData = Helpers.createPermissionlessGenericDepositData(
+            depositFunctionSignature,
+            ColorsInstance.address,
+            destinationMaxFee,
+            depositorAddress,
+            hexRedColor,
+            false // don't append depositor for destination chain check
         );
 
         // set MPC address to unpause the Bridge
@@ -106,7 +107,7 @@ contract('GenericHandlerV1 colors example - [deposit]', async (accounts) => {
     it('should revert if metadata encoded depositor does not match deposit depositor', async () => {
       const invalidDepositorAddress = accounts[2];
 
-      const invalidDepositData = Helpers.createGenericDepositDataV1(
+      const invalidDepositData = Helpers.createPermissionlessGenericDepositData(
         depositFunctionSignature,
         ColorsInstance.address,
         destinationMaxFee,

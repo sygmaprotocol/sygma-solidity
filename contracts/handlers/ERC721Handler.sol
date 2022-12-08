@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IDepositExecute.sol";
-import "./HandlerHelpers.sol";
+import "../interfaces/IHandler.sol";
+import "./ERCHandlerHelpers.sol";
 import "../ERC721Safe.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
+contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
@@ -24,7 +24,7 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
      */
     constructor(
         address bridgeAddress
-    ) HandlerHelpers(bridgeAddress) {
+    ) ERCHandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -44,10 +44,11 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
         @return metaData : the deposited token metadata acquired by calling a {tokenURI} method in the token contract.
      */
-    function deposit(bytes32    resourceID,
-                    address     depositor,
-                    bytes       calldata data
-                    ) external override onlyBridge returns (bytes memory metaData) {
+    function deposit(
+        bytes32    resourceID,
+        address     depositor,
+        bytes       calldata data
+    ) external override onlyBridge returns (bytes memory metaData) {
         uint         tokenID;
 
         (tokenID) = abi.decode(data, (uint));
@@ -127,5 +128,17 @@ contract ERC721Handler is IDepositExecute, HandlerHelpers, ERC721Safe {
         (tokenAddress, recipient, tokenID) = abi.decode(data, (address, address, uint));
 
         releaseERC721(tokenAddress, address(this), recipient, tokenID);
+    }
+
+    /**
+        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
+        {_contractAddressToResourceID} with {resourceID} and
+        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param args Additional data to be passed to specified handler.
+     */
+    function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        _setResource(resourceID, contractAddress);
     }
 }

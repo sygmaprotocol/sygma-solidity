@@ -13,6 +13,7 @@ const XC20HandlerContract = artifacts.require("XC20Handler");
 
 contract('XC20Handler - [constructor]', async (accounts) => {
     const domainID = 1;
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance1;
@@ -56,7 +57,7 @@ contract('XC20Handler - [constructor]', async (accounts) => {
         const XC20HandlerInstance = await XC20HandlerContract.new(BridgeInstance.address);
 
         for (i = 0; i < initialResourceIDs.length; i++) {
-            await TruffleAssert.passes(BridgeInstance.adminSetResource(XC20HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i]));
+            await TruffleAssert.passes(BridgeInstance.adminSetResource(XC20HandlerInstance.address, initialResourceIDs[i], initialContractAddresses[i], emptySetResourceData));
         }
 
         for (const resourceID of initialResourceIDs) {

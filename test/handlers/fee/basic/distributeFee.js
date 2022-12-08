@@ -23,6 +23,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
     const depositAmount = 10;
     const feeData = "0x0";
+    const emptySetResourceData = '0x';
 
     const assertOnlyAdmin = (method, ...params) => {
         return TruffleAssert.reverts(method(...params, {from: accounts[1]}), "sender doesn't have admin role");
@@ -50,7 +51,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
         await Promise.all([
             ERC20MintableInstance.mint(depositorAddress, depositAmount),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, emptySetResourceData)
         ]);
 
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositorAddress });

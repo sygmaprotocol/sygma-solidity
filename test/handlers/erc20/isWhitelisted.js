@@ -15,6 +15,7 @@ contract('ERC20Handler - [isWhitelisted]', async (accounts) => {
     const AbiCoder = new Ethers.utils.AbiCoder();
 
     const domainID = 1;
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance1;
@@ -43,7 +44,7 @@ contract('ERC20Handler - [isWhitelisted]', async (accounts) => {
 
     it('initialContractAddress should be whitelisted', async () => {
         const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address);
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID1, ERC20MintableInstance1.address, emptySetResourceData);
         const isWhitelisted = await ERC20HandlerInstance._contractWhitelist.call(ERC20MintableInstance1.address);
         assert.isTrue(isWhitelisted, "Contract wasn't successfully whitelisted");
     });

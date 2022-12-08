@@ -14,7 +14,7 @@ const PausableContract = artifacts.require("Pausable");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
-const GenericHandlerContract = artifacts.require("GenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
@@ -24,7 +24,7 @@ module.exports = async function(deployer, network) {
     // fetch deployer address
     const deployerAddress = await deployer['networks'][deployer['network']]['from'];
     // assign addresses for access segregation
-    const functionAccessAddresses = Array(14).fill(deployerAddress);
+    const functionAccessAddresses = Array(13).fill(deployerAddress);
 
     // trim suffix from network name and fetch current network config
     let currentNetworkName = network.split("-")[0]
@@ -41,7 +41,7 @@ module.exports = async function(deployer, network) {
     // deploy handler contracts
     const erc20HandlerInstance = await deployer.deploy(ERC20HandlerContract, bridgeInstance.address);
     const erc721HandlerInstance = await deployer.deploy(ERC721HandlerContract, bridgeInstance.address);
-    const genericHandlerInstance = await deployer.deploy(GenericHandlerContract, bridgeInstance.address);
+    const permissionedGenericHandlerInstance = await deployer.deploy(PermissionedGenericHandlerContract, bridgeInstance.address);
 
     // deploy fee handlers
     const feeRouterInstance = await deployer.deploy(FeeRouterContract, bridgeInstance.address);
@@ -60,7 +60,7 @@ module.exports = async function(deployer, network) {
       "Bridge Address": bridgeInstance.address,
       "ERC20Handler Address": erc20HandlerInstance.address,
       "ERC721Handler Address": erc721HandlerInstance.address,
-      "GenericHandler Address": genericHandlerInstance.address,
+      "PermissionedGenericHandler Address": permissionedGenericHandlerInstance.address,
       "FeeRouterContract Address": feeRouterInstance.address,
       "BasicFeeHandler Address": basicFeeHandlerInstance.address,
       "FeeHandlerWithOracle Address": feeHandlerWithOracleInstance.address,
@@ -89,7 +89,7 @@ module.exports = async function(deployer, network) {
     }
 
     for (const generic of currentNetworkConfig.permissionedGeneric) {
-      await Utils.setupGeneric(deployer, generic, bridgeInstance, genericHandlerInstance);
+      await Utils.setupGeneric(deployer, generic, bridgeInstance, permissionedGenericHandlerInstance);
       await Utils.setupFee(networksConfig, feeRouterInstance, feeHandlerWithOracleInstance, basicFeeHandlerInstance, generic);
 
       console.log("-------------------------------------------------------------------------------")

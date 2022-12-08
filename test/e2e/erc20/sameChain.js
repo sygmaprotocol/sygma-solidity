@@ -20,6 +20,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
     const depositAmount = 10;
     const expectedDepositNonce = 1;
     const feeData = '0x';
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;
@@ -44,7 +45,7 @@ contract('E2E ERC20 - Same Chain', async accounts => {
 
         await Promise.all([
             ERC20MintableInstance.mint(depositorAddress, initialTokenAmount),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, emptySetResourceData)
         ]);
 
         await ERC20MintableInstance.approve(ERC20HandlerInstance.address, depositAmount, { from: depositorAddress });

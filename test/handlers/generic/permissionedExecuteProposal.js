@@ -10,9 +10,9 @@ const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
 const TestStoreContract = artifacts.require("TestStore");
-const GenericHandlerContract = artifacts.require("GenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
 
-contract('GenericHandler - [Execute Proposal]', async (accounts) => {
+contract('PermissionedGenericHandler - [Execute Proposal]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
@@ -32,7 +32,7 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
     let initialDepositFunctionSignatures;
     let initialDepositFunctionDepositorOffsets;
     let initialExecuteFunctionSignatures;
-    let GenericHandlerInstance;
+    let PermissionedGenericHandlerInstance;
     let resourceID;
     let depositData;
 
@@ -53,13 +53,24 @@ contract('GenericHandler - [Execute Proposal]', async (accounts) => {
         initialDepositFunctionDepositorOffsets = [Helpers.blankFunctionDepositorOffset];
         initialExecuteFunctionSignatures = [TestStoreFuncSig];
 
-        GenericHandlerInstance = await GenericHandlerContract.new(
+        PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositorOffsets[0], initialExecuteFunctionSignatures[0]);
+        const permissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+            initialDepositFunctionSignatures[0],
+            initialDepositFunctionDepositorOffsets[0],
+            initialExecuteFunctionSignatures[0]
+        );
 
-        depositData = Helpers.createGenericDepositData(hashOfTestStore);
-        depositProposalDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+        await BridgeInstance.adminSetResource(
+          PermissionedGenericHandlerInstance.address,
+          resourceID,
+          TestStoreInstance.address,
+          permissionedGenericHandlerSetResourceData
+        );
+
+        depositData = Helpers.createPermissionedGenericDepositData(hashOfTestStore);
+        depositProposalDataHash = Ethers.utils.keccak256(PermissionedGenericHandlerInstance.address + depositData.substr(2));
 
         proposal = {
           originDomainID: originDomainID,

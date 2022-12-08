@@ -7,9 +7,10 @@ const AccessControlSegregatorContract = artifacts.require("AccessControlSegregat
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
-const GenericHandlerContract = artifacts.require("GenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
+const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 const TestStoreContract = artifacts.require("TestStore");
-const HandlerHelpersContract = artifacts.require("HandlerHelpers");
+const ERCHandlerHelpersContract = artifacts.require("ERCHandlerHelpers");
 const ERC20SafeContract = artifacts.require("ERC20Safe");
 const ERC721SafeContract = artifacts.require("ERC721Safe");
 const ERC1155SafeContract = artifacts.require("ERC1155Safe");
@@ -37,9 +38,10 @@ contract('Gas Benchmark - [contract deployments]', async (accounts) => {
                 ERC20HandlerContract.new(BridgeInstance.address),
                 ERC721HandlerContract.new(BridgeInstance.address),
                 ERC1155HandlerContract.new(BridgeInstance.address),
-                GenericHandlerContract.new(BridgeInstance.address),
+                PermissionedGenericHandlerContract.new(BridgeInstance.address),
+                PermissionlessGenericHandlerContract.new(BridgeInstance.address),
                 TestStoreContract.new(TestStoreMinCount),
-                HandlerHelpersContract.new(BridgeInstance.address),
+                ERCHandlerHelpersContract.new(BridgeInstance.address),
                 ERC20SafeContract.new(),
                 ERC721SafeContract.new(),
                 ERC1155SafeContract.new()

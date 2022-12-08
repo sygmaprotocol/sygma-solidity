@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IGenericHandler.sol";
+import "../interfaces/IHandler.sol";
 
 /**
     @title Handles generic deposits and deposit executions.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract GenericHandler is IGenericHandler {
+contract PermissionedGenericHandler is IHandler {
     address public immutable _bridgeAddress;
 
     // resourceID => contract address
@@ -59,17 +59,20 @@ contract GenericHandler is IGenericHandler {
         and {_contractWhitelist} to true for {contractAddress}.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
-        @param depositFunctionDepositorOffset Depositor address position offset in the metadata, in bytes.
-        @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
+        @param args Additional data to be passed to specified handler.
+        Permissioned handler structure should be it constructed as follows:
+          depositFunctionSig:              bytes4   bytes 0  - 4
+          depositFunctionDepositorOffset:  uint256  bytes 4  - 36
+          executeFunctionSig:              bytes4   bytes 36 - 40
      */
     function setResource(
         bytes32 resourceID,
         address contractAddress,
-        bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositorOffset,
-        bytes4 executeFunctionSig
-    ) external onlyBridge override {
+        bytes calldata args
+    ) external onlyBridge {
+        bytes4   depositFunctionSig = bytes4(args[0:4]);
+        uint256  depositFunctionDepositorOffset = uint256(bytes32(args[4:36]));
+        bytes4   executeFunctionSig = bytes4(args[36:40]);
 
         _setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositorOffset, executeFunctionSig);
     }
@@ -157,6 +160,7 @@ contract GenericHandler is IGenericHandler {
         uint256 depositFunctionDepositorOffset,
         bytes4 executeFunctionSig
     ) internal {
+
         _resourceIDToContractAddress[resourceID] = contractAddress;
         _contractAddressToResourceID[contractAddress] = resourceID;
         _contractAddressToDepositFunctionSignature[contractAddress] = depositFunctionSig;

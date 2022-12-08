@@ -9,7 +9,7 @@ const Helpers = require('../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
 const TestStoreContract = artifacts.require("TestStore");
-const GenericHandlerContract = artifacts.require("GenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
 
 contract('Bridge - [deposit - Generic]', async (accounts) => {
     const originDomainID = 1;
@@ -20,13 +20,14 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
     const depositorAddress = accounts[1];
 
     let BridgeInstance;
-    let GenericHandlerInstance;
+    let PermissionedGenericHandlerInstance;
     let depositData;
     let initialResourceIDs;
     let initialContractAddresses;
     let initialDepositFunctionSignatures;
     let initialDepositFunctionDepositorOffsets;
     let initialExecuteFunctionSignatures;
+    let permissionedGenericHandlerSetResourceData;
 
     beforeEach(async () => {
         await Promise.all([
@@ -41,12 +42,19 @@ contract('Bridge - [deposit - Generic]', async (accounts) => {
         initialDepositFunctionDepositorOffsets = [Helpers.blankFunctionDepositorOffset];
         initialExecuteFunctionSignatures = [Helpers.getFunctionSignature(TestStoreInstance, 'store')];
 
-        GenericHandlerInstance = await GenericHandlerContract.new(
+        PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID,  initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositorOffsets[0], initialExecuteFunctionSignatures[0]);
+        permissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+            initialDepositFunctionSignatures[0],
+            initialDepositFunctionDepositorOffsets[0],
+            initialExecuteFunctionSignatures[0]
+        );
 
-        depositData = Helpers.createGenericDepositData('0xdeadbeef');
+        await BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, resourceID,  initialContractAddresses[0], permissionedGenericHandlerSetResourceData);
+
+        depositData = Helpers.createPermissionedGenericDepositData('0xdeadbeef');
+
 
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);

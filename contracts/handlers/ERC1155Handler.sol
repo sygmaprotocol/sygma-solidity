@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IDepositExecute.sol";
-import "./HandlerHelpers.sol";
+import "../interfaces/IHandler.sol";
+import "./ERCHandlerHelpers.sol";
 import "../ERC1155Safe.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
-contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155Holder {
+contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Holder {
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC1155_METADATA = 0x0e89341c;
@@ -20,7 +20,7 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
      */
     constructor(
         address bridgeAddress
-    ) HandlerHelpers(bridgeAddress) {
+    ) ERCHandlerHelpers(bridgeAddress) {
     }
 
     /**
@@ -88,7 +88,7 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
 
     /**
         @notice Used to manually release ERC1155 tokens from ERC1155Safe.
-        @param data Consists of ABI-encoded {tokenAddress}, {recipient}, {tokenIDs}, 
+        @param data Consists of ABI-encoded {tokenAddress}, {recipient}, {tokenIDs},
         {amounts}, and {transferData} of types address, address, uint[], uint[], bytes.
      */
     function withdraw(bytes memory data) external override onlyBridge {
@@ -101,5 +101,17 @@ contract ERC1155Handler is IDepositExecute, HandlerHelpers, ERC1155Safe, ERC1155
         (tokenAddress, recipient, tokenIDs, amounts, transferData) = abi.decode(data, (address, address, uint[], uint[], bytes));
 
         releaseBatchERC1155(tokenAddress, address(this), recipient, tokenIDs, amounts, transferData);
+    }
+
+    /**
+        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
+        {_contractAddressToResourceID} with {resourceID} and
+        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
+        @param resourceID ResourceID to be used when making deposits.
+        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
+        @param args Additional data to be passed to specified handler.
+     */
+    function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        _setResource(resourceID, contractAddress);
     }
 }

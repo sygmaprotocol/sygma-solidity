@@ -31,6 +31,7 @@
      const depositAmount = 10;
      const expectedDepositNonces = [1,2,3];
      const feeData = '0x';
+     const emptySetResourceData = '0x';
 
      let BridgeInstance;
      let ERC20MintableInstance;
@@ -76,11 +77,11 @@
 
         await Promise.all([
             ERC20MintableInstance.mint(depositorAddress, initialTokenAmount),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address, emptySetResourceData),
             ERC721MintableInstance.grantRole(await ERC721MintableInstance.MINTER_ROLE(), ERC721HandlerInstance.address),
             ERC721MintableInstance.mint(depositorAddress, tokenID, ""),
-            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
-            BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address),
+            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address, emptySetResourceData),
+            BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address, emptySetResourceData),
             ERC1155MintableInstance.mintBatch(depositorAddress, [tokenID], [initialTokenAmount], "0x0"),
         ]);
 

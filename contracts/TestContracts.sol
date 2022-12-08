@@ -3,7 +3,7 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
-import "./handlers/HandlerHelpers.sol";
+import "./handlers/ERCHandlerHelpers.sol";
 import "./interfaces/IERC20Plus.sol";
 
 contract NoArgument {
@@ -55,12 +55,12 @@ contract ReturnData {
     }
 }
 
-contract HandlerRevert is HandlerHelpers {
+contract HandlerRevert is ERCHandlerHelpers {
     uint private _totalAmount;
 
     constructor(
         address          bridgeAddress
-    ) public HandlerHelpers(bridgeAddress) {
+    ) public ERCHandlerHelpers(bridgeAddress) {
     }
 
     function executeProposal(bytes32, bytes calldata) external view {
@@ -72,6 +72,10 @@ contract HandlerRevert is HandlerHelpers {
 
     function virtualIncreaseBalance(uint amount) external {
         _totalAmount = amount;
+    }
+
+    function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external {
+        _setResource(resourceID, contractAddress);
     }
 }
 

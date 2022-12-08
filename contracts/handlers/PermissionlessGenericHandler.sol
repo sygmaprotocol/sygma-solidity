@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "../interfaces/IGenericHandler.sol";
+import "../interfaces/IHandler.sol";
 
 /**
     @title Handles generic deposits and deposit executions.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract GenericHandlerV1 is IGenericHandler {
+contract PermissionlessGenericHandler is IHandler {
     address public immutable _bridgeAddress;
 
     modifier onlyBridge() {
@@ -31,21 +31,16 @@ contract GenericHandlerV1 is IGenericHandler {
     }
 
     /**
-        @notice Temporary doesn't do anything, required in IGenericHandler.
-        @notice Sets {_resourceIDToContractAddress} with {contractAddress}
+        @notice Blank function, required in IHandler.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param depositFunctionSig Function signature of method to be called in {contractAddress} when a deposit is made.
-        @param depositFunctionDepositorOffset Depositor address position offset in the metadata, in bytes.
-        @param executeFunctionSig Function signature of method to be called in {contractAddress} when a deposit is executed.
+        @param args Additional data to be passed to specified handler.
      */
     function setResource(
         bytes32 resourceID,
         address contractAddress,
-        bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositorOffset,
-        bytes4 executeFunctionSig
-    ) external onlyBridge override {}
+        bytes calldata args
+    ) external onlyBridge {}
 
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.
@@ -61,7 +56,7 @@ contract GenericHandlerV1 is IGenericHandler {
           executionDataDepositor:       bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)                                -  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)
           executionData:                bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)  -  END
      */
-    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external returns (bytes memory) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view returns (bytes memory) {
         require(data.length > 81, "Incorrect data length");
 
         uint16         lenExecuteFuncSignature;
@@ -89,7 +84,7 @@ contract GenericHandlerV1 is IGenericHandler {
           len(executionDataDepositor):        uint8    bytes  35 + len(executeFuncSignature) + len(executeContractAddress)  -  36 + len(executeFuncSignature) + len(executeContractAddress)
           executionDataDepositorWithData:     bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)  -  END
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
         uint16         lenExecuteFuncSignature;
         bytes4         executeFuncSignature;
         uint8          lenExecuteContractAddress;

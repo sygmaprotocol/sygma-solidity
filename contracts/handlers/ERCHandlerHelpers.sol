@@ -9,7 +9,7 @@ import "../interfaces/IERCHandler.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract HandlerHelpers is IERCHandler {
+contract ERCHandlerHelpers is IERCHandler {
     address public immutable _bridgeAddress;
 
     // resourceID => token contract address
@@ -40,18 +40,6 @@ contract HandlerHelpers is IERCHandler {
 
     function _onlyBridge() private view {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
-    }
-
-    /**
-        @notice Sets {_resourceIDToContractAddress} with {contractAddress},
-        {_contractAddressToResourceID} with {resourceID},
-        and {_contractWhitelist} to true for {contractAddress}.
-        @param resourceID ResourceID to be used when making deposits.
-        @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-     */
-    function setResource(bytes32 resourceID, address contractAddress) external override onlyBridge {
-
-        _setResource(resourceID, contractAddress);
     }
 
     /**

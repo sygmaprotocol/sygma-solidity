@@ -9,7 +9,7 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
-const GenericHandlerContract = artifacts.require("GenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
 const TestStoreContract = artifacts.require("TestStore");
 const NoArgumentContract = artifacts.require("NoArgument");
 const OneArgumentContract = artifacts.require("OneArgument");
@@ -33,6 +33,8 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
     const erc1155TokenID = 1;
     const erc1155TokenAmount = 100;
     const feeData = '0x';
+    const emptySetResourceData = '0x';
+
 
     let BridgeInstance;
     let ERC20MintableInstance;
@@ -78,36 +80,21 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         twoArgumentsResourceID = Helpers.createResourceID(TwoArgumentsInstance.address, originDomainID);
         threeArgumentsResourceID = Helpers.createResourceID(ThreeArgumentsInstance.address, originDomainID);
 
-        const genericInitialResourceIDs = [
-            TestStoreResourceID,
-            noArgumentResourceID,
-            oneArgumentResourceID,
-            twoArgumentsResourceID,
-            threeArgumentsResourceID];
         const genericInitialContractAddresses = initialContractAddresses = [
             TestStoreInstance.address,
             NoArgumentInstance.address,
             OneArgumentInstance.address,
             TwoArgumentsInstance.address,
-            ThreeArgumentsInstance.address];
-        const genericInitialDepositFunctionSignatures = [
-            Helpers.blankFunctionSig,
-            Helpers.getFunctionSignature(NoArgumentInstance, 'noArgument'),
-            Helpers.getFunctionSignature(OneArgumentInstance, 'oneArgument'),
-            Helpers.getFunctionSignature(TwoArgumentsInstance, 'twoArguments'),
-            Helpers.getFunctionSignature(ThreeArgumentsInstance, 'threeArguments')];
-        const genericInitialDepositFunctionDepositorOffsets = [
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset];
-        const genericInitialExecuteFunctionSignatures = [
-            Helpers.getFunctionSignature(TestStoreInstance, 'store'),
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig];
+            ThreeArgumentsInstance.address
+        ];
+
+        const permissionedGenericHandlerSetResourceData = [
+            Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.getFunctionSignature(TestStoreInstance, 'store')),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(NoArgumentInstance, 'noArgument'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(OneArgumentInstance, 'oneArgument'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(TwoArgumentsInstance, 'twoArguments'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(ThreeArgumentsInstance, 'threeArguments'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+        ];
 
         await Promise.all([
             ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
@@ -116,21 +103,21 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
             ERC721MintableInstance.mint(depositorAddress, erc721TokenID, ""),
             ERC1155HandlerContract.new(BridgeInstance.address).then(instance => ERC1155HandlerInstance = instance),
             ERC1155MintableInstance.mintBatch(depositorAddress, [erc1155TokenID], [erc1155TokenAmount], "0x0"),
-            GenericHandlerInstance = await GenericHandlerContract.new(BridgeInstance.address)
+            PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(BridgeInstance.address)
         ]);
 
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, erc20TokenAmount, { from: depositorAddress }),
             ERC721MintableInstance.approve(ERC721HandlerInstance.address, erc721TokenID, { from: depositorAddress }),
             ERC1155MintableInstance.setApprovalForAll(ERC1155HandlerInstance.address, true, { from: depositorAddress }),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address),
-            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address),
-            BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, TestStoreResourceID, genericInitialContractAddresses[0], genericInitialDepositFunctionSignatures[0], genericInitialDepositFunctionDepositorOffsets[0], genericInitialExecuteFunctionSignatures[0]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, noArgumentResourceID, genericInitialContractAddresses[1], genericInitialDepositFunctionSignatures[1], genericInitialDepositFunctionDepositorOffsets[1], genericInitialExecuteFunctionSignatures[1]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, oneArgumentResourceID, genericInitialContractAddresses[2], genericInitialDepositFunctionSignatures[2], genericInitialDepositFunctionDepositorOffsets[2], genericInitialExecuteFunctionSignatures[2]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, twoArgumentsResourceID, genericInitialContractAddresses[3], genericInitialDepositFunctionSignatures[3], genericInitialDepositFunctionDepositorOffsets[3], genericInitialExecuteFunctionSignatures[3]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, threeArgumentsResourceID, genericInitialContractAddresses[4], genericInitialDepositFunctionSignatures[4], genericInitialDepositFunctionDepositorOffsets[4], genericInitialExecuteFunctionSignatures[4])
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, erc20ResourceID, ERC20MintableInstance.address, emptySetResourceData),
+            BridgeInstance.adminSetResource(ERC721HandlerInstance.address, erc721ResourceID, ERC721MintableInstance.address, emptySetResourceData),
+            BridgeInstance.adminSetResource(ERC1155HandlerInstance.address, erc1155ResourceID, ERC1155MintableInstance.address, emptySetResourceData),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, TestStoreResourceID, genericInitialContractAddresses[0], permissionedGenericHandlerSetResourceData[0]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, noArgumentResourceID, genericInitialContractAddresses[1], permissionedGenericHandlerSetResourceData[1]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, oneArgumentResourceID, genericInitialContractAddresses[2], permissionedGenericHandlerSetResourceData[2]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, twoArgumentsResourceID, genericInitialContractAddresses[3], permissionedGenericHandlerSetResourceData[3]),
+            BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, threeArgumentsResourceID, genericInitialContractAddresses[4], permissionedGenericHandlerSetResourceData[4])
         ]);
 
         // set MPC address to unpause the Bridge
@@ -191,7 +178,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             TestStoreResourceID,
-            Helpers.createGenericDepositData('0xc0ff33'),
+            Helpers.createPermissionedGenericDepositData('0xc0ff33'),
             feeData,
             { from: depositorAddress }
         );
@@ -206,7 +193,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             noArgumentResourceID,
-            Helpers.createGenericDepositData(null),
+            Helpers.createPermissionedGenericDepositData(null),
             feeData,
             { from: depositorAddress }
         );
@@ -221,7 +208,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             oneArgumentResourceID,
-            Helpers.createGenericDepositData(Helpers.toHex(42, 32)),
+            Helpers.createPermissionedGenericDepositData(Helpers.toHex(42, 32)),
             feeData,
             { from: depositorAddress }
         );
@@ -239,7 +226,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             twoArgumentsResourceID,
-            Helpers.createGenericDepositData(encodedMetaData),
+            Helpers.createPermissionedGenericDepositData(encodedMetaData),
             feeData,
             { from: depositorAddress }
         );
@@ -258,7 +245,7 @@ contract('Gas Benchmark - [Deposits]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             threeArgumentsResourceID,
-            Helpers.createGenericDepositData(encodedMetaData),
+            Helpers.createPermissionedGenericDepositData(encodedMetaData),
             feeData,
             { from: depositorAddress }
         );

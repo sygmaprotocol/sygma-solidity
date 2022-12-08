@@ -9,14 +9,14 @@ const Helpers = require('../../helpers');
 
 const BridgeContract = artifacts.require("Bridge");
 const TestStoreContract = artifacts.require("TestStore");
-const GenericHandlerContract = artifacts.require("GenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
 const NoArgumentContract = artifacts.require("NoArgument");
 const OneArgumentContract = artifacts.require("OneArgument");
 const TwoArgumentsContract = artifacts.require("TwoArguments");
 const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 const WithDepositorContract = artifacts.require("WithDepositor");
 const ReturnDataContract = artifacts.require("ReturnData");
-contract('GenericHandler - [deposit]', async (accounts) => {
+contract('PermissionedGenericHandler - [deposit]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
@@ -36,10 +36,8 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     let initialResourceIDs;
     let initialContractAddresses;
-    let initialDepositFunctionSignatures;
-    let initialDepositFunctionDepositorOffsets;
-    let initialExecuteFunctionSignatures;
-    let GenericHandlerInstance;
+    let genericHandlerSetResourceData;
+    let PermissionedGenericHandlerInstance;
     let depositData
 
     beforeEach(async () => {
@@ -53,6 +51,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             WithDepositorContract.new().then(instance => WithDepositorInstance = instance),
             ReturnDataContract.new().then(instance => ReturnDataInstance = instance),
         ]);
+
         initialResourceIDs = [
             Helpers.createResourceID(TestStoreInstance.address, originDomainID),
             Helpers.createResourceID(NoArgumentInstance.address, originDomainID),
@@ -62,6 +61,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             Helpers.createResourceID(WithDepositorInstance.address, originDomainID),
             Helpers.createResourceID(ReturnDataInstance.address, originDomainID),
         ];
+
         initialContractAddresses = [
             TestStoreInstance.address,
             NoArgumentInstance.address,
@@ -71,48 +71,30 @@ contract('GenericHandler - [deposit]', async (accounts) => {
             WithDepositorInstance.address,
             ReturnDataInstance.address,
         ];
-        initialDepositFunctionSignatures = [
-            Helpers.blankFunctionSig,
-            Helpers.getFunctionSignature(NoArgumentInstance, 'noArgument'),
-            Helpers.getFunctionSignature(OneArgumentInstance, 'oneArgument'),
-            Helpers.getFunctionSignature(TwoArgumentsInstance, 'twoArguments'),
-            Helpers.getFunctionSignature(ThreeArgumentsInstance, 'threeArguments'),
-            Helpers.getFunctionSignature(WithDepositorInstance, 'withDepositor'),
-            Helpers.getFunctionSignature(ReturnDataInstance, 'returnData'),
-        ];
-        initialDepositFunctionDepositorOffsets = [
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset,
-            Helpers.blankFunctionDepositorOffset,
-            12,
-            Helpers.blankFunctionDepositorOffset,
-        ];
-        initialExecuteFunctionSignatures = [
-            Helpers.getFunctionSignature(TestStoreInstance, 'store'),
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig,
-            Helpers.blankFunctionSig,
+
+        genericHandlerSetResourceData = [
+            Helpers.constructGenericHandlerSetResourceData(Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.getFunctionSignature(TestStoreInstance, 'store')),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(NoArgumentInstance, 'noArgument'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(OneArgumentInstance, 'oneArgument'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(TwoArgumentsInstance, 'twoArguments'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(ThreeArgumentsInstance, 'threeArguments'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(WithDepositorInstance, 'withDepositor'), 12, Helpers.blankFunctionSig),
+            Helpers.constructGenericHandlerSetResourceData(Helpers.getFunctionSignature(ReturnDataInstance, 'returnData'), Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig),
         ];
 
-        GenericHandlerInstance = await GenericHandlerContract.new(
-            BridgeInstance.address);
+        PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(BridgeInstance.address);
 
         await Promise.all([
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0], initialDepositFunctionSignatures[0], initialDepositFunctionDepositorOffsets[0], initialExecuteFunctionSignatures[0]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[1], initialContractAddresses[1], initialDepositFunctionSignatures[1], initialDepositFunctionDepositorOffsets[1], initialExecuteFunctionSignatures[1]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[2], initialContractAddresses[2], initialDepositFunctionSignatures[2], initialDepositFunctionDepositorOffsets[2], initialExecuteFunctionSignatures[2]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[3], initialContractAddresses[3], initialDepositFunctionSignatures[3], initialDepositFunctionDepositorOffsets[3], initialExecuteFunctionSignatures[3]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], initialDepositFunctionSignatures[4], initialDepositFunctionDepositorOffsets[4], initialExecuteFunctionSignatures[4]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[5], initialContractAddresses[5], initialDepositFunctionSignatures[5], initialDepositFunctionDepositorOffsets[5], initialExecuteFunctionSignatures[5]),
-            BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, initialResourceIDs[6], initialContractAddresses[6], initialDepositFunctionSignatures[6], initialDepositFunctionDepositorOffsets[6], initialExecuteFunctionSignatures[6])
+              BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[0], initialContractAddresses[0], genericHandlerSetResourceData[0]),
+              BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[1], initialContractAddresses[1], genericHandlerSetResourceData[1]),
+              BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[2], initialContractAddresses[2], genericHandlerSetResourceData[2]),
+              BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[3], initialContractAddresses[3], genericHandlerSetResourceData[3]),
+              BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[4], initialContractAddresses[4], genericHandlerSetResourceData[4]),
+              BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[5], initialContractAddresses[5], genericHandlerSetResourceData[5]),
+              BridgeInstance.adminSetResource(PermissionedGenericHandlerInstance.address, initialResourceIDs[6], initialContractAddresses[6], genericHandlerSetResourceData[6]),
         ]);
 
-        depositData = Helpers.createGenericDepositData('0xdeadbeef');
+        depositData = Helpers.createPermissionedGenericDepositData('0xdeadbeef');
 
         // set MPC address to unpause the Bridge
         await BridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -151,7 +133,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             initialResourceIDs[1],
-            Helpers.createGenericDepositData(null),
+            Helpers.createPermissionedGenericDepositData(null),
             feeData,
             { from: depositorAddress }
         );
@@ -161,7 +143,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[1].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositorAddress &&
-                event.data === Helpers.createGenericDepositData(null) &&
+                event.data === Helpers.createPermissionedGenericDepositData(null) &&
                 event.handlerResponse === null
         });
 
@@ -175,7 +157,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             initialResourceIDs[2],
-            Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)),
+            Helpers.createPermissionedGenericDepositData(Helpers.toHex(argumentOne, 32)),
             feeData,
             { from: depositorAddress }
         );
@@ -185,7 +167,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[2].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositorAddress &&
-                event.data === Helpers.createGenericDepositData(Helpers.toHex(argumentOne, 32)) &&
+                event.data === Helpers.createPermissionedGenericDepositData(Helpers.toHex(argumentOne, 32)) &&
                 event.handlerResponse === null
         });
 
@@ -195,13 +177,13 @@ contract('GenericHandler - [deposit]', async (accounts) => {
 
     it('twoArguments can be called successfully and deposit event is created with expected values', async () => {
         const argumentOne = [NoArgumentInstance.address, OneArgumentInstance.address, TwoArgumentsInstance.address];
-        const argumentTwo = initialDepositFunctionSignatures[3];
+        const argumentTwo = Helpers.getFunctionSignature(TwoArgumentsInstance, 'twoArguments');
         const encodedMetaData = Helpers.abiEncode(['address[]','bytes4'], [argumentOne, argumentTwo]);
 
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             initialResourceIDs[3],
-            Helpers.createGenericDepositData(encodedMetaData),
+            Helpers.createPermissionedGenericDepositData(encodedMetaData),
             feeData,
             { from: depositorAddress }
         );
@@ -211,7 +193,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[3].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositorAddress &&
-                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.data === Helpers.createPermissionedGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === null
         });
 
@@ -231,7 +213,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             initialResourceIDs[4],
-            Helpers.createGenericDepositData(encodedMetaData),
+            Helpers.createPermissionedGenericDepositData(encodedMetaData),
             feeData,
             { from: depositorAddress }
         );
@@ -241,7 +223,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[4].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositorAddress &&
-                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.data === Helpers.createPermissionedGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === null
         });
 
@@ -260,7 +242,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             initialResourceIDs[5],
-            Helpers.createGenericDepositData(encodedMetaData),
+            Helpers.createPermissionedGenericDepositData(encodedMetaData),
             feeData,
             { from: depositorAddress }
         );
@@ -270,7 +252,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[5].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositorAddress &&
-                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.data === Helpers.createPermissionedGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === null
         });
 
@@ -289,7 +271,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         await TruffleAssert.reverts(BridgeInstance.deposit(
             destinationDomainID,
             initialResourceIDs[5],
-            Helpers.createGenericDepositData(encodedMetaData),
+            Helpers.createPermissionedGenericDepositData(encodedMetaData),
             feeData,
             { from: depositorAddress }
         ), 'incorrect depositor in the data');
@@ -302,7 +284,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
         const depositTx = await BridgeInstance.deposit(
             destinationDomainID,
             initialResourceIDs[6],
-            Helpers.createGenericDepositData(encodedMetaData),
+            Helpers.createPermissionedGenericDepositData(encodedMetaData),
             feeData,
             { from: depositorAddress }
         );
@@ -314,7 +296,7 @@ contract('GenericHandler - [deposit]', async (accounts) => {
                 event.resourceID === initialResourceIDs[6].toLowerCase() &&
                 event.depositNonce.toNumber() === expectedDepositNonce &&
                 event.user === depositorAddress &&
-                event.data === Helpers.createGenericDepositData(encodedMetaData) &&
+                event.data === Helpers.createPermissionedGenericDepositData(encodedMetaData) &&
                 event.handlerResponse === expectedMetaData
         });
     })

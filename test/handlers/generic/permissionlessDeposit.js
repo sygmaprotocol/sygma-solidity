@@ -8,11 +8,11 @@ const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
 const TestStoreContract = artifacts.require("TestStore");
-const GenericHandlerContract = artifacts.require("GenericHandlerV1");
+const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 const WithDepositorContract = artifacts.require("WithDepositor");
 const ReturnDataContract = artifacts.require("ReturnData");
 
-contract('GenericHandlerV1 - [deposit]', async (accounts) => {
+contract('PermissionlessGenericHandler - [deposit]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
@@ -22,13 +22,15 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
     const feeData = '0x';
     const destinationMaxFee = 2000000;
     const hashOfTestStore = Ethers.utils.keccak256('0xc0ffee');
+    const emptySetResourceData = '0x';
+
 
     let BridgeInstance;
     let TestStoreInstance;
 
     let resourceID;
     let depositFunctionSignature;
-    let GenericHandlerInstance;
+    let PermissionlessGenericHandlerInstance;
     let depositData;
 
     beforeEach(async () => {
@@ -41,20 +43,20 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
 
         resourceID = Helpers.createResourceID(TestStoreInstance.address, originDomainID)
 
-        GenericHandlerInstance = await GenericHandlerContract.new(
+        PermissionlessGenericHandlerInstance = await PermissionlessGenericHandlerContract.new(
             BridgeInstance.address);
 
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, TestStoreInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
+        await BridgeInstance.adminSetResource(PermissionlessGenericHandlerInstance.address, resourceID, TestStoreInstance.address, emptySetResourceData);
 
         depositFunctionSignature = Helpers.getFunctionSignature(TestStoreInstance, 'storeWithDepositor');
 
 
-        depositData = Helpers.createGenericDepositDataV1(
-          depositFunctionSignature,
-          TestStoreInstance.address,
-          destinationMaxFee,
-          depositorAddress,
-          hashOfTestStore
+        depositData = Helpers.createPermissionlessGenericDepositData(
+            depositFunctionSignature,
+            TestStoreInstance.address,
+            destinationMaxFee,
+            depositorAddress,
+            hashOfTestStore
         );
 
         // set MPC address to unpause the Bridge
@@ -105,7 +107,7 @@ contract('GenericHandlerV1 - [deposit]', async (accounts) => {
     it('should revert if metadata encoded depositor does not match deposit depositor', async () => {
       const invalidDepositorAddress = accounts[2];
 
-      const invalidDepositData = Helpers.createGenericDepositDataV1(
+      const invalidDepositData = Helpers.createPermissionlessGenericDepositData(
         depositFunctionSignature,
         TestStoreInstance.address,
         destinationMaxFee,

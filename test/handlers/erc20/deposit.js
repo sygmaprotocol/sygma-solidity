@@ -18,15 +18,13 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
     const tokenAmount = 100;
     const feeData = '0x';
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let ERC20MintableInstance;
     let ERC20HandlerInstance;
 
     let resourceID;
-    let initialResourceIDs;
-    let initialContractAddresses;
-    let burnableContractAddresses;
 
     beforeEach(async () => {
         await Promise.all([
@@ -46,7 +44,7 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
 
         await Promise.all([
             ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, { from: depositorAddress }),
-            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address)
+            BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID, ERC20MintableInstance.address, emptySetResourceData)
         ]);
 
         // set MPC address to unpause the Bridge
@@ -124,8 +122,8 @@ contract('ERC20Handler - [Deposit ERC20]', async (accounts) => {
         const EOA_Address = accounts[1];
         const resourceID_ZERO_Address = Helpers.createResourceID(ZERO_Address, originDomainID);
         const resourceID_EOA_Address = Helpers.createResourceID(EOA_Address, originDomainID);
-        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID_ZERO_Address, ZERO_Address);
-        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID_EOA_Address, EOA_Address);
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID_ZERO_Address, ZERO_Address, emptySetResourceData);
+        await BridgeInstance.adminSetResource(ERC20HandlerInstance.address, resourceID_EOA_Address, EOA_Address, emptySetResourceData);
 
         const recipientAddress = accounts[0] + accounts[1].substr(2);
         const lenRecipientAddress = 40;

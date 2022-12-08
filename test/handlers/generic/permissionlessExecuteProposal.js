@@ -8,9 +8,9 @@ const Ethers = require('ethers');
 const Helpers = require('../../helpers');
 
 const TestStoreContract = artifacts.require("TestStore");
-const GenericHandlerContract = artifacts.require("GenericHandlerV1");
+const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 
-contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
+contract('PermissionlessGenericHandler - [Execute Proposal]', async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
@@ -29,7 +29,7 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
 
     let resourceID;
     let depositFunctionSignature;
-    let GenericHandlerInstance;
+    let PermissionlessGenericHandlerInstance;
     let depositData;
     let proposal;
 
@@ -41,20 +41,25 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
 
         resourceID = Helpers.createResourceID(TestStoreInstance.address, originDomainID);
 
-        GenericHandlerInstance = await GenericHandlerContract.new(
+        PermissionlessGenericHandlerInstance = await PermissionlessGenericHandlerContract.new(
             BridgeInstance.address);
-
-        await BridgeInstance.adminSetGenericResource(GenericHandlerInstance.address, resourceID, TestStoreInstance.address, Helpers.blankFunctionSig, Helpers.blankFunctionDepositorOffset, Helpers.blankFunctionSig);
 
         depositFunctionSignature = Helpers.getFunctionSignature(TestStoreInstance, 'storeWithDepositor');
 
-        depositData =
-         Helpers.createGenericDepositDataV1(
-          depositFunctionSignature,
-          TestStoreInstance.address,
-          destinationMaxFee,
-          depositorAddress,
-          hashOfTestStore
+        const PermissionlessGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+            depositFunctionSignature,
+            Helpers.blankFunctionDepositorOffset,
+            Helpers.blankFunctionSig
+        );
+        await BridgeInstance.adminSetResource(PermissionlessGenericHandlerInstance.address, resourceID, TestStoreInstance.address, PermissionlessGenericHandlerSetResourceData);
+
+
+        depositData = Helpers.createPermissionlessGenericDepositData(
+            depositFunctionSignature,
+            TestStoreInstance.address,
+            destinationMaxFee,
+            depositorAddress,
+            hashOfTestStore
         );
 
         proposal = {
@@ -121,7 +126,7 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
       const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
       // execution contract address
       const invalidDepositData =
-      Helpers.createGenericDepositDataV1(
+      Helpers.createPermissionlessGenericDepositData(
         depositFunctionSignature,
         invalidExecutionContractAddress,
         destinationMaxFee,
@@ -129,7 +134,7 @@ contract('GenericHandlerV1 - [Execute Proposal]', async (accounts) => {
         hashOfTestStore
     );
 
-    const depositDataHash = Ethers.utils.keccak256(GenericHandlerInstance.address + depositData.substr(2));
+    const depositDataHash = Ethers.utils.keccak256(PermissionlessGenericHandlerInstance.address + depositData.substr(2));
 
     await TruffleAssert.passes(BridgeInstance.deposit(
         originDomainID,

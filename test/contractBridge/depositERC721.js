@@ -22,6 +22,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
     const expectedDepositNonce = 1;
     const genericBytes = '0x736f796c656e745f677265656e5f69735f70656f706c65';
     const feeData = '0x';
+    const emptySetResourceData = '0x';
 
     let BridgeInstance;
     let OriginERC721MintableInstance;
@@ -44,7 +45,7 @@ contract('Bridge - [deposit - ERC721]', async (accounts) => {
         ]);
 
         await Promise.all([
-            BridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address),
+            BridgeInstance.adminSetResource(OriginERC721HandlerInstance.address, originResourceID, OriginERC721MintableInstance.address, emptySetResourceData),
             OriginERC721MintableInstance.mint(depositorAddress, originChainTokenID, genericBytes)
         ]);
 
