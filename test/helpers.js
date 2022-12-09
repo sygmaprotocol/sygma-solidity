@@ -162,27 +162,28 @@ const nonceAndId = (nonce, id) => {
 const createOracleFeeData = (oracleResponse, privateKey, amount) => {
     /*
         feeData structure:
-            ber*10^18: uint256
-            ter*10^18: uint256
-            dstGasPrice: uint256
-            timestamp: uint256
+            ber*10^18:    uint256
+            ter*10^18:    uint256
+            dstGasPrice:  uint256
+            timestamp:    uint256
             fromDomainID: uint8 encoded as uint256
-            toDomainID: uint8 encoded as uint256
-            resourceID: bytes32
-            sig: bytes(65 bytes)
+            toDomainID:   uint8 encoded as uint256
+            resourceID:   bytes32
+            msgGasLimit:  uint256
+            sig:          bytes(65 bytes)
 
         total in bytes:
         message:
-            32 * 7  = 224
+            32 * 8  = 256
         message + sig:
-            224 + 65 = 289
+            256 + 65 = 321
 
             amount: uint256
-        total feeData length: 321
+        total feeData length: 353
     */
 
     const oracleMessage = Ethers.utils.solidityPack(
-        ['uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32'],
+        ['uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32', 'uint256'],
         [
             oracleResponse.ber,
             oracleResponse.ter,
@@ -190,7 +191,8 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
             oracleResponse.expiresAt,
             oracleResponse.fromDomainID,
             oracleResponse.toDomainID,
-            oracleResponse.resourceID
+            oracleResponse.resourceID,
+            oracleResponse.msgGasLimit
         ]
       );
     const messageHash = Ethers.utils.keccak256(oracleMessage);

@@ -34,6 +34,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         uint8 fromDomainID;
         uint8 toDomainID;
         bytes32 resourceID;
+        uint256 msgGasLimit;
     }
 
     struct FeeDataType {
@@ -142,25 +143,27 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
             fromDomainID: uint8 encoded as uint256
             toDomainID:   uint8 encoded as uint256
             resourceID:   bytes32
+            msgGasLimit:  uint256
             sig:          bytes(65 bytes)
 
             total in bytes:
             message:
-            32 * 7  = 224
+            32 * 8  = 256
             message + sig:
-            224 + 65 = 289
+            256 + 65 = 321
 
             amount: uint256
-            total: 321
+            total: 353
         */
 
-        require(feeData.length == 321, "Incorrect feeData length");
+        require(feeData.length == 353, "Incorrect feeData length");
 
         FeeDataType memory feeDataDecoded;
+        uint256 txCost;
 
-        feeDataDecoded.message = bytes(feeData[: 224]);
-        feeDataDecoded.sig = bytes(feeData[224: 289]);
-        feeDataDecoded.amount = abi.decode(feeData[289:], (uint256));
+        feeDataDecoded.message = bytes(feeData[: 256]);
+        feeDataDecoded.sig = bytes(feeData[256: 321]);
+        feeDataDecoded.amount = abi.decode(feeData[321:], (uint256));
 
         OracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (OracleMessageType));
         require(block.timestamp <= oracleMessage.expiresAt, "Obsolete oracle data");
@@ -177,8 +180,13 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
 
-        // txCost = dstGasPrice * _gasUsed * Token Effective Rate (rate of dest base currency to token)
-        uint256 txCost = oracleMessage.dstGasPrice * _gasUsed * oracleMessage.ter / 1e18;
+        if(oracleMessage.msgGasLimit > 0) {
+            // txCost = dstGasPrice * oracleMessage.msgGasLimit * Base Effective Rate (rate between base currencies of source and dest)
+            txCost = oracleMessage.dstGasPrice * oracleMessage.msgGasLimit * oracleMessage.ber / 1e18;
+        } else {
+            // txCost = dstGasPrice * _gasUsed * Token Effective Rate (rate of dest base currency to token)
+            txCost = oracleMessage.dstGasPrice * _gasUsed * oracleMessage.ter / 1e18;
+        }
 
         fee = feeDataDecoded.amount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
 
