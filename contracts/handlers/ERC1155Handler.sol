@@ -34,7 +34,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         destinationRecipientAddress                   bytes    bytes
         transferData                                  bytes    bytes
      */
-    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external override onlyBridge returns (bytes memory metaData) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external override onlyBridge returns (bytes memory) {
         uint[] memory tokenIDs;
         uint[] memory amounts;
 
