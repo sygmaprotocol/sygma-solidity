@@ -3,164 +3,227 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
- const Ethers = require('ethers');
- const ethSigUtil = require('eth-sig-util');
+const Ethers = require("ethers");
+const ethSigUtil = require("eth-sig-util");
 
- const AccessControlSegregatorContract = artifacts.require("AccessControlSegregator");
- const BridgeContract = artifacts.require("Bridge");
+const AccessControlSegregatorContract = artifacts.require(
+  "AccessControlSegregator"
+);
+const BridgeContract = artifacts.require("Bridge");
 
- const blankFunctionSig = '0x00000000';
- const blankFunctionDepositorOffset = "0x0000000000000000000000000000000000000000000000000000000000000000"
- const AbiCoder = new Ethers.utils.AbiCoder;
- const mpcAddress = "0x1Ad4b1efE3Bc6FEE085e995FCF48219430e615C3";
- const mpcPrivateKey= "0x497b6ae580cb1b0238f8b6b543fada697bc6f8768a983281e5e52a1a5bca4d58"
- const toHex = (covertThis, padding) => {
-    return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(covertThis), padding);
- };
-
- const abiEncode = (valueTypes, values) => {
-    return AbiCoder.encode(valueTypes, values)
- };
-
- const getFunctionSignature = (contractInstance, functionName) => {
-    return contractInstance.abi.filter(abiProperty => abiProperty.name === functionName)[0].signature;
- };
-
- const createCallData = (contractInstance, functionName, valueTypes, values) => {
-    let signature = getFunctionSignature(contractInstance, functionName);
-    let encodedABI = abiEncode(valueTypes, values);
-    return signature + encodedABI.substr(2);
- };
-
- const createERCDepositData = (tokenAmountOrID, lenRecipientAddress, recipientAddress) => {
-    return '0x' +
-        toHex(tokenAmountOrID, 32).substr(2) +      // Token amount or ID to deposit (32 bytes)
-        toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
-        recipientAddress.substr(2);               // recipientAddress               (?? bytes)
+const blankFunctionSig = "0x00000000";
+const blankFunctionDepositorOffset =
+  "0x0000000000000000000000000000000000000000000000000000000000000000";
+const AbiCoder = new Ethers.utils.AbiCoder();
+const mpcAddress = "0x1Ad4b1efE3Bc6FEE085e995FCF48219430e615C3";
+const mpcPrivateKey =
+  "0x497b6ae580cb1b0238f8b6b543fada697bc6f8768a983281e5e52a1a5bca4d58";
+const toHex = (covertThis, padding) => {
+  return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(covertThis), padding);
 };
 
-const createERCWithdrawData = (tokenAddress, recipientAddress, tokenAmountOrID) => {
-    return '0x' +
-        toHex(tokenAddress, 32).substr(2) +
-        toHex(recipientAddress, 32).substr(2) +
-        toHex(tokenAmountOrID, 32).substr(2);
-}
+const abiEncode = (valueTypes, values) => {
+  return AbiCoder.encode(valueTypes, values);
+};
+
+const getFunctionSignature = (contractInstance, functionName) => {
+  return contractInstance.abi.filter(
+    (abiProperty) => abiProperty.name === functionName
+  )[0].signature;
+};
+
+const createCallData = (contractInstance, functionName, valueTypes, values) => {
+  const signature = getFunctionSignature(contractInstance, functionName);
+  const encodedABI = abiEncode(valueTypes, values);
+  return signature + encodedABI.substr(2);
+};
+
+const createERCDepositData = (
+  tokenAmountOrID,
+  lenRecipientAddress,
+  recipientAddress
+) => {
+  return (
+    "0x" +
+    toHex(tokenAmountOrID, 32).substr(2) + // Token amount or ID to deposit (32 bytes)
+    toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)          (32 bytes)
+    recipientAddress.substr(2)
+  ); // recipientAddress               (?? bytes)
+};
+
+const createERCWithdrawData = (
+  tokenAddress,
+  recipientAddress,
+  tokenAmountOrID
+) => {
+  return (
+    "0x" +
+    toHex(tokenAddress, 32).substr(2) +
+    toHex(recipientAddress, 32).substr(2) +
+    toHex(tokenAmountOrID, 32).substr(2)
+  );
+};
 
 const createERC1155DepositData = (tokenIDs, amounts) => {
-    return abiEncode(["uint[]", "uint[]"], [tokenIDs, amounts]);
-}
+  return abiEncode(["uint[]", "uint[]"], [tokenIDs, amounts]);
+};
 
-const createERC1155DepositProposalData = (tokenIDs, amounts, recipient, transferData) => {
-    return abiEncode(["uint[]", "uint[]", "bytes", "bytes"], [tokenIDs, amounts, recipient, transferData])
-}
+const createERC1155DepositProposalData = (
+  tokenIDs,
+  amounts,
+  recipient,
+  transferData
+) => {
+  return abiEncode(
+    ["uint[]", "uint[]", "bytes", "bytes"],
+    [tokenIDs, amounts, recipient, transferData]
+  );
+};
 
-const createERC1155WithdrawData = (tokenAddress, recipient, tokenIDs, amounts, transferData) => {
-    return abiEncode(["address", "address", "uint[]", "uint[]", "bytes"], [tokenAddress, recipient, tokenIDs, amounts, transferData])
-}
+const createERC1155WithdrawData = (
+  tokenAddress,
+  recipient,
+  tokenIDs,
+  amounts,
+  transferData
+) => {
+  return abiEncode(
+    ["address", "address", "uint[]", "uint[]", "bytes"],
+    [tokenAddress, recipient, tokenIDs, amounts, transferData]
+  );
+};
 
 const createERC721DepositProposalData = (
-    tokenAmountOrID, lenRecipientAddress,
-    recipientAddress, lenMetaData, metaData) => {
-    return '0x' +
-        toHex(tokenAmountOrID, 32).substr(2) +     // Token amount or ID to deposit (32 bytes)
-        toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)         (32 bytes)
-        recipientAddress.substr(2) +               // recipientAddress              (?? bytes)
-        toHex(lenMetaData, 32).substr(2) +         // len(metaData)                 (32 bytes)
-        toHex(metaData, lenMetaData).substr(2)     // metaData                      (?? bytes)
+  tokenAmountOrID,
+  lenRecipientAddress,
+  recipientAddress,
+  lenMetaData,
+  metaData
+) => {
+  return (
+    "0x" +
+    toHex(tokenAmountOrID, 32).substr(2) + // Token amount or ID to deposit (32 bytes)
+    toHex(lenRecipientAddress, 32).substr(2) + // len(recipientAddress)         (32 bytes)
+    recipientAddress.substr(2) + // recipientAddress              (?? bytes)
+    toHex(lenMetaData, 32).substr(2) + // len(metaData)                 (32 bytes)
+    toHex(metaData, lenMetaData).substr(2)
+  ); // metaData                      (?? bytes)
 };
 
 const advanceBlock = () => {
-    let provider = new Ethers.providers.JsonRpcProvider();
-    const time = Math.floor(Date.now() / 1000);
-    return provider.send("evm_mine", [time]);
-}
-
-const advanceTime = (seconds) => {
-    let provider = new Ethers.providers.JsonRpcProvider();
-    const time = Math.floor(Date.now() / 1000) + seconds;
-    return provider.send("evm_mine", [time]);
-}
-
-const createPermissionedGenericDepositData = (hexMetaData) => {
-    if (hexMetaData === null) {
-        return '0x' +
-            toHex(0, 32).substr(2) // len(metaData) (32 bytes)
-    }
-    const hexMetaDataLength = (hexMetaData.substr(2)).length / 2;
-    return '0x' +
-        toHex(hexMetaDataLength, 32).substr(2) +
-        hexMetaData.substr(2)
+  const provider = new Ethers.providers.JsonRpcProvider();
+  const time = Math.floor(Date.now() / 1000);
+  return provider.send("evm_mine", [time]);
 };
 
-const createPermissionlessGenericDepositData = (executeFunctionSignature, executeContractAddress, maxFee, depositor, executionData, depositorCheck = true) => {
-    if(depositorCheck) {
-      // if "depositorCheck" is true -> append depositor address for destination chain check
-      executionData = executionData.concat(toHex(depositor,32).substr(2));
-    }
+const advanceTime = (seconds) => {
+  const provider = new Ethers.providers.JsonRpcProvider();
+  const time = Math.floor(Date.now() / 1000) + seconds;
+  return provider.send("evm_mine", [time]);
+};
 
-    return( '0x' +
-        toHex(maxFee, 32).substr(2) +                                        // uint256
-        toHex(executeFunctionSignature.substr(2).length/2, 2).substr(2) +    // uint16
-        executeFunctionSignature.substr(2) +                                 // bytes
-        toHex(executeContractAddress.substr(2).length/2, 1).substr(2) +      // uint8
-        executeContractAddress.substr(2) +                                   // bytes
-        toHex(32, 1).substr(2) +                                             // uint8
-        toHex(depositor, 32).substr(2) +                                     // bytes32
-        executionData.substr(2)                                              // bytes
-    ).toLowerCase()
+const createPermissionedGenericDepositData = (hexMetaData) => {
+  if (hexMetaData === null) {
+    return "0x" + toHex(0, 32).substr(2); // len(metaData) (32 bytes)
+  }
+  const hexMetaDataLength = hexMetaData.substr(2).length / 2;
+  return "0x" + toHex(hexMetaDataLength, 32).substr(2) + hexMetaData.substr(2);
+};
+
+const createPermissionlessGenericDepositData = (
+  executeFunctionSignature,
+  executeContractAddress,
+  maxFee,
+  depositor,
+  executionData,
+  depositorCheck = true
+) => {
+  if (depositorCheck) {
+    // if "depositorCheck" is true -> append depositor address for destination chain check
+    executionData = executionData.concat(toHex(depositor, 32).substr(2));
+  }
+
+  return (
+    "0x" +
+    toHex(maxFee, 32).substr(2) + // uint256
+    toHex(executeFunctionSignature.substr(2).length / 2, 2).substr(2) + // uint16
+    executeFunctionSignature.substr(2) + // bytes
+    toHex(executeContractAddress.substr(2).length / 2, 1).substr(2) + // uint8
+    executeContractAddress.substr(2) + // bytes
+    toHex(32, 1).substr(2) + // uint8
+    toHex(depositor, 32).substr(2) + // bytes32
+    executionData.substr(2)
+  ) // bytes
+    .toLowerCase();
 };
 
 const constructGenericHandlerSetResourceData = (...args) => {
   return args.reduce((accumulator, currentArg) => {
-      if(typeof currentArg === 'number'){
-          currentArg = toHex(currentArg, 32);
-      }
-      return accumulator + currentArg.substr(2)});
-}
+    if (typeof currentArg === "number") {
+      currentArg = toHex(currentArg, 32);
+    }
+    return accumulator + currentArg.substr(2);
+  });
+};
 
 const createResourceID = (contractAddress, domainID) => {
-    return toHex(contractAddress + toHex(domainID, 1).substr(2), 32)
+  return toHex(contractAddress + toHex(domainID, 1).substr(2), 32);
 };
 
 const assertObjectsMatch = (expectedObj, actualObj) => {
-    for (const expectedProperty of Object.keys(expectedObj)) {
-        assert.property(actualObj, expectedProperty, `actualObj does not have property: ${expectedProperty}`);
+  for (const expectedProperty of Object.keys(expectedObj)) {
+    assert.property(
+      actualObj,
+      expectedProperty,
+      `actualObj does not have property: ${expectedProperty}`
+    );
 
-        let expectedValue = expectedObj[expectedProperty];
-        let actualValue = actualObj[expectedProperty];
+    let expectedValue = expectedObj[expectedProperty];
+    let actualValue = actualObj[expectedProperty];
 
-        // If expectedValue is not null, we can expected actualValue to not be null as well
-        if (expectedValue !== null) {
-            // Handling mixed case ETH addresses
-            // If expectedValue is a string, we can expected actualValue to be a string as well
-            if (expectedValue.toLowerCase !== undefined) {
-                expectedValue = expectedValue.toLowerCase();
-                actualValue = actualValue.toLowerCase();
-            }
+    // If expectedValue is not null, we can expected actualValue to not be null as well
+    if (expectedValue !== null) {
+      // Handling mixed case ETH addresses
+      // If expectedValue is a string, we can expected actualValue to be a string as well
+      if (expectedValue.toLowerCase !== undefined) {
+        expectedValue = expectedValue.toLowerCase();
+        actualValue = actualValue.toLowerCase();
+      }
 
-            // Handling BigNumber.js instances
-            if (actualValue.toNumber !== undefined) {
-                actualValue = actualValue.toNumber();
-            }
+      // Handling BigNumber.js instances
+      if (actualValue.toNumber !== undefined) {
+        actualValue = actualValue.toNumber();
+      }
 
-            // Truffle seems to return uint/ints as strings
-            // Also handles when Truffle returns hex number when expecting uint/int
-            if (typeof expectedValue === 'number' && typeof actualValue === 'string' ||
-                Ethers.utils.isHexString(actualValue) && typeof expectedValue === 'number') {
-                actualValue = parseInt(actualValue);
-            }
-        }
-
-        assert.deepEqual(expectedValue, actualValue, `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`);
+      // Truffle seems to return uint/ints as strings
+      // Also handles when Truffle returns hex number when expecting uint/int
+      if (
+        (typeof expectedValue === "number" &&
+          typeof actualValue === "string") ||
+        (Ethers.utils.isHexString(actualValue) &&
+          typeof expectedValue === "number")
+      ) {
+        actualValue = parseInt(actualValue);
+      }
     }
+
+    assert.deepEqual(
+      expectedValue,
+      actualValue,
+      `expectedValue: ${expectedValue} does not match actualValue: ${actualValue}`
+    );
+  }
 };
 //uint72 nonceAndID = (uint72(depositNonce) << 8) | uint72(domainID);
 const nonceAndId = (nonce, id) => {
-    return Ethers.utils.hexZeroPad(Ethers.utils.hexlify(nonce), 8) + Ethers.utils.hexZeroPad(Ethers.utils.hexlify(id), 1).substr(2)
-}
+  return (
+    Ethers.utils.hexZeroPad(Ethers.utils.hexlify(nonce), 8) +
+    Ethers.utils.hexZeroPad(Ethers.utils.hexlify(id), 1).substr(2)
+  );
+};
 
 const createOracleFeeData = (oracleResponse, privateKey, amount) => {
-    /*
+  /*
         feeData structure:
             ber*10^18:    uint256
             ter*10^18:    uint256
@@ -182,30 +245,39 @@ const createOracleFeeData = (oracleResponse, privateKey, amount) => {
         total feeData length: 353
     */
 
-    const oracleMessage = Ethers.utils.solidityPack(
-        ['uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'uint256', 'bytes32', 'uint256'],
-        [
-            oracleResponse.ber,
-            oracleResponse.ter,
-            oracleResponse.dstGasPrice,
-            oracleResponse.expiresAt,
-            oracleResponse.fromDomainID,
-            oracleResponse.toDomainID,
-            oracleResponse.resourceID,
-            oracleResponse.msgGasLimit
-        ]
-      );
-    const messageHash = Ethers.utils.keccak256(oracleMessage);
-    const signingKey = new Ethers.utils.SigningKey(privateKey);
-    const messageHashBytes = Ethers.utils.arrayify(messageHash);
-    const signature = signingKey.signDigest(messageHashBytes);
-    const rawSignature = Ethers.utils.joinSignature(signature);
-    return oracleMessage + rawSignature.substr(2) + toHex(amount, 32).substr(2);
-}
+  const oracleMessage = Ethers.utils.solidityPack(
+    [
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "bytes32",
+      "uint256",
+    ],
+    [
+      oracleResponse.ber,
+      oracleResponse.ter,
+      oracleResponse.dstGasPrice,
+      oracleResponse.expiresAt,
+      oracleResponse.fromDomainID,
+      oracleResponse.toDomainID,
+      oracleResponse.resourceID,
+      oracleResponse.msgGasLimit,
+    ]
+  );
+  const messageHash = Ethers.utils.keccak256(oracleMessage);
+  const signingKey = new Ethers.utils.SigningKey(privateKey);
+  const messageHashBytes = Ethers.utils.arrayify(messageHash);
+  const signature = signingKey.signDigest(messageHashBytes);
+  const rawSignature = Ethers.utils.joinSignature(signature);
+  return oracleMessage + rawSignature.substr(2) + toHex(amount, 32).substr(2);
+};
 
 const decimalToPaddedBinary = (decimal) => {
-  return decimal.toString(2).padStart(64,'0');
-}
+  return decimal.toString(2).padStart(64, "0");
+};
 
 const accessControlFuncSignatures = [
   "0x80ae1c28", // adminPauseTransfers
@@ -224,90 +296,83 @@ const accessControlFuncSignatures = [
 ];
 
 const deployBridge = async (domainID, admin) => {
-    let accessControlInstance = await AccessControlSegregatorContract.new(
-        accessControlFuncSignatures,
-        Array(13).fill(admin)
-    )
-    return await BridgeContract.new(domainID, accessControlInstance.address);
-}
+  const accessControlInstance = await AccessControlSegregatorContract.new(
+    accessControlFuncSignatures,
+    Array(13).fill(admin)
+  );
+  return await BridgeContract.new(domainID, accessControlInstance.address);
+};
 
 const signTypedProposal = (bridgeAddress, proposals, chainId = 1) => {
-
   const name = "Bridge";
   const version = "3.1.0";
 
   const EIP712Domain = [
-    { name: 'name' ,type: 'string' },
-    { name: 'version' ,type: 'string' },
-    { name: 'chainId' ,type: 'uint256' },
-    { name: 'verifyingContract' ,type: 'address' },
+    {name: "name", type: "string"},
+    {name: "version", type: "string"},
+    {name: "chainId", type: "uint256"},
+    {name: "verifyingContract", type: "address"},
   ];
 
   const types = {
     EIP712Domain: EIP712Domain,
     Proposal: [
-      { name: 'originDomainID', type: 'uint8' },
-      { name: 'depositNonce', type: 'uint64' },
-      { name: 'resourceID', type: 'bytes32' },
-      { name: 'data', type: 'bytes' },
+      {name: "originDomainID", type: "uint8"},
+      {name: "depositNonce", type: "uint64"},
+      {name: "resourceID", type: "bytes32"},
+      {name: "data", type: "bytes"},
     ],
-    Proposals: [
-      { name: 'proposals', type: "Proposal[]"}
-    ]
+    Proposals: [{name: "proposals", type: "Proposal[]"}],
   };
 
-
-  return ethSigUtil.signTypedMessage(
-    Ethers.utils.arrayify(mpcPrivateKey),
-    {
-      data: {
-        types: types,
-        domain: {
-          name,
-          version,
-          chainId,
-          verifyingContract: bridgeAddress,
-        },
-        primaryType: 'Proposals',
-        message: {
-          proposals: proposals
-        }
-      }
-    }
-  );
-}
+  return ethSigUtil.signTypedMessage(Ethers.utils.arrayify(mpcPrivateKey), {
+    data: {
+      types: types,
+      domain: {
+        name,
+        version,
+        chainId,
+        verifyingContract: bridgeAddress,
+      },
+      primaryType: "Proposals",
+      message: {
+        proposals: proposals,
+      },
+    },
+  });
+};
 
 const mockSignTypedProposalWithInvalidChainID = (bridgeAddress, proposals) => {
   return signTypedProposal(bridgeAddress, proposals, 3);
-}
+};
 
 module.exports = {
-    advanceBlock,
-    advanceTime,
-    blankFunctionSig,
-    blankFunctionDepositorOffset,
-    mpcAddress,
-    mpcPrivateKey,
-    accessControlFuncSignatures,
-    toHex,
-    abiEncode,
-    getFunctionSignature,
-    createCallData,
-    createERCDepositData,
-    createERCWithdrawData,
-    createERC1155DepositData,
-    createERC1155DepositProposalData,
-    createERC1155WithdrawData,
-    createPermissionedGenericDepositData,
-    createPermissionlessGenericDepositData,
-    constructGenericHandlerSetResourceData,
-    createERC721DepositProposalData,
-    createResourceID,
-    assertObjectsMatch,
-    nonceAndId,
-    createOracleFeeData,
-    decimalToPaddedBinary,
-    deployBridge,
-    signTypedProposal,
-    mockSignTypedProposalWithInvalidChainID,
+  advanceBlock,
+  advanceTime,
+  blankFunctionSig,
+  blankFunctionDepositorOffset,
+  mpcAddress,
+  mpcPrivateKey,
+  accessControlFuncSignatures,
+  toHex,
+  abiEncode,
+  getFunctionSignature,
+  createCallData,
+  createERCDepositData,
+  createERCWithdrawData,
+  createERC1155DepositData,
+  createERC1155DepositProposalData,
+  createERC1155WithdrawData,
+  createPermissionedGenericDepositData,
+  createPermissionlessGenericDepositData,
+  constructGenericHandlerSetResourceData,
+  createERC721DepositProposalData,
+  createResourceID,
+  assertObjectsMatch,
+  nonceAndId,
+  createOracleFeeData,
+  decimalToPaddedBinary,
+  deployBridge,
+  signTypedProposal,
+  mockSignTypedProposalWithInvalidChainID,
 };

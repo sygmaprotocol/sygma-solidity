@@ -1,25 +1,25 @@
-const parseArgs = require('minimist')
+const parseArgs = require("minimist");
 const fs = require("fs");
 
-const Helpers = require('../test/helpers');
+const Helpers = require("../test/helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
 const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser");
-const ERC721MinterBurnerPauserContract = artifacts.require("ERC721MinterBurnerPauser");
+const ERC721MinterBurnerPauserContract = artifacts.require(
+  "ERC721MinterBurnerPauser"
+);
 
-const DEFAULT_CONFIG_PATH = "./migrations/local.json"
-const emptySetResourceData = '0x';
-
+const DEFAULT_CONFIG_PATH = "./migrations/local.json";
+const emptySetResourceData = "0x";
 
 function getNetworksConfig() {
-  let path = parseArgs(process.argv.slice(2))["file"]
+  let path = parseArgs(process.argv.slice(2))["file"];
   if (path == undefined) {
-    path = DEFAULT_CONFIG_PATH
+    path = DEFAULT_CONFIG_PATH;
   }
 
   return JSON.parse(fs.readFileSync(path));
 }
-
 
 async function setupFee(
   networksConfig,
@@ -30,9 +30,17 @@ async function setupFee(
 ) {
   for await (const network of Object.values(networksConfig)) {
     if (token.feeType == "oracle") {
-      await feeRouterInstance.adminSetResourceHandler(network.domainID, token.resourceID, feeHandlerWithOracleInstance.address)
+      await feeRouterInstance.adminSetResourceHandler(
+        network.domainID,
+        token.resourceID,
+        feeHandlerWithOracleInstance.address
+      );
     } else {
-      await feeRouterInstance.adminSetResourceHandler(network.domainID, token.resourceID, basicFeeHandlerInstance.address)
+      await feeRouterInstance.adminSetResourceHandler(
+        network.domainID,
+        token.resourceID,
+        basicFeeHandlerInstance.address
+      );
     }
   }
 }
@@ -43,21 +51,36 @@ async function setupErc20(
   bridgeInstance,
   erc20HandlerInstance
 ) {
-  var erc20Instance
+  let erc20Instance;
   if (!erc20.address) {
-    erc20Instance = await deployer.deploy(ERC20PresetMinterPauser, erc20.name, erc20.symbol);
-    erc20.address = erc20Instance.address
+    erc20Instance = await deployer.deploy(
+      ERC20PresetMinterPauser,
+      erc20.name,
+      erc20.symbol
+    );
+    erc20.address = erc20Instance.address;
   } else {
-    erc20Instance = await ERC20PresetMinterPauser.at(erc20.address)
-    erc20Instance.contract.setProvider(deployer.provider)
+    erc20Instance = await ERC20PresetMinterPauser.at(erc20.address);
+    erc20Instance.contract.setProvider(deployer.provider);
   }
 
-  await bridgeInstance.adminSetResource(erc20HandlerInstance.address, erc20.resourceID, erc20Instance.address, emptySetResourceData);
+  await bridgeInstance.adminSetResource(
+    erc20HandlerInstance.address,
+    erc20.resourceID,
+    erc20Instance.address,
+    emptySetResourceData
+  );
 
   // strategy can be either mb (mint/burn) or lr (lock/release)
   if (erc20.strategy == "mb") {
-    await erc20Instance.grantRole(await erc20Instance.MINTER_ROLE(), erc20HandlerInstance.address);
-    await bridgeInstance.adminSetBurnable(erc20HandlerInstance.address, erc20Instance.address);
+    await erc20Instance.grantRole(
+      await erc20Instance.MINTER_ROLE(),
+      erc20HandlerInstance.address
+    );
+    await bridgeInstance.adminSetBurnable(
+      erc20HandlerInstance.address,
+      erc20Instance.address
+    );
   }
 }
 
@@ -67,36 +90,61 @@ async function setupErc721(
   bridgeInstance,
   erc721HandlerInstance
 ) {
-  var erc721Instance
+  let erc721Instance;
   if (!erc721.address) {
-    erc721Instance = await deployer.deploy(ERC721MinterBurnerPauserContract, erc721.name, erc721.symbol, erc721.uri);
-    erc721.address = erc721Instance.address
+    erc721Instance = await deployer.deploy(
+      ERC721MinterBurnerPauserContract,
+      erc721.name,
+      erc721.symbol,
+      erc721.uri
+    );
+    erc721.address = erc721Instance.address;
   } else {
-    erc721Instance = await ERC721MinterBurnerPauserContract.at(erc721.address)
-    erc721Instance.contract.setProvider(deployer.provider)
+    erc721Instance = await ERC721MinterBurnerPauserContract.at(erc721.address);
+    erc721Instance.contract.setProvider(deployer.provider);
   }
 
-  await bridgeInstance.adminSetResource(erc721HandlerInstance.address, erc721.resourceID, erc721.address, emptySetResourceData);
+  await bridgeInstance.adminSetResource(
+    erc721HandlerInstance.address,
+    erc721.resourceID,
+    erc721.address,
+    emptySetResourceData
+  );
 
-  await erc721Instance.grantRole(await erc721Instance.MINTER_ROLE(), erc721HandlerInstance.address);
-  await bridgeInstance.adminSetBurnable(erc721HandlerInstance.address, erc721Instance.address);
+  await erc721Instance.grantRole(
+    await erc721Instance.MINTER_ROLE(),
+    erc721HandlerInstance.address
+  );
+  await bridgeInstance.adminSetBurnable(
+    erc721HandlerInstance.address,
+    erc721Instance.address
+  );
 }
 
-async function setupGeneric(deployer, generic, bridgeInstance, genericHandlerInstance) {
+async function setupGeneric(
+  deployer,
+  generic,
+  bridgeInstance,
+  genericHandlerInstance
+) {
   let genericHandlerSetResourceData = "";
   if (!generic.address) {
     const testStoreInstance = await deployer.deploy(TestStoreContract);
     generic.address = testStoreInstance.address;
     generic.depositFunctionSig = Helpers.blankFunctionSig;
     generic.depositorOffset = Helpers.blankFunctionDepositorOffset;
-    generic.executeFunctionSig = Helpers.getFunctionSignature(testStoreInstance, "store");
+    generic.executeFunctionSig = Helpers.getFunctionSignature(
+      testStoreInstance,
+      "store"
+    );
   }
 
-    genericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
+  genericHandlerSetResourceData =
+    Helpers.constructGenericHandlerSetResourceData(
       generic.depositFunctionSig,
       generic.depositorOffset,
       generic.executeFunctionSig
-      );
+    );
 
   await bridgeInstance.adminSetResource(
     genericHandlerInstance.address,
@@ -106,11 +154,10 @@ async function setupGeneric(deployer, generic, bridgeInstance, genericHandlerIns
   );
 }
 
-
 module.exports = {
   setupFee,
   setupErc20,
   setupErc721,
   setupGeneric,
-  getNetworksConfig
-}
+  getNetworksConfig,
+};

@@ -3,16 +3,19 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-const TruffleAssert = require('truffle-assertions');
-const Ethers = require('ethers');
+const TruffleAssert = require("truffle-assertions");
+const Ethers = require("ethers");
 
-const Helpers = require('../../helpers');
+const Helpers = require("../../helpers");
 
-const BridgeContract = artifacts.require("Bridge");
 const TestStoreContract = artifacts.require("TestStore");
-const PermissionedGenericHandlerContract = artifacts.require("PermissionedGenericHandler");
+const PermissionedGenericHandlerContract = artifacts.require(
+  "PermissionedGenericHandler"
+);
 
-contract('PermissionedGenericHandler - [Execute Proposal]', async (accounts) => {
+contract(
+  "PermissionedGenericHandler - [Execute Proposal]",
+  async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
     const expectedDepositNonce = 1;
@@ -22,13 +25,11 @@ contract('PermissionedGenericHandler - [Execute Proposal]', async (accounts) => 
     const depositorAddress = accounts[1];
 
     const TestStoreMinCount = 10;
-    const hashOfTestStore = Ethers.utils.keccak256('0xc0ffee');
-    const feeData = '0x';
+    const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
+    const feeData = "0x";
 
     let BridgeInstance;
     let TestStoreInstance;
-    let initialResourceIDs;
-    let initialContractAddresses;
     let initialDepositFunctionSignatures;
     let initialDepositFunctionDepositorOffsets;
     let initialExecuteFunctionSignatures;
@@ -39,96 +40,130 @@ contract('PermissionedGenericHandler - [Execute Proposal]', async (accounts) => 
     let proposal;
 
     beforeEach(async () => {
-        await Promise.all([
-            BridgeInstance = await Helpers.deployBridge(destinationDomainID, accounts[0]),
-            TestStoreContract.new(TestStoreMinCount).then(instance => TestStoreInstance = instance)
-        ]);
+      await Promise.all([
+        (BridgeInstance = await Helpers.deployBridge(
+          destinationDomainID,
+          accounts[0]
+        )),
+        TestStoreContract.new(TestStoreMinCount).then(
+          (instance) => (TestStoreInstance = instance)
+        ),
+      ]);
 
-        const TestStoreFuncSig = Helpers.getFunctionSignature(TestStoreInstance, 'store');
+      const TestStoreFuncSig = Helpers.getFunctionSignature(
+        TestStoreInstance,
+        "store"
+      );
 
-        resourceID = Helpers.createResourceID(TestStoreInstance.address, originDomainID);
-        initialResourceIDs = [resourceID];
-        initialContractAddresses = [TestStoreInstance.address];
-        initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
-        initialDepositFunctionDepositorOffsets = [Helpers.blankFunctionDepositorOffset];
-        initialExecuteFunctionSignatures = [TestStoreFuncSig];
+      resourceID = Helpers.createResourceID(
+        TestStoreInstance.address,
+        originDomainID
+      );
+      initialResourceIDs = [resourceID];
+      initialContractAddresses = [TestStoreInstance.address];
+      initialDepositFunctionSignatures = [Helpers.blankFunctionSig];
+      initialDepositFunctionDepositorOffsets = [
+        Helpers.blankFunctionDepositorOffset,
+      ];
+      initialExecuteFunctionSignatures = [TestStoreFuncSig];
 
-        PermissionedGenericHandlerInstance = await PermissionedGenericHandlerContract.new(
-            BridgeInstance.address);
+      PermissionedGenericHandlerInstance =
+        await PermissionedGenericHandlerContract.new(BridgeInstance.address);
 
-        const permissionedGenericHandlerSetResourceData = Helpers.constructGenericHandlerSetResourceData(
-            initialDepositFunctionSignatures[0],
-            initialDepositFunctionDepositorOffsets[0],
-            initialExecuteFunctionSignatures[0]
+      const permissionedGenericHandlerSetResourceData =
+        Helpers.constructGenericHandlerSetResourceData(
+          initialDepositFunctionSignatures[0],
+          initialDepositFunctionDepositorOffsets[0],
+          initialExecuteFunctionSignatures[0]
         );
 
-        await BridgeInstance.adminSetResource(
-          PermissionedGenericHandlerInstance.address,
+      await BridgeInstance.adminSetResource(
+        PermissionedGenericHandlerInstance.address,
+        resourceID,
+        TestStoreInstance.address,
+        permissionedGenericHandlerSetResourceData
+      );
+
+      depositData =
+        Helpers.createPermissionedGenericDepositData(hashOfTestStore);
+      depositProposalDataHash = Ethers.utils.keccak256(
+        PermissionedGenericHandlerInstance.address + depositData.substr(2)
+      );
+
+      proposal = {
+        originDomainID: originDomainID,
+        depositNonce: expectedDepositNonce,
+        data: depositData,
+        resourceID: resourceID,
+      };
+
+      // set MPC address to unpause the Bridge
+      await BridgeInstance.endKeygen(Helpers.mpcAddress);
+    });
+
+    it("deposit can be executed successfully", async () => {
+      const proposalSignedData = await Helpers.signTypedProposal(
+        BridgeInstance.address,
+        [proposal]
+      );
+
+      await TruffleAssert.passes(
+        BridgeInstance.deposit(
+          originDomainID,
           resourceID,
-          TestStoreInstance.address,
-          permissionedGenericHandlerSetResourceData
-        );
+          depositData,
+          feeData,
+          {from: depositorAddress}
+        )
+      );
 
-        depositData = Helpers.createPermissionedGenericDepositData(hashOfTestStore);
-        depositProposalDataHash = Ethers.utils.keccak256(PermissionedGenericHandlerInstance.address + depositData.substr(2));
+      // relayer1 executes the proposal
+      await TruffleAssert.passes(
+        BridgeInstance.executeProposal(proposal, proposalSignedData, {
+          from: relayer1Address,
+        })
+      );
 
-        proposal = {
-          originDomainID: originDomainID,
-          depositNonce: expectedDepositNonce,
-          data: depositData,
-          resourceID: resourceID
-        };
-
-        // set MPC address to unpause the Bridge
-        await BridgeInstance.endKeygen(Helpers.mpcAddress);
+      // Verifying asset was marked as stored in TestStoreInstance
+      assert.isTrue(
+        await TestStoreInstance._assetsStored.call(hashOfTestStore)
+      );
     });
 
-    it('deposit can be executed successfully', async () => {
-        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
+    it("AssetStored event should be emitted", async () => {
+      const proposalSignedData = await Helpers.signTypedProposal(
+        BridgeInstance.address,
+        [proposal]
+      );
 
-        await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainID,
-            resourceID,
-            depositData,
-            feeData,
-            { from: depositorAddress }
-        ));
+      await TruffleAssert.passes(
+        BridgeInstance.deposit(
+          originDomainID,
+          resourceID,
+          depositData,
+          feeData,
+          {from: depositorAddress}
+        )
+      );
 
-        // relayer1 executes the proposal
-        await TruffleAssert.passes(BridgeInstance.executeProposal(
-            proposal,
-            proposalSignedData,
-            { from: relayer1Address }
-        ));
+      // relayer1 executes the proposal
+      const executeTx = await BridgeInstance.executeProposal(
+        proposal,
+        proposalSignedData,
+        {from: relayer2Address}
+      );
+      const internalTx = await TruffleAssert.createTransactionResult(
+        TestStoreInstance,
+        executeTx.tx
+      );
+      TruffleAssert.eventEmitted(internalTx, "AssetStored", (event) => {
+        return event.asset === hashOfTestStore;
+      });
 
-        // Verifying asset was marked as stored in TestStoreInstance
-        assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore));
+      assert.isTrue(
+        await TestStoreInstance._assetsStored.call(hashOfTestStore),
+        "TestStore asset was not successfully stored"
+      );
     });
-
-    it('AssetStored event should be emitted', async () => {
-        const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
-
-
-        await TruffleAssert.passes(BridgeInstance.deposit(
-            originDomainID,
-            resourceID,
-            depositData,
-            feeData,
-            { from: depositorAddress }
-        ));
-
-        // relayer1 executes the proposal
-        const executeTx = await BridgeInstance.executeProposal(
-            proposal,
-            proposalSignedData,
-            { from: relayer2Address }
-        );
-        const internalTx = await TruffleAssert.createTransactionResult(TestStoreInstance, executeTx.tx);
-        TruffleAssert.eventEmitted(internalTx, 'AssetStored', event => {
-          return event.asset === hashOfTestStore;
-        });
-
-        assert.isTrue(await TestStoreInstance._assetsStored.call(hashOfTestStore),
-            'TestStore asset was not successfully stored');
-    });
-});
+  }
+);
