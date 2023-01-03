@@ -21,7 +21,7 @@ module.exports = {
     "new-parens": "error",
     "no-caller": "error",
     "no-bitwise": "off",
-    "no-console": "warn",
+    "no-console": "off",
     "no-var": "error",
     "object-curly-spacing": ["error", "never"],
     "prefer-const": "error",
