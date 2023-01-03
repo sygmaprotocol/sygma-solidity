@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
+const Utils = require("./utils")
+
 const BridgeContract = artifacts.require("Bridge");
 const XC20HandlerContract = artifacts.require("XC20Handler");
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
@@ -13,9 +15,12 @@ const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
 module.exports = async function (deployer, network) {
     // trim suffix from network name and fetch current network config
     let currentNetworkName = network.split("-")[0];
-    if(currentNetworkName !== "astar" || "shiden" || "shibuya") {
+    if(currentNetworkName !== "astar" ||  currentNetworkName !== "shiden" ||  currentNetworkName !== "shibuya") {
         return
     }
+
+    const networksConfig = Utils.getNetworksConfig()
+    let currentNetworkConfig = networksConfig[currentNetworkName]
 
     // fetch deployed contracts addresses
     const bridgeInstance = await BridgeContract.deployed();
