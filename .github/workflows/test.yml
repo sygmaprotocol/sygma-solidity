@@ -17,7 +17,7 @@ jobs:
       - uses: actions/cache@v2.1.7
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Install Node.js ${{ matrix.node-version }}
@@ -44,8 +44,8 @@ jobs:
         uses: actions/setup-node@v2.5.1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: NPM install
-        run: npm install
+      - name: Yarn install
+        run: yarn install --frozen-lockfile
       - name: Run coverage
         run: ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
       - name: Coverall
