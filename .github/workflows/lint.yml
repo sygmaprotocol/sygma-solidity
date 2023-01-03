@@ -2,7 +2,7 @@ on: [pull_request]
 name: Linter check
 
 jobs:
-  lint:solidity:
+  lint-solidity:
     name: Lint Solidity
     runs-on: ubuntu-latest
     steps:
@@ -16,7 +16,7 @@ jobs:
       - name: Run linter
         run: yarn run lint:solidity
 
-  lint:js:
+  lint-js:
     name: Lint JS
     runs-on: ubuntu-latest
     steps:
