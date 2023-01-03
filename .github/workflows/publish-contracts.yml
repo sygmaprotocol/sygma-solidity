@@ -1,27 +1,10 @@
 name: Release Contracts
 
 on:
-  push:
-    branches:
-      - 'master'
+  release:
+    types: [published]
 
 jobs:
-  tag:
-    name: Check and Tag
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Create tag
-        id: tag
-        uses: butlerlogic/action-autotag@1.1.1
-        with:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          strategy: package # Optional, since "package" is the default strategy
-          tag_prefix: "v"
-    outputs:
-      tag: ${{ steps.tag.outputs.tagname }}
-
   release-contracts:
     name: Release Contracts
     runs-on: ubuntu-latest
@@ -44,7 +27,6 @@ jobs:
 
       - name: Compile contracts
         run: yarn run compile
-
 
       - name: Deploy local 1
         run: yarn run deploy:local:1
