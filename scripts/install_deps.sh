@@ -14,11 +14,11 @@ else
   (set -x; npm install --global truffle)
 fi
 
-if [ -x "$(command -v ganache-cli)" ]
+if [ -x "$(command -v ganache)" ]
 then
-  echo "ganache-cli found, skipping install"
+  echo "ganache found, skipping install"
 else
-  (set -x; npm install --global ganache-cli)
+  (set -x; npm install --global ganache)
 fi
 
 if [ -x "$(command -v abigen)" ]
@@ -42,4 +42,3 @@ else
         echo "Operating system not supported, please manually install: https://geth.ethereum.org/docs/install-and-build/installing-geth"
   esac
 fi
-
