@@ -2,7 +2,7 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
- require('dotenv').config();
+ require("dotenv").config();
 
 /**
  * Use this file to configure your truffle project. It's seeded with some
@@ -24,7 +24,7 @@
  *
  */
 
-const HDWalletProvider = require('@truffle/hdwallet-provider');
+const HDWalletProvider = require("@truffle/hdwallet-provider");
 // const infuraKey = "fj4jll3k.....";
 //
 // const fs = require('fs');
@@ -75,7 +75,7 @@ module.exports = {
       },
       networkCheckTimeout: 10000,
       timeoutBlocks: 200,
-      network_id: '5',
+      network_id: "5",
       gasPrice: 30000000000,  // 30 gwei
     },
     mumbai: {
@@ -87,7 +87,7 @@ module.exports = {
       },
       networkCheckTimeout: 10000,
       timeoutBlocks: 200,
-      network_id: '80001',
+      network_id: "80001",
       gasPrice: 30000000000,  // 30 gwei
     },
     moonbase: {
@@ -99,7 +99,7 @@ module.exports = {
       },
       networkCheckTimeout: 10000,
       timeoutBlocks: 200,
-      network_id: '1287',
+      network_id: "1287",
       gasPrice: 30000000000,  // 30 gwei
     }
     // Another network with more advanced options...

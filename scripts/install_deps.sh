@@ -5,7 +5,7 @@
 
 set -e
 
-(set -x; npm install)
+(set -x; yarn install --frozen-lockfil)
 
 if [ -x "$(command -v truffle)" ]
 then
@@ -42,4 +42,3 @@ else
         echo "Operating system not supported, please manually install: https://geth.ethereum.org/docs/install-and-build/installing-geth"
   esac
 fi
-
