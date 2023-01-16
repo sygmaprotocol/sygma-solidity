@@ -80,9 +80,9 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
-            mintERC20(tokenAddress, address(recipientAddress), amount);
+            mintERC20(tokenAddress, address(recipientAddress), convertBalance(tokenAddress, amount));
         } else {
-            releaseERC20(tokenAddress, address(recipientAddress), amount);
+            releaseERC20(tokenAddress, address(recipientAddress), convertBalance(tokenAddress, amount));
         }
     }
 
@@ -114,5 +114,20 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
         _setResource(resourceID, contractAddress);
+    }
+
+    /**
+        @notice Returns number of decimals on destination chain.
+        @param tokenAddress Address of contract to be used when making or executing deposits.
+        @param amount Decimals value to be set for {contractAddress}.
+    */
+    function convertBalance(address tokenAddress, uint256 amount) internal returns(uint256) {
+        Decimals memory decimals = _decimals[tokenAddress];
+        require(decimals.srcDecimals != 0 && decimals.destDecimals != 0, "Invalid decimals");
+        if (decimals.destDecimals >= decimals.srcDecimals) {
+            return amount / 10 ** (decimals.destDecimals - decimals.srcDecimals);
+        } else {
+            return amount * 10 ** (decimals.srcDecimals - decimals.destDecimals);
+        }
     }
 }

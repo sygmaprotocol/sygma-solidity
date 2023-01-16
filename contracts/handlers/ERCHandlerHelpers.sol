@@ -24,6 +24,14 @@ contract ERCHandlerHelpers is IERCHandler {
     // token contract address => is burnable
     mapping (address => bool) public _burnList;
 
+    // token contract address => decimals
+    mapping (address => Decimals) public _decimals;
+
+    struct Decimals {
+        uint8 srcDecimals;
+        uint8 destDecimals;
+    }
+
     modifier onlyBridge() {
         _onlyBridge();
         _;
@@ -53,6 +61,17 @@ contract ERCHandlerHelpers is IERCHandler {
 
     function withdraw(bytes memory data) external virtual override {}
 
+    /**
+        @notice First verifies {contractAddress} is whitelisted,
+        then sets {_decimals}[{contractAddress}] to it's decimals value.
+        @param contractAddress Address of contract to be used when making or executing deposits.
+        @param srcDecimals Decimals of this token on source chain.
+        @param destDecimals Decimals of this token on dest chain.
+     */
+    function setDecimals(address contractAddress, uint8 srcDecimals, uint8 destDecimals) external onlyBridge {
+        _setDecimals(contractAddress, srcDecimals, destDecimals);
+    }
+
     function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
@@ -63,5 +82,13 @@ contract ERCHandlerHelpers is IERCHandler {
     function _setBurnable(address contractAddress) internal {
         require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
+    }
+
+    function _setDecimals(address contractAddress, uint8 srcDecimals, uint8 destDecimals) internal {
+        require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
+        _decimals[contractAddress] = Decimals({
+            srcDecimals: srcDecimals,
+            destDecimals: destDecimals
+        });
     }
 }

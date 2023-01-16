@@ -159,6 +159,18 @@ contract Bridge is Pausable, Context, EIP712 {
         handler.setBurnable(tokenAddress);
     }
 
+      /**
+        @notice Sets source and destination number of decimals for handler contract and provided token,
+        which is mapped in {_decimals} in ERCHandlerHelpers.
+        @notice Only callable by address that has the right to call the specific function.
+        @param handlerAddress Address of handler resource will be set for.
+        @param tokenAddress Address of contract to be called when a deposit is made and a deposited is executed.
+     */
+    function adminSetDecimals(address handlerAddress, address tokenAddress, uint8 srcDecimals, uint8 destDecimals) external onlyAllowed {
+        IERCHandler handler = IERCHandler(handlerAddress);
+        handler.setDecimals(tokenAddress, srcDecimals, destDecimals);
+    }
+
     /**
         @notice Sets the nonce for the specific domainID.
         @notice Only callable by address that has the right to call the specific function,

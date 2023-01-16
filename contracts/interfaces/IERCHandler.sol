@@ -25,4 +25,12 @@ interface IERCHandler {
         @return address The {tokenContractAddress} that is currently set for the resourceID.
      */
     function _resourceIDToTokenContractAddress(bytes32 resourceID) external view returns (address);
+
+      /**
+        @notice Set {contractAddress} decimals on dest chain.
+        @param contractAddress Address of contract to be used when making or executing deposits.
+        @param srcDecimals Decimals of this token on source chain
+        @param destDecimals Decimals of this token on dest chain.
+     */
+    function setDecimals(address contractAddress, uint8 srcDecimals, uint8 destDecimals) external;
 }
