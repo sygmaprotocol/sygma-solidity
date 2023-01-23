@@ -10,6 +10,7 @@ const ERC721MinterBurnerPauserContract = artifacts.require(
 );
 
 const DEFAULT_CONFIG_PATH = "./migrations/local.json";
+const DEFAULT_DECIMALS_VALUE = 18;
 const emptySetResourceData = "0x";
 
 function getNetworksConfig() {
@@ -154,10 +155,31 @@ async function setupGeneric(
   );
 }
 
+async function setupDecimals(
+  networksConfig,
+  bridgeInstance,
+  erc20HandlerInstance,
+  erc20
+){
+  for (const network of Object.values(networksConfig)) {
+    for await (const token of network.erc20){
+      // DEFAULT_DECIMALS_VALUE is used if "decimals" is not defined
+      // under "erc20" property for token in "local.json"
+       await bridgeInstance.adminSetDecimals(
+          erc20HandlerInstance.address,
+          erc20.address,
+          erc20.decimals ?? DEFAULT_DECIMALS_VALUE,
+          token.decimals ?? DEFAULT_DECIMALS_VALUE
+        );
+    }
+  }
+}
+
 module.exports = {
   setupFee,
   setupErc20,
   setupErc721,
   setupGeneric,
   getNetworksConfig,
+  setupDecimals
 };

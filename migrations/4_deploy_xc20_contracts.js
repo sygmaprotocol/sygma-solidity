@@ -46,6 +46,12 @@ module.exports = async function (deployer, network) {
       basicFeeHandlerInstance,
       xc20
     );
+    await Utils.setupDecimals(
+      networksConfig,
+      bridgeInstance,
+      erc20HandlerInstance,
+      erc20
+    );
 
     console.log(
       "-------------------------------------------------------------------------------"
