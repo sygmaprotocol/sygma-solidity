@@ -28,8 +28,8 @@ contract ERCHandlerHelpers is IERCHandler {
     mapping (address => Decimals) public _decimals;
 
     struct Decimals {
-        uint8 srcDecimals;
-        uint8 destDecimals;
+        uint8 localDecimals;
+        uint8 externalDecimals;
     }
 
     modifier onlyBridge() {
@@ -65,11 +65,11 @@ contract ERCHandlerHelpers is IERCHandler {
         @notice First verifies {contractAddress} is whitelisted,
         then sets {_decimals}[{contractAddress}] to it's decimals value.
         @param contractAddress Address of contract to be used when making or executing deposits.
-        @param srcDecimals Decimals of this token on source chain.
-        @param destDecimals Decimals of this token on dest chain.
+        @param localDecimals Decimals of this token on source chain.
+        @param externalDecimals Decimals of this token on dest chain.
      */
-    function setDecimals(address contractAddress, uint8 srcDecimals, uint8 destDecimals) external onlyBridge {
-        _setDecimals(contractAddress, srcDecimals, destDecimals);
+    function setDecimals(address contractAddress, uint8 localDecimals, uint8 externalDecimals) external onlyBridge {
+        _setDecimals(contractAddress, localDecimals, externalDecimals);
     }
 
     function _setResource(bytes32 resourceID, address contractAddress) internal {
@@ -84,11 +84,11 @@ contract ERCHandlerHelpers is IERCHandler {
         _burnList[contractAddress] = true;
     }
 
-    function _setDecimals(address contractAddress, uint8 srcDecimals, uint8 destDecimals) internal {
+    function _setDecimals(address contractAddress, uint8 localDecimals, uint8 externalDecimals) internal {
         require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
         _decimals[contractAddress] = Decimals({
-            srcDecimals: srcDecimals,
-            destDecimals: destDecimals
+            localDecimals: localDecimals,
+            externalDecimals: externalDecimals
         });
     }
 }

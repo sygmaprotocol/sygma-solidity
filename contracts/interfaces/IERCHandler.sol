@@ -29,8 +29,8 @@ interface IERCHandler {
       /**
         @notice Set {contractAddress} decimals on dest chain.
         @param contractAddress Address of contract to be used when making or executing deposits.
-        @param srcDecimals Decimals of this token on source chain
-        @param destDecimals Decimals of this token on dest chain.
+        @param localDecimals Decimals of this token on source chain
+        @param externalDecimals Decimals of this token on dest chain.
      */
-    function setDecimals(address contractAddress, uint8 srcDecimals, uint8 destDecimals) external;
+    function setDecimals(address contractAddress, uint8 localDecimals, uint8 externalDecimals) external;
 }

@@ -117,17 +117,16 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
     }
 
     /**
-        @notice Returns number of decimals on destination chain.
-        @param tokenAddress Address of contract to be used when making or executing deposits.
+        @notice Converts token amount based on decimal places difference between neworks tokens are transfered.
+        @param tokenAddress Address of contract to be used when executing proposals.
         @param amount Decimals value to be set for {contractAddress}.
     */
     function convertBalance(address tokenAddress, uint256 amount) internal returns(uint256) {
         Decimals memory decimals = _decimals[tokenAddress];
-        require(decimals.srcDecimals != 0 && decimals.destDecimals != 0, "Invalid decimals");
-        if (decimals.destDecimals >= decimals.srcDecimals) {
-            return amount / 10 ** (decimals.destDecimals - decimals.srcDecimals);
+        if (decimals.externalDecimals >= decimals.localDecimals) {
+            return amount / 10 ** (decimals.externalDecimals - decimals.localDecimals);
         } else {
-            return amount * 10 ** (decimals.srcDecimals - decimals.destDecimals);
+            return amount * 10 ** (decimals.localDecimals - decimals.externalDecimals);
         }
     }
 }
