@@ -79,35 +79,7 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
   it("[sanity] decimals value is set", async () => {
       const ERC20MintableInstanceDecimals = await ERC20HandlerInstance._decimals.call(ERC20MintableInstance.address);
 
-      assert.strictEqual(ERC20MintableInstanceDecimals.srcDecimals.toNumber(), 10)
-      assert.strictEqual(ERC20MintableInstanceDecimals.destDecimals.toNumber(), 18)
-  });
-
-  it("Should not revert if handler execution failed. FailedHandlerExecution event should be emitted", async () => {
-      // set decimals values to 0 to trigger conversion check
-      await BridgeInstance.adminSetDecimals(ERC20HandlerInstance.address, ERC20MintableInstance.address, 0, 0);
-
-      const proposalSignedData = await Helpers.signTypedProposal(BridgeInstance.address, [proposal]);
-
-      // depositorAddress makes initial deposit of depositAmount
-      await TruffleAssert.passes(BridgeInstance.deposit(
-          destinationDomainID,
-          resourceID,
-          depositData,
-          feeData,
-          {from: depositorAddress}
-      ));
-
-      const executeTx = await BridgeInstance.executeProposal(
-        proposal,
-        proposalSignedData,
-        {from: relayerAddress}
-      );
-
-    TruffleAssert.eventEmitted(executeTx, "FailedHandlerExecution", (event) => {
-        return event.originDomainID.toNumber() === destinationDomainID &&
-            event.depositNonce.toNumber() === expectedDepositNonce &&
-            Ethers.utils.parseBytes32String("0x" + event.lowLevelData.slice(-64)) === "Invalid decimals"
-    });
+      assert.strictEqual(ERC20MintableInstanceDecimals.localDecimals.toNumber(), 10)
+      assert.strictEqual(ERC20MintableInstanceDecimals.externalDecimals.toNumber(), 18)
   });
 });

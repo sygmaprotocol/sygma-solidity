@@ -175,20 +175,6 @@ contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
       // set MPC address to unpause the Bridge
       await OriginBridgeInstance.endKeygen(Helpers.mpcAddress);
       await DestinationBridgeInstance.endKeygen(Helpers.mpcAddress);
-
-      // set decimals values for handler and token [src -> 18 decimals, dest -> 18 decimals]
-      await OriginBridgeInstance.adminSetDecimals(
-        OriginERC20HandlerInstance.address,
-        originInitialContractAddresses[0],
-        18,
-        18
-      );
-      await DestinationBridgeInstance.adminSetDecimals(
-        DestinationERC20HandlerInstance.address,
-        destinationInitialContractAddresses[0],
-        18,
-        18
-      );
   });
 
   it("[sanity] depositorAddress' balance should be equal to initialTokenAmount", async () => {

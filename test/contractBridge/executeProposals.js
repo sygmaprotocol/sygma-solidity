@@ -216,9 +216,6 @@ contract("Bridge - [execute proposal]", async (accounts) => {
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
-
-    // set decimals values for handler and token [src -> 18 decimals, dest -> 18 decimals]
-    await BridgeInstance.adminSetDecimals(ERC20HandlerInstance.address, ERC20MintableInstance.address, 18, 18);
 });
 
   it("should create and execute executeProposal successfully", async () => {
