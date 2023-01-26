@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-const TruffleAssert = require("truffle-assertions");
-const Ethers = require("ethers");
 
 const Helpers = require("../../helpers");
 
@@ -17,13 +15,11 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
 
   const depositorAddress = accounts[1];
   const recipientAddress = accounts[2];
-  const relayerAddress = accounts[3];
 
 
   const tokenAmount = 100;
   const depositAmount = 10;
   const expectedDepositNonce = 1;
-  const feeData = "0x";
   const emptySetResourceData = "0x";
 
   let BridgeInstance;
@@ -31,7 +27,6 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
   let ERC20HandlerInstance;
 
   let resourceID;
-  let depositData;
   let depositProposalData;
 
   beforeEach(async () => {
@@ -51,7 +46,6 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
         data: depositProposalData
       };
 
-      depositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
       depositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
 
       await Promise.all([
