@@ -26,13 +26,20 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: make install-deps
+      - name: Compile contracts
+        run: make compile
+      - name: Store contract artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: contracts-artifacts
+          path: build
       - name: Ganache Tests
         run: |
           SILENT=true make start-ganache
           make test
 
   coverage:
-    needs: Test
+    needs: test
     name: Coverage
     runs-on: ubuntu-latest
     strategy:
@@ -45,6 +52,11 @@ jobs:
         uses: actions/setup-node@v2.5.1
         with:
           node-version: ${{ matrix.node-version }}
+      - name: Download contracts artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: contracts-artifacts
+          path: build
       - name: Yarn install
         run: yarn install --frozen-lockfile
       - name: Run coverage
