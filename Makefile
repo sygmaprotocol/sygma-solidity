@@ -25,6 +25,10 @@ bindings: compile
 	@echo " > \033[32mCreating go bindings for ethereum contracts... \033[0m "
 	./scripts/create_bindings.sh
 
+func-signatures:
+	@echo " > \033[32mGenerating signature hashes... \033[0m "
+	node -e "require('./scripts/generateFuncSignatures.js').generateAccessControlFuncSignatures()"
+
 ## license: Adds license header to missing files.
 license:
 	@echo "  >  \033[32mAdding license headers...\033[0m "
@@ -36,4 +40,3 @@ license-check:
 	@echo "  >  \033[Checking for license headers...\033[0m "
 	GO111MODULE=off go get -u github.com/google/addlicense
 	addlicense -check -c "SYgma" -f ./scripts/header.txt -y 2021 .
-

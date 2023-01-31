@@ -2,6 +2,9 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
+
+const Helpers = require("../../test/helpers");
+
 const BridgeContract = artifacts.require("Bridge");
 const AccessControlSegregatorContract = artifacts.require(
   "AccessControlSegregator"
@@ -30,22 +33,8 @@ contract("Gas Benchmark - [contract deployments]", async (accounts) => {
 
   it("Should deploy all contracts and print benchmarks", async () => {
     const accessControlInstance = await AccessControlSegregatorContract.new(
-      [
-        "0x80ae1c28",
-        "0xad71c7d2",
-        "0xcb10f215",
-        "0x5a1ad87c",
-        "0x8c0c2631",
-        "0xedc20c3c",
-        "0xd15ef64e",
-        "0x9d33b6d4",
-        "0x8b63aebf",
-        "0xbd2a1820",
-        "0x6ba6db6b",
-        "0xd2e5fae9",
-        "0xf5f63b39",
-      ],
-      Array(13).fill(accounts[0])
+        Helpers.accessControlFuncSignatures,
+        Array(13).fill(accounts[0])
     );
     let contractInstances = [accessControlInstance];
     contractInstances = contractInstances.concat(

@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-const Ethers = require("ethers");
-const ethSigUtil = require("eth-sig-util");
+ const Ethers = require("ethers");
+ const ethSigUtil = require("eth-sig-util");
+ const Utils = require("../scripts/generateFuncSignatures");
 
 const AccessControlSegregatorContract = artifacts.require(
   "AccessControlSegregator"
@@ -279,21 +280,8 @@ const decimalToPaddedBinary = (decimal) => {
   return decimal.toString(2).padStart(64, "0");
 };
 
-const accessControlFuncSignatures = [
-  "0x80ae1c28", // adminPauseTransfers
-  "0xffaac0eb", // adminUnpauseTransfers
-  "0x8a3234c7", // adminSetResource
-  "0x8c0c2631", // adminSetBurnable
-  "0xedc20c3c", // adminSetDepositNonce
-  "0xd15ef64e", // adminSetForwarder
-  "0x9d33b6d4", // adminChangeAccessControl
-  "0x8b63aebf", // adminChangeFeeHandler
-  "0xbd2a1820", // adminWithdraw
-  "0x6ba6db6b", // startKeygen
-  "0xd2e5fae9", // endKeygen
-  "0xd8236744", // refreshKey
-  "0x366b4885", // retry
-];
+// filter out only func signatures
+const accessControlFuncSignatures = Utils.generateAccessControlFuncSignatures().map(e => e.hash);
 
 const deployBridge = async (domainID, admin) => {
   const accessControlInstance = await AccessControlSegregatorContract.new(
