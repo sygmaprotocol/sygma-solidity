@@ -62,7 +62,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     ]);
     await OriginXC20TestInstance.approve(
       OriginXC20HandlerInstance.address,
-      depositAmount * 2,
+      depositAmount,
       {from: depositorAddress}
     );
 
@@ -136,6 +136,13 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     });
 
     it("Deposit event is fired with expected value", async () => {
+      // set allowance to 2 * depositAmount since 2 deposits are made in this test
+      await OriginXC20TestInstance.approve(
+        OriginXC20HandlerInstance.address,
+        depositAmount * 2,
+        {from: depositorAddress}
+      );
+
       let depositTx = await BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
@@ -193,7 +200,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
   });
 
   describe("mint/burn strategy", async () => {
-    before(async () => {
+    beforeEach(async () => {
       await BridgeInstance.adminSetBurnable(
         OriginXC20HandlerInstance.address,
         OriginXC20TestInstance.address
@@ -252,10 +259,11 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
         originChainInitialTokenAmount - depositAmount
       );
 
-      const originChainHandlerBalance = await OriginXC20TestInstance.balanceOf(
+      const originChainHandlerAllowance = await OriginXC20TestInstance.allowance(
+        depositorAddress,
         OriginXC20HandlerInstance.address
       );
-      assert.strictEqual(originChainHandlerBalance.toNumber(), depositAmount);
+      assert.strictEqual(originChainHandlerAllowance.toNumber(), depositAmount);
     });
 
     it("Deposit event is fired with expected value", async () => {

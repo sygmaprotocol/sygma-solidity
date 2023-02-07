@@ -70,13 +70,15 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
         XC20TestInstance.address,
         emptySetResourceData
       ),
-      XC20TestInstance.mint(depositorAddress, initialTokenAmount),
-      // XC20TestInstance.mint(XC20HandlerInstance.address, initialTokenAmount),
+      XC20TestInstance.mint(
+        depositorAddress,
+        initialTokenAmount
+      ),
     ]);
-    await XC20TestInstance.approve(
-      XC20TestInstance.address,
-      initialTokenAmount,
-      {from: depositorAddress}
+
+    await BridgeInstance.adminSetBurnable(
+      XC20HandlerInstance.address,
+      XC20TestInstance.address
     );
 
     data = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
@@ -275,6 +277,13 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
   });
 
   describe("mint/burn strategy", async () => {
+    beforeEach(async () => {
+      await BridgeInstance.adminSetBurnable(
+        XC20HandlerInstance.address,
+        XC20TestInstance.address
+      );
+    });
+
     it("isProposalExecuted returns false if depositNonce is not used", async () => {
       const destinationDomainID = await BridgeInstance._domainID();
 
