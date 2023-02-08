@@ -443,4 +443,73 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       );
     });
   });
+
+  it(`transfer event should be emitted with expected values when executing proposal -
+      mint to handler and then transfer to recipient`, async () => {
+    const proposalSignedData = await Helpers.signTypedProposal(
+      BridgeInstance.address,
+      [proposal]
+    );
+
+    // depositorAddress makes initial deposit of depositAmount
+    assert.isFalse(await BridgeInstance.paused());
+    await TruffleAssert.passes(
+      BridgeInstance.deposit(
+        originDomainID,
+        resourceID,
+        depositData,
+        feeData,
+        {from: depositorAddress}
+      )
+    );
+
+    const proposalTx = await BridgeInstance.executeProposal(
+      proposal,
+      proposalSignedData,
+      {from: relayer1Address}
+    );
+
+    TruffleAssert.eventEmitted(proposalTx, "ProposalExecution", (event) => {
+      return (
+        event.originDomainID.toNumber() === originDomainID &&
+        event.depositNonce.toNumber() === expectedDepositNonce &&
+        event.dataHash === dataHash
+      );
+    });
+
+    const internalTx = await TruffleAssert.createTransactionResult(
+      XC20TestInstance,
+      proposalTx.tx
+    );
+
+    // check that tokens are minted to handler
+    TruffleAssert.eventEmitted(internalTx, "Transfer", (event) => {
+      return (
+        event.from === Ethers.constants.AddressZero &&
+        event.to === XC20HandlerInstance.address &&
+        event.value.toNumber() === depositAmount
+      );
+    });
+
+    // check that tokens are transferred from handler to recipient
+    TruffleAssert.eventEmitted(internalTx, "Transfer", (event) => {
+      return (
+        event.from === XC20HandlerInstance.address &&
+        event.to === recipientAddress &&
+        event.value.toNumber() === depositAmount
+      );
+    });
+
+    // check that deposit nonce has been marked as used in bitmap
+    assert.isTrue(
+      await BridgeInstance.isProposalExecuted(
+        originDomainID,
+        expectedDepositNonce
+      )
+    );
+
+    // check that tokens are transferred to recipient address
+    const recipientBalance = await XC20TestInstance.balanceOf(recipientAddress);
+    assert.strictEqual(recipientBalance.toNumber(), depositAmount);
+  });
 });
