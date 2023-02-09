@@ -11,7 +11,7 @@ import "./interfaces/IERC20Plus.sol";
     @notice This contract is intended to be used with XC20Handler contract.
  */
 contract XC20Safe is ERC20Safe {
-        /**
+    /**
         @notice Used to burn XC20s.
         @param tokenAddress Address of XC20 to burn.
         @param owner Current owner of tokens.
@@ -20,5 +20,19 @@ contract XC20Safe is ERC20Safe {
     function burnERC20(address tokenAddress, address owner, uint256 amount) internal override {
         IERC20Plus xc20 = IERC20Plus(tokenAddress);
         xc20.burn(owner, amount);
+    }
+
+    /**
+        @notice Used to mint XC20s.
+        @notice Token issuer can only mint tokens to himself (XC20Handler), overrides
+        minting tokens from ERC20Safe so it mints tokens to handler and then transferes to recipient.
+        @param tokenAddress Address of XC20 to mint.
+        @param recipient Address to mint tokens to.
+        @param amount Amount of tokens to mint.
+     */
+    function mintERC20(address tokenAddress, address recipient, uint256 amount) internal override {
+        IERC20Plus xc20 = IERC20Plus(tokenAddress);
+        xc20.mint(address(this), amount);
+        xc20.transfer(recipient, amount);
     }
 }
