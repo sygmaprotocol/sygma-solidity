@@ -5,25 +5,11 @@ pragma solidity 0.8.11;
 import "./FeeHandlerWithOracle.sol";
 
 /**
-    @title Handles deposit fees on Substrate based on Effective rates provided by Fee oracle.
+    @title Handles deposit fees for generic messages based on Effective rates provided by Fee oracle.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract FeeHandlerSubstrate is FeeHandlerWithOracle {
-
-    struct SubstrateOracleMessageType {
-        // Base Effective Rate - effective rate between base currencies of source and dest networks (eg. MATIC/ETH)
-        uint256 ber;
-        // Token Effective Rate - rate between base currency of destination network and token that is being trasferred (eg. MATIC/USDT)
-        uint256 ter;
-        // Final fee - resulting fee calculated by the oracle
-        uint256 finalFee;
-        uint256 expiresAt;
-        uint8 fromDomainID;
-        uint8 toDomainID;
-        bytes32 resourceID;
-        uint256 msgGasLimit;
-    }
+contract FeeHandlerGeneric is FeeHandlerWithOracle {
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
@@ -33,12 +19,9 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
     }
     
      /**
-        @notice Calculates fee for deposit for Substrate.
+        @notice Calculates fee for generic messages.
         This function is almost identical to the _calculateFee function in the base contract.
-        The differences are: unpacking of the oracle message and the txCost calculation formula.
-        Oracle will do the calculation of the tx cost and provide the resulting fee to the contract.
-        The resulting calculation is:
-        txCost = finalFee * oracleMessage.ter / 1e18
+        The difference is the txCost calculation formula.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
@@ -51,14 +34,14 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
     function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view override returns(uint256 fee, address tokenAddress) {
          /**
             Message:
-            ber * 10^18:  uint256 (not used)
-            ter * 10^18:  uint256
-            finalFee:     uint256
+            ber * 10^18:  uint256
+            ter * 10^18:  uint256 (not used)
+            dstGasPrice:  uint256
             expiresAt:    uint256
             fromDomainID: uint8 encoded as uint256
             toDomainID:   uint8 encoded as uint256
             resourceID:   bytes32
-            msgGasLimit:  uint256 (not used)
+            msgGasLimit:  uint256
             sig:          bytes(65 bytes)
 
             total in bytes:
@@ -80,7 +63,7 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
         feeDataDecoded.sig = bytes(feeData[256: 321]);
         feeDataDecoded.amount = abi.decode(feeData[321:], (uint256));
 
-        SubstrateOracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (SubstrateOracleMessageType));
+        OracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (OracleMessageType));
         require(block.timestamp <= oracleMessage.expiresAt, "Obsolete oracle data");
         require((oracleMessage.fromDomainID == fromDomainID)
             && (oracleMessage.toDomainID == destinationDomainID)
@@ -95,7 +78,9 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
 
-        txCost = oracleMessage.finalFee * oracleMessage.ter / 1e18;
+        require(oracleMessage.msgGasLimit > 0, "msgGasLimit == 0");
+        // txCost = dstGasPrice * oracleMessage.msgGasLimit * Base Effective Rate (rate between base currencies of source and dest)
+        txCost = oracleMessage.dstGasPrice * oracleMessage.msgGasLimit * oracleMessage.ber / 1e18;
 
         fee = feeDataDecoded.amount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
 

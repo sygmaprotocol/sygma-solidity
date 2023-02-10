@@ -131,7 +131,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
       depositData,
       feeData
     );
-    assert.equal(Ethers.utils.formatUnits(res.fee.toString(), "wei"), "49180200000");
+    assert.equal(res.fee.toString(), "49180200000");
     assert.equal(res.tokenAddress, ERC20MintableInstance.address);
   });
 

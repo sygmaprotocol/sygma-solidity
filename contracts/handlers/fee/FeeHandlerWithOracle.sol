@@ -136,14 +136,14 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view virtual returns(uint256 fee, address tokenAddress) {
         /**
             Message:
-            ber * 10^18:  uint256
+            ber * 10^18:  uint256 (not used)
             ter * 10^18:  uint256
             dstGasPrice:  uint256
             expiresAt:    uint256
             fromDomainID: uint8 encoded as uint256
             toDomainID:   uint8 encoded as uint256
             resourceID:   bytes32
-            msgGasLimit:  uint256
+            msgGasLimit:  uint256 (not used)
             sig:          bytes(65 bytes)
 
             total in bytes:
@@ -180,13 +180,8 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
 
-        if(oracleMessage.msgGasLimit > 0) {
-            // txCost = dstGasPrice * oracleMessage.msgGasLimit * Base Effective Rate (rate between base currencies of source and dest)
-            txCost = oracleMessage.dstGasPrice * oracleMessage.msgGasLimit * oracleMessage.ber / 1e18;
-        } else {
-            // txCost = dstGasPrice * _gasUsed * Token Effective Rate (rate of dest base currency to token)
-            txCost = oracleMessage.dstGasPrice * _gasUsed * oracleMessage.ter / 1e18;
-        }
+        // txCost = dstGasPrice * _gasUsed * Token Effective Rate (rate of dest base currency to token)
+        txCost = oracleMessage.dstGasPrice * _gasUsed * oracleMessage.ter / 1e18;
 
         fee = feeDataDecoded.amount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
 
