@@ -30,27 +30,27 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
   let resourceID;
   let FeeHandlerRouterInstance;
 
-        /**
-            Message:
-            ber * 10^18:  uint256 (not used)
-            ter * 10^18:  uint256
-            finalFee:     uint256
-            expiresAt:    uint256
-            fromDomainID: uint8 encoded as uint256
-            toDomainID:   uint8 encoded as uint256
-            resourceID:   bytes32
-            msgGasLimit:  uint256 (not used)
-            sig:          bytes(65 bytes)
+  /**
+      Message:
+      ber * 10^18:  uint256 (not used)
+      ter * 10^18:  uint256
+      finalFee:     uint256
+      expiresAt:    uint256
+      fromDomainID: uint8 encoded as uint256
+      toDomainID:   uint8 encoded as uint256
+      resourceID:   bytes32
+      msgGasLimit:  uint256 (not used)
+      sig:          bytes(65 bytes)
 
-            total in bytes:
-            message:
-            32 * 8  = 256
-            message + sig:
-            256 + 65 = 321
+      total in bytes:
+      message:
+      32 * 8  = 256
+      message + sig:
+      256 + 65 = 321
 
-            amount: uint256
-            total: 353
-        */
+      amount: uint256
+      total: 353
+  */
 
   beforeEach(async () => {
     await Promise.all([

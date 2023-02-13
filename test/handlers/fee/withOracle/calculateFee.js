@@ -50,7 +50,7 @@ contract("FeeHandlerWithOracle - [calculateFee]", async (accounts) => {
 
       amount: uint256
       total: 353
-      */
+  */
 
   beforeEach(async () => {
     await Promise.all([
