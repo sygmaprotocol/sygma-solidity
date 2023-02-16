@@ -284,12 +284,12 @@ const decimalToPaddedBinary = (decimal) => {
 const accessControlFuncSignatures = Utils.generateAccessControlFuncSignatures().map(e => e.hash);
 
 const deployBridge = async (domainID, admin) => {
-    const accessControlInstance = await AccessControlSegregatorContract.new(
-        accessControlFuncSignatures,
-        Array(14).fill(admin)
-    )
-    return await BridgeContract.new(domainID, accessControlInstance.address);
-}
+  const accessControlInstance = await AccessControlSegregatorContract.new(
+    accessControlFuncSignatures,
+    Array(13).fill(admin)
+  );
+  return await BridgeContract.new(domainID, accessControlInstance.address);
+};
 
 const signTypedProposal = (bridgeAddress, proposals, chainId = 1) => {
   const name = "Bridge";

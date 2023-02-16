@@ -1,11 +1,12 @@
+const Ethers = require("ethers");
 const TruffleAssert = require("truffle-assertions");
 
-const Helpers = require("../../helpers");
+const Helpers = require("../../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
-contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts => {
+contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with != 18", async accounts => {
     const adminAddress = accounts[0]
 
     const originDomainID = 1;
@@ -16,12 +17,17 @@ contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts =>
 
     const depositorAddress = accounts[1];
     const recipientAddress = accounts[2];
-    const initialTokenAmount = 10000000;
-    const depositAmount = 140000;
-    const bridgedDepositAmount = 1400000000; // decimals difference is 4 decimal places
+    const originDecimalPlaces = 20;
+    const destinationDecimalPlaces = 18;
+    const bridgeDefaultDecimalPlaces = 18;
+    const initialTokenAmount = Ethers.utils.parseUnits("100", originDecimalPlaces);
+    const originDepositAmount = Ethers.utils.parseUnits("14", originDecimalPlaces);
+    const destinationDepositAmount = Ethers.utils.parseUnits("14", destinationDecimalPlaces);
+    const relayerConvertedAmount = Ethers.utils.parseUnits("14", bridgeDefaultDecimalPlaces);
     const expectedDepositNonce = 1;
     const feeData = "0x";
     const emptySetResourceData = "0x";
+
 
     let OriginBridgeInstance;
     let OriginERC20MintableInstance;
@@ -71,7 +77,7 @@ contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts =>
 
         await OriginERC20MintableInstance.approve(
           OriginERC20HandlerInstance.address,
-          depositAmount,
+          originDepositAmount,
           {from: depositorAddress}
         ),
         await OriginERC20MintableInstance.grantRole(
@@ -86,7 +92,8 @@ contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts =>
           OriginERC20HandlerInstance.address,
           originResourceID,
           originInitialContractAddresses[0],
-          emptySetResourceData
+          // set decimal places for handler and token
+          originDecimalPlaces
         ),
         await OriginBridgeInstance.adminSetBurnable(
           OriginERC20HandlerInstance.address,
@@ -103,11 +110,11 @@ contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts =>
           destinationBurnableContractAddresses[0]
         );
 
-        originDepositData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
-        originDepositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
+        originDepositData = Helpers.createERCDepositData(originDepositAmount, 20, recipientAddress);
+        originDepositProposalData = Helpers.createERCDepositData(relayerConvertedAmount, 20, recipientAddress);
 
-        destinationDepositData = Helpers.createERCDepositData(bridgedDepositAmount, 20, depositorAddress);
-        destinationDepositProposalData = Helpers.createERCDepositData(bridgedDepositAmount, 20, depositorAddress);
+        destinationDepositData = Helpers.createERCDepositData(destinationDepositAmount, 20, depositorAddress);
+        destinationDepositProposalData = Helpers.createERCDepositData(relayerConvertedAmount, 20, depositorAddress);
 
         originDomainProposal = {
           originDomainID: originDomainID,
@@ -126,24 +133,10 @@ contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts =>
         // set MPC address to unpause the Bridge
         await OriginBridgeInstance.endKeygen(Helpers.mpcAddress);
         await DestinationBridgeInstance.endKeygen(Helpers.mpcAddress);
-
-        // set decimals values for handler and token [src -> 5 decimals, dest -> 9 decimals]
-        await OriginBridgeInstance.adminSetDecimals(
-          OriginERC20HandlerInstance.address,
-          originInitialContractAddresses[0],
-          5,
-          9
-        );
-        await DestinationBridgeInstance.adminSetDecimals(
-          DestinationERC20HandlerInstance.address,
-          destinationInitialContractAddresses[0],
-          9,
-          5
-        );
     });
 
     it(`E2E: depositAmount of Origin ERC20 owned by depositAddress to Destination ERC20
-        owned by recipientAddress and back again with different decimals values`, async () => {
+        owned by recipientAddress and back again`, async () => {
         const originProposalSignedData = await Helpers.signTypedProposal(
           DestinationBridgeInstance.address,
           [originDomainProposal]
@@ -157,38 +150,44 @@ contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts =>
         let recipientBalance;
 
         // depositorAddress makes initial deposit of depositAmount
-        await TruffleAssert.passes(OriginBridgeInstance.deposit(
+        await TruffleAssert.passes(
+          OriginBridgeInstance.deposit(
             destinationDomainID,
             originResourceID,
             originDepositData,
             feeData,
             {from: depositorAddress}
-        ));
+          )
+        );
 
         // destinationRelayer1 executes the proposal
-        await TruffleAssert.passes(DestinationBridgeInstance.executeProposal(
+        await TruffleAssert.passes(
+          DestinationBridgeInstance.executeProposal(
             originDomainProposal,
             originProposalSignedData,
             {from: destinationRelayer1Address}
-        ));
+          )
+        );
 
         // Assert ERC20 balance was transferred from depositorAddress
-        depositorBalance = await OriginERC20MintableInstance.balanceOf(depositorAddress);
+        depositorBalance = await OriginERC20MintableInstance.balanceOf(
+          depositorAddress
+        );
         assert.strictEqual(
-          depositorBalance.toNumber(),
-          initialTokenAmount - depositAmount,
-          "depositAmount wasn't transferred from depositorAddress"
+          depositorBalance.toString(),
+          (initialTokenAmount.sub(originDepositAmount)).toString(),
+          "originDepositAmount wasn't transferred from depositorAddress"
         );
 
-
-        // Assert ERC20 balance was transferred to recipientAddress and converted with proper decimal places difference
-        recipientBalance = await DestinationERC20MintableInstance.balanceOf(recipientAddress);
-        assert.strictEqual(
-          recipientBalance.toNumber(),
-          bridgedDepositAmount,
-          "depositAmount wasn't transferred to recipientAddress"
+        // Assert ERC20 balance was transferred to recipientAddress
+        recipientBalance = await DestinationERC20MintableInstance.balanceOf(
+          recipientAddress
         );
-
+        assert.strictEqual(
+          recipientBalance.toString(),
+          destinationDepositAmount.toString(),
+          "originDepositAmount wasn't transferred to recipientAddress"
+        );
 
         // At this point a representation of OriginERC20Mintable has been transferred from
         // depositor to the recipient using Both Bridges and DestinationERC20Mintable.
@@ -196,36 +195,57 @@ contract("E2E ERC20 - Two EVM Chains with different decimals", async accounts =>
 
         await DestinationERC20MintableInstance.approve(
           DestinationERC20HandlerInstance.address,
-          bridgedDepositAmount,
+          destinationDepositAmount,
           {from: recipientAddress}
         );
 
-        // recipientAddress makes a deposit of the received bridgedDepositAmount
-        await TruffleAssert.passes(DestinationBridgeInstance.deposit(
-            originDomainID,
-            destinationResourceID,
-            destinationDepositData,
-            feeData,
-            {from: recipientAddress}
-        ));
+        // recipientAddress makes a deposit of the received depositAmount
+        const depositTx = await DestinationBridgeInstance.deposit(
+          originDomainID,
+          destinationResourceID,
+          destinationDepositData,
+          feeData,
+          {from: recipientAddress}
+        );
+        await TruffleAssert.passes(depositTx);
 
-       // Recipient should have a balance of 0 (deposit amount - deposit amount)
-        recipientBalance = await DestinationERC20MintableInstance.balanceOf(recipientAddress);
-        assert.strictEqual(recipientBalance.toNumber(), 0);
+        // check that handlerResponse is empty - deposits from networks with 18 decimal
+        // places shouldn't return handlerResponse
+        TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
+          return (
+            event.destinationDomainID.toNumber() === originDomainID &&
+            event.resourceID === destinationResourceID.toLowerCase() &&
+            event.depositNonce.toNumber() === expectedDepositNonce &&
+            event.data === destinationDepositData.toLowerCase() &&
+            event.handlerResponse === null
+          );
+        });
+
+        // Recipient should have a balance of 0 (deposit amount)
+        recipientBalance = await DestinationERC20MintableInstance.balanceOf(
+          recipientAddress
+        );
+        assert.strictEqual(recipientBalance.toString(), "0");
 
         // destinationRelayer1 executes the proposal
-        await TruffleAssert.passes(OriginBridgeInstance.executeProposal(
+        await TruffleAssert.passes(
+          OriginBridgeInstance.executeProposal(
             destinationDomainProposal,
             destinationProposalSignedData,
             {from: originRelayer1Address}
-        ));
+          )
+        );
 
         // Assert ERC20 balance was transferred from recipientAddress
-        recipientBalance = await DestinationERC20MintableInstance.balanceOf(recipientAddress);
-        assert.strictEqual(recipientBalance.toNumber(), 0);
+        recipientBalance = await DestinationERC20MintableInstance.balanceOf(
+          recipientAddress
+        );
+        assert.strictEqual(recipientBalance.toString(), "0");
 
         // Assert ERC20 balance was transferred to recipientAddress
-        depositorBalance = await OriginERC20MintableInstance.balanceOf(depositorAddress);
-        assert.strictEqual(depositorBalance.toNumber(), initialTokenAmount);
+        depositorBalance = await OriginERC20MintableInstance.balanceOf(
+          depositorAddress
+        );
+        assert.strictEqual(depositorBalance.toString(), initialTokenAmount.toString());
     });
 });

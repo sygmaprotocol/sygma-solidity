@@ -417,17 +417,4 @@ contract("Bridge - [admin]", async (accounts) => {
       return event.txHash === txHash;
     });
   });
-
-  it("Should require admin role to set decimals", async () => {
-    const ERC20HandlerInstance = await ERC20HandlerContract.new(BridgeInstance.address);
-    const ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
-
-    await assertOnlyAdmin(
-      BridgeInstance.adminSetDecimals,
-      ERC20HandlerInstance.address,
-      ERC20MintableInstance.address,
-      18,
-      10
-    );
-  });
 });

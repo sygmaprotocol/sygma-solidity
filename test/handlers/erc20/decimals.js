@@ -20,6 +20,7 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
   const tokenAmount = 100;
   const depositAmount = 10;
   const expectedDepositNonce = 1;
+  const setDecimalPlaces = 11;
   const emptySetResourceData = "0x";
 
   let BridgeInstance;
@@ -59,21 +60,34 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
             ERC20HandlerInstance.address,
             resourceID,
             ERC20MintableInstance.address,
+            // set decimal places for handler and token
             emptySetResourceData
           )
       ]);
 
       // set MPC address to unpause the Bridge
       await BridgeInstance.endKeygen(Helpers.mpcAddress);
-
-      // set decimals value for handler and token
-      await BridgeInstance.adminSetDecimals(ERC20HandlerInstance.address, ERC20MintableInstance.address, 10, 18);
   });
 
-  it("[sanity] decimals value is set", async () => {
+  it("[sanity] decimals value is not set if 'adminSetResource' is called with empty args", async () => {
       const ERC20MintableInstanceDecimals = await ERC20HandlerInstance._decimals.call(ERC20MintableInstance.address);
 
-      assert.strictEqual(ERC20MintableInstanceDecimals.localDecimals.toNumber(), 10)
-      assert.strictEqual(ERC20MintableInstanceDecimals.externalDecimals.toNumber(), 18)
+      assert.strictEqual(ERC20MintableInstanceDecimals.isSet, false)
+      assert.strictEqual(ERC20MintableInstanceDecimals.externalDecimals.toNumber(), 0)
+  });
+
+  it("[sanity] decimals value is set if args are provided to 'adminSetResource'", async () => {
+      await BridgeInstance.adminSetResource(
+        ERC20HandlerInstance.address,
+        resourceID,
+        ERC20MintableInstance.address,
+        // set decimal places for handler and token
+        setDecimalPlaces
+      );
+
+      const ERC20MintableInstanceDecimals = await ERC20HandlerInstance._decimals.call(ERC20MintableInstance.address);
+
+      assert.strictEqual(ERC20MintableInstanceDecimals.isSet, true)
+      assert.strictEqual(ERC20MintableInstanceDecimals.externalDecimals.toNumber(), 11)
   });
 });
