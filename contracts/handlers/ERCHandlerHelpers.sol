@@ -12,6 +12,8 @@ import "../interfaces/IERCHandler.sol";
 contract ERCHandlerHelpers is IERCHandler {
     address public immutable _bridgeAddress;
 
+    uint8 public constant defaultDecimals = 18;
+
     // resourceID => token contract address
     mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
 
@@ -28,7 +30,7 @@ contract ERCHandlerHelpers is IERCHandler {
     mapping (address => Decimals) public _decimals;
 
     struct Decimals {
-        uint8 localDecimals;
+        bool isSet;
         uint8 externalDecimals;
     }
 
@@ -65,11 +67,10 @@ contract ERCHandlerHelpers is IERCHandler {
         @notice First verifies {contractAddress} is whitelisted,
         then sets {_decimals}[{contractAddress}] to it's decimals value.
         @param contractAddress Address of contract to be used when making or executing deposits.
-        @param localDecimals Decimals of this token on source chain.
-        @param externalDecimals Decimals of this token on dest chain.
+        @param externalDecimals Decimal places of token that is transferred.
      */
-    function setDecimals(address contractAddress, uint8 localDecimals, uint8 externalDecimals) external onlyBridge {
-        _setDecimals(contractAddress, localDecimals, externalDecimals);
+    function setDecimals(address contractAddress, uint8 externalDecimals) external onlyBridge {
+        _setDecimals(contractAddress, externalDecimals);
     }
 
     function _setResource(bytes32 resourceID, address contractAddress) internal {
@@ -84,10 +85,10 @@ contract ERCHandlerHelpers is IERCHandler {
         _burnList[contractAddress] = true;
     }
 
-    function _setDecimals(address contractAddress, uint8 localDecimals, uint8 externalDecimals) internal {
+    function _setDecimals(address contractAddress, uint8 externalDecimals) internal {
         require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
         _decimals[contractAddress] = Decimals({
-            localDecimals: localDecimals,
+            isSet: true,
             externalDecimals: externalDecimals
         });
     }
