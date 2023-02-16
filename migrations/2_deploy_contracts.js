@@ -29,7 +29,7 @@ module.exports = async function (deployer, network) {
     "from"
   ];
   // assign addresses for access segregation
-  const functionAccessAddresses = Array(14).fill(deployerAddress);
+  const functionAccessAddresses = Array(13).fill(deployerAddress);
 
   // trim suffix from network name and fetch current network config
   const currentNetworkName = network.split("-")[0];
@@ -120,12 +120,6 @@ module.exports = async function (deployer, network) {
       feeRouterInstance,
       feeHandlerWithOracleInstance,
       basicFeeHandlerInstance,
-      erc20
-    );
-    await Utils.setupDecimals(
-      networksConfig,
-      bridgeInstance,
-      erc20HandlerInstance,
       erc20
     );
 
