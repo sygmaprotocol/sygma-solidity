@@ -20,7 +20,7 @@ const PermissionedGenericHandlerContract = artifacts.require(
 );
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -75,18 +75,18 @@ module.exports = async function (deployer, network) {
     bridgeInstance.address,
     feeRouterInstance.address
   );
-  const feeHandlerWithOracleInstance = await deployer.deploy(
-    FeeHandlerWithOracleContract,
+  const dynamicFeeHandlerInstance = await deployer.deploy(
+    DynamicFeeHandlerContract,
     bridgeInstance.address,
     feeRouterInstance.address
   );
 
   // setup fee router and fee handlers
   await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);
-  await feeHandlerWithOracleInstance.setFeeOracle(
+  await dynamicFeeHandlerInstance.setFeeOracle(
     currentNetworkConfig.fee.oracle.address
   );
-  await feeHandlerWithOracleInstance.setFeeProperties(
+  await dynamicFeeHandlerInstance.setFeeProperties(
     currentNetworkConfig.fee.oracle.gasUsed,
     currentNetworkConfig.fee.oracle.feePercentage
   );
@@ -104,7 +104,7 @@ module.exports = async function (deployer, network) {
       permissionedGenericHandlerInstance.address,
     "FeeRouterContract Address": feeRouterInstance.address,
     "BasicFeeHandler Address": basicFeeHandlerInstance.address,
-    "FeeHandlerWithOracle Address": feeHandlerWithOracleInstance.address,
+    "DynamicFeeHandler Address": dynamicFeeHandlerInstance.address,
   });
 
   // setup erc20 tokens
@@ -118,7 +118,7 @@ module.exports = async function (deployer, network) {
     await Utils.setupFee(
       networksConfig,
       feeRouterInstance,
-      feeHandlerWithOracleInstance,
+      dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
       erc20
     );
@@ -144,7 +144,7 @@ module.exports = async function (deployer, network) {
     await Utils.setupFee(
       networksConfig,
       feeRouterInstance,
-      feeHandlerWithOracleInstance,
+      dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
       erc721
     );
@@ -169,7 +169,7 @@ module.exports = async function (deployer, network) {
     await Utils.setupFee(
       networksConfig,
       feeRouterInstance,
-      feeHandlerWithOracleInstance,
+      dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
       generic
     );

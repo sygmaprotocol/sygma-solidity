@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "./FeeHandlerWithOracle.sol";
+import "./DynamicFeeHandler.sol";
 
 /**
     @title Handles deposit fees on Substrate based on Effective rates provided by Fee oracle.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract FeeHandlerSubstrate is FeeHandlerWithOracle {
+contract DynamicERC20FeeHandlerSubstrate is DynamicFeeHandler {
 
     struct SubstrateOracleMessageType {
         // Base Effective Rate - effective rate between base currencies of source and dest networks (eg. MATIC/ETH)
@@ -29,7 +29,7 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address bridgeAddress, address feeHandlerRouterAddress) FeeHandlerWithOracle(bridgeAddress, feeHandlerRouterAddress) {
+    constructor(address bridgeAddress, address feeHandlerRouterAddress) DynamicFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
     }
     
      /**
@@ -43,7 +43,7 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
         @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
-        @param depositData Additional data to be passed to specified handler.
+        @param depositData Additional data about the deposit.
         @param feeData Additional data to be passed to the fee handler.
         @return fee Returns the fee amount.
         @return tokenAddress Returns the address of the token to be used for fee.
@@ -67,7 +67,7 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
             message + sig:
             256 + 65 = 321
 
-            amount: uint256
+            amount: uint256 (not used)
             total: 353
         */
 
@@ -78,7 +78,6 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
 
         feeDataDecoded.message = bytes(feeData[: 256]);
         feeDataDecoded.sig = bytes(feeData[256: 321]);
-        feeDataDecoded.amount = abi.decode(feeData[321:], (uint256));
 
         SubstrateOracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (SubstrateOracleMessageType));
         require(block.timestamp <= oracleMessage.expiresAt, "Obsolete oracle data");
@@ -93,11 +92,14 @@ contract FeeHandlerSubstrate is FeeHandlerWithOracle {
         verifySig(messageHash, feeDataDecoded.sig, _oracleAddress);
 
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
-        address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
+        tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
 
         txCost = oracleMessage.finalFee * oracleMessage.ter / 1e18;
 
-        fee = feeDataDecoded.amount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
+        uint256 depositAmount;
+        (depositAmount) = abi.decode(depositData, (uint256));
+
+        fee = depositAmount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
 
         if (fee < txCost) {
             fee = txCost;

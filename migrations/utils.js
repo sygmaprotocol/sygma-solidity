@@ -24,7 +24,7 @@ function getNetworksConfig() {
 async function setupFee(
   networksConfig,
   feeRouterInstance,
-  feeHandlerWithOracleInstance,
+  dynamicFeeHandlerInstance,
   basicFeeHandlerInstance,
   token
 ) {
@@ -33,7 +33,7 @@ async function setupFee(
       await feeRouterInstance.adminSetResourceHandler(
         network.domainID,
         token.resourceID,
-        feeHandlerWithOracleInstance.address
+        dynamicFeeHandlerInstance.address
       );
     } else {
       await feeRouterInstance.adminSetResourceHandler(

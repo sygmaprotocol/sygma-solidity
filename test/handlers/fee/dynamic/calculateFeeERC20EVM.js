@@ -10,10 +10,10 @@ const Helpers = require("../../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
-const FeeHandlerSubstrateContract = artifacts.require("FeeHandlerSubstrate");
+const DynamicERC20FeeHandlerEVMContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
-contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
+contract("DynamicERC20FeeHandlerEVM - [calculateFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 1;
   const oracle = new Ethers.Wallet.createRandom();
@@ -22,11 +22,12 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
   const gasUsed = 100000;
   const feePercent = 500;
   const emptySetResourceData = "0x";
-  const msgGasLimit = 0;
-  const ber = 0;
+  const msgGasLimit = 0; // Not used
+  const ber = 0; // Not used
+  const feeDataAmount = 0; // Not used
 
   let BridgeInstance;
-  let FeeHandlerSubstrateInstance;
+  let DynamicERC20FeeHandlerEVMInstance;
   let resourceID;
   let FeeHandlerRouterInstance;
 
@@ -34,7 +35,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
       Message:
       ber * 10^18:  uint256 (not used)
       ter * 10^18:  uint256
-      finalFee:     uint256
+      dstGasPrice:  uint256
       expiresAt:    uint256
       fromDomainID: uint8 encoded as uint256
       toDomainID:   uint8 encoded as uint256
@@ -48,7 +49,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
       message + sig:
       256 + 65 = 321
 
-      amount: uint256
+      amount: uint256 (not used)
       total: 353
   */
 
@@ -70,7 +71,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
-    FeeHandlerSubstrateInstance = await FeeHandlerSubstrateContract.new(
+    DynamicERC20FeeHandlerEVMInstance = await DynamicERC20FeeHandlerEVMContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
@@ -81,8 +82,8 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     );
 
     await Promise.all([
-      FeeHandlerSubstrateInstance.setFeeOracle(oracle.address),
-      FeeHandlerSubstrateInstance.setFeeProperties(gasUsed, feePercent),
+      DynamicERC20FeeHandlerEVMInstance.setFeeOracle(oracle.address),
+      DynamicERC20FeeHandlerEVMInstance.setFeeProperties(gasUsed, feePercent),
       BridgeInstance.adminSetResource(
         ERC20HandlerInstance.address,
         resourceID,
@@ -93,7 +94,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
       FeeHandlerRouterInstance.adminSetResourceHandler(
         destinationDomainID,
         resourceID,
-        FeeHandlerSubstrateInstance.address
+        DynamicERC20FeeHandlerEVMInstance.address
       ),
     ]);
   });
@@ -109,7 +110,6 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.63934"),
-      // dstGasPrice is used as finalFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -121,7 +121,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const feeData = Helpers.createOracleFeeData(
       oracleResponse,
       oracle.privateKey,
-      tokenAmount
+      feeDataAmount
     );
     const res = await FeeHandlerRouterInstance.calculateFee.call(
       sender,
@@ -131,7 +131,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
       depositData,
       feeData
     );
-    assert.equal(res.fee.toString(), "49180200000");
+    assert.equal(Ethers.utils.formatEther(res.fee.toString()), "0.00491802");
     assert.equal(res.tokenAddress, ERC20MintableInstance.address);
   });
 
@@ -145,7 +145,6 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.63934"),
-      // dstGasPrice is used as finalFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -157,7 +156,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const feeData = Helpers.createOracleFeeData(
       oracleResponse,
       oracle.privateKey,
-      tokenAmount
+      feeDataAmount
     );
     const res = await FeeHandlerRouterInstance.calculateFee.call(
       sender,
@@ -182,8 +181,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
-      dstGasPrice: Ethers.utils.parseEther("0.003"),
+      dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
       toDomainID: destinationDomainID,
@@ -194,7 +192,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const feeData = Helpers.createOracleFeeData(
       oracleResponse,
       oracle.privateKey,
-      tokenAmount
+      feeDataAmount
     );
     const res = await FeeHandlerRouterInstance.calculateFee.call(
       sender,
@@ -219,7 +217,6 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -232,7 +229,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
       Helpers.createOracleFeeData(
         oracleResponse,
         oracle.privateKey,
-        tokenAmount
+        feeDataAmount
       ) + "11";
     await TruffleAssert.reverts(
       FeeHandlerRouterInstance.calculateFee(
@@ -259,7 +256,6 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -271,7 +267,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const feeData = Helpers.createOracleFeeData(
       oracleResponse,
       oracle.privateKey,
-      tokenAmount
+      feeDataAmount
     );
     await TruffleAssert.reverts(
       FeeHandlerRouterInstance.calculateFee(
@@ -297,7 +293,6 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -311,7 +306,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const feeData = Helpers.createOracleFeeData(
       oracleResponse,
       oracle2.privateKey,
-      tokenAmount
+      feeDataAmount
     );
     await TruffleAssert.reverts(
       FeeHandlerRouterInstance.calculateFee(
@@ -329,7 +324,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
   it("should not calculate fee if oracle data are outdated", async () => {
     const gasUsed = 100000;
     const feePercent = 500;
-    await FeeHandlerSubstrateInstance.setFeeProperties(gasUsed, feePercent);
+    await DynamicERC20FeeHandlerEVMInstance.setFeeProperties(gasUsed, feePercent);
 
     const tokenAmount = Ethers.utils.parseEther("1");
     const depositData = Helpers.createERCDepositData(
@@ -340,7 +335,6 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.63934"),
-      // dstGasPrice is used as finalFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) - 500,
       fromDomainID: originDomainID,
@@ -351,7 +345,7 @@ contract("FeeHandlerSubstrate - [calculateFee]", async (accounts) => {
     const feeData = Helpers.createOracleFeeData(
       oracleResponse,
       oracle.privateKey,
-      tokenAmount
+      feeDataAmount
     );
     await TruffleAssert.reverts(
       FeeHandlerRouterInstance.calculateFee(

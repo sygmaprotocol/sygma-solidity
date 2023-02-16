@@ -10,7 +10,7 @@ const AccessControlSegregatorContract = artifacts.require(
 );
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -23,8 +23,8 @@ module.exports = async function (deployer, network) {
     await AccessControlSegregatorContract.deployed();
   const feeRouterInstance = await FeeRouterContract.deployed();
   const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
-  const feeHandlerWithOracleInstance =
-    await FeeHandlerWithOracleContract.deployed();
+  const dynamicFeeHandlerInstance =
+    await DynamicFeeHandlerContract.deployed();
 
   if (currentNetworkConfig.access.feeHandlerAdmin) {
     console.log(
@@ -35,7 +35,7 @@ module.exports = async function (deployer, network) {
     await basicFeeHandlerInstance.renounceAdmin(
       currentNetworkConfig.access.feeHandlerAdmin
     );
-    await feeHandlerWithOracleInstance.renounceAdmin(
+    await dynamicFeeHandlerInstance.renounceAdmin(
       currentNetworkConfig.access.feeHandlerAdmin
     );
   }

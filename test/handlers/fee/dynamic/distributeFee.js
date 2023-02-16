@@ -8,12 +8,12 @@ const Ethers = require("ethers");
 
 const Helpers = require("../../../helpers");
 
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
-contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
+contract("DynamicFeeHandler - [distributeFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const oracle = new Ethers.Wallet.createRandom();
@@ -25,7 +25,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
   const msgGasLimit = 0;
 
   let BridgeInstance;
-  let FeeHandlerWithOracleInstance;
+  let DynamicFeeHandlerInstance;
   let resourceID;
   let depositData;
   let feeData;
@@ -44,15 +44,15 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
-    FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(
+    DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
+    await DynamicFeeHandlerInstance.setFeeOracle(oracle.address);
 
     const gasUsed = 100000;
     const feePercent = 10000;
-    await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
+    await DynamicFeeHandlerInstance.setFeeProperties(gasUsed, feePercent);
 
     ERC20MintableInstance = await ERC20MintableContract.new("token", "TOK");
     resourceID = Helpers.createResourceID(
@@ -76,7 +76,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
         from: depositorAddress,
       }),
       ERC20MintableInstance.approve(
-        FeeHandlerWithOracleInstance.address,
+        DynamicFeeHandlerInstance.address,
         tokenAmount,
         {from: depositorAddress}
       ),
@@ -84,7 +84,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
       FeeHandlerRouterInstance.adminSetResourceHandler(
         destinationDomainID,
         resourceID,
-        FeeHandlerWithOracleInstance.address
+        DynamicFeeHandlerInstance.address
       ),
     ]);
 
@@ -135,14 +135,14 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
       )
     );
     const balance = await ERC20MintableInstance.balanceOf(
-      FeeHandlerWithOracleInstance.address
+      DynamicFeeHandlerInstance.address
     );
     assert.equal(web3.utils.fromWei(balance, "ether"), "1");
 
     const payout = Ethers.utils.parseEther("0.5");
 
     // Transfer the funds
-    const tx = await FeeHandlerWithOracleInstance.transferFee(
+    const tx = await DynamicFeeHandlerInstance.transferFee(
       resourceID,
       [accounts[3], accounts[4]],
       [payout, payout]
@@ -180,7 +180,7 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
       )
     );
     const balance = await ERC20MintableInstance.balanceOf(
-      FeeHandlerWithOracleInstance.address
+      DynamicFeeHandlerInstance.address
     );
     assert.equal(web3.utils.fromWei(balance, "ether"), "1");
 
@@ -188,13 +188,13 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
 
     // Incorrect resourceID
     resourceID = Helpers.createResourceID(
-      FeeHandlerWithOracleInstance.address,
+      DynamicFeeHandlerInstance.address,
       originDomainID
     );
 
     // Transfer the funds: fails
     await TruffleAssert.reverts(
-      FeeHandlerWithOracleInstance.transferFee(
+      DynamicFeeHandlerInstance.transferFee(
         resourceID,
         [accounts[3], accounts[4]],
         [payout, payout]
@@ -215,13 +215,13 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
       )
     );
     const balance = await ERC20MintableInstance.balanceOf(
-      FeeHandlerWithOracleInstance.address
+      DynamicFeeHandlerInstance.address
     );
     assert.equal(web3.utils.fromWei(balance, "ether"), "1");
 
     const payout = Ethers.utils.parseEther("0.5");
     await assertOnlyAdmin(
-      FeeHandlerWithOracleInstance.transferFee,
+      DynamicFeeHandlerInstance.transferFee,
       resourceID,
       [accounts[3], accounts[4]],
       [payout, payout]
@@ -241,13 +241,13 @@ contract("FeeHandlerWithOracle - [distributeFee]", async (accounts) => {
       )
     );
     const balance = await ERC20MintableInstance.balanceOf(
-      FeeHandlerWithOracleInstance.address
+      DynamicFeeHandlerInstance.address
     );
     assert.equal(web3.utils.fromWei(balance, "ether"), "1");
 
     const payout = Ethers.utils.parseEther("0.5");
     await TruffleAssert.reverts(
-      FeeHandlerWithOracleInstance.transferFee(
+      DynamicFeeHandlerInstance.transferFee(
         resourceID,
         [accounts[3], accounts[4]],
         [payout, payout, payout]

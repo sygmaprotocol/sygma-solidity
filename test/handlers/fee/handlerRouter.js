@@ -7,7 +7,7 @@ const TruffleAssert = require("truffle-assertions");
 
 const Helpers = require("../../helpers");
 
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
@@ -42,7 +42,7 @@ contract("FeeHandlerRouter", async (accounts) => {
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
-    FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(
+    DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );

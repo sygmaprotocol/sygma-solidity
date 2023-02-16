@@ -12,7 +12,7 @@ const PermissionlessGenericHandlerContract = artifacts.require(
 );
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -25,8 +25,8 @@ module.exports = async function (deployer, network) {
   const bridgeInstance = await BridgeContract.deployed();
   const feeRouterInstance = await FeeRouterContract.deployed();
   const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
-  const feeHandlerWithOracleInstance =
-    await FeeHandlerWithOracleContract.deployed();
+  const dynamicFeeHandlerInstance =
+    await DynamicFeeHandlerContract.deployed();
 
   // deploy generic handler
   const permissionlessGenericHandlerInstance = await deployer.deploy(
@@ -71,7 +71,7 @@ module.exports = async function (deployer, network) {
     await Utils.setupFee(
       networksConfig,
       feeRouterInstance,
-      feeHandlerWithOracleInstance,
+      dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
       currentNetworkConfig.permissionlessGeneric
     );
