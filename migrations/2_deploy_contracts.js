@@ -29,7 +29,7 @@ module.exports = async function (deployer, network) {
     "from"
   ];
   // assign addresses for access segregation
-  const functionAccessAddresses = Array(13).fill(deployerAddress);
+  const functionAccessAddresses = Array(14).fill(deployerAddress);
 
   // trim suffix from network name and fetch current network config
   const currentNetworkName = network.split("-")[0];
