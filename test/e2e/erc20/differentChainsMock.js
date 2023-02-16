@@ -99,34 +99,34 @@ contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
       depositAmount,
       {from: depositorAddress}
     ),
-      await OriginERC20MintableInstance.grantRole(
-        await OriginERC20MintableInstance.MINTER_ROLE(),
-        OriginERC20HandlerInstance.address
-      ),
-      await DestinationERC20MintableInstance.grantRole(
-        await DestinationERC20MintableInstance.MINTER_ROLE(),
-        DestinationERC20HandlerInstance.address
-      ),
-      await OriginBridgeInstance.adminSetResource(
-        OriginERC20HandlerInstance.address,
-        originResourceID,
-        OriginERC20MintableInstance.address,
-        emptySetResourceData
-      ),
-      await OriginBridgeInstance.adminSetBurnable(
-        OriginERC20HandlerInstance.address,
-        originBurnableContractAddresses[0]
-      ),
-      await DestinationBridgeInstance.adminSetResource(
-        DestinationERC20HandlerInstance.address,
-        destinationResourceID,
-        DestinationERC20MintableInstance.address,
-        emptySetResourceData
-      ),
-      await DestinationBridgeInstance.adminSetBurnable(
-        DestinationERC20HandlerInstance.address,
-        destinationBurnableContractAddresses[0]
-      );
+    await OriginERC20MintableInstance.grantRole(
+      await OriginERC20MintableInstance.MINTER_ROLE(),
+      OriginERC20HandlerInstance.address
+    ),
+    await DestinationERC20MintableInstance.grantRole(
+      await DestinationERC20MintableInstance.MINTER_ROLE(),
+      DestinationERC20HandlerInstance.address
+    ),
+    await OriginBridgeInstance.adminSetResource(
+      OriginERC20HandlerInstance.address,
+      originResourceID,
+      OriginERC20MintableInstance.address,
+      emptySetResourceData
+    ),
+    await OriginBridgeInstance.adminSetBurnable(
+      OriginERC20HandlerInstance.address,
+      originBurnableContractAddresses[0]
+    ),
+    await DestinationBridgeInstance.adminSetResource(
+      DestinationERC20HandlerInstance.address,
+      destinationResourceID,
+      DestinationERC20MintableInstance.address,
+      emptySetResourceData
+    ),
+    await DestinationBridgeInstance.adminSetBurnable(
+      DestinationERC20HandlerInstance.address,
+      destinationBurnableContractAddresses[0]
+    );
 
     originDepositData = Helpers.createERCDepositData(
       depositAmount,
@@ -177,8 +177,18 @@ contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
       await DestinationBridgeInstance.endKeygen(Helpers.mpcAddress);
 
       // set decimals values for handler and token [src -> 18 decimals, dest -> 18 decimals]
-      await OriginBridgeInstance.adminSetDecimals(OriginERC20HandlerInstance.address, originInitialContractAddresses[0], 18, 18);
-      await DestinationBridgeInstance.adminSetDecimals(DestinationERC20HandlerInstance.address, destinationInitialContractAddresses[0], 18, 18);
+      await OriginBridgeInstance.adminSetDecimals(
+        OriginERC20HandlerInstance.address,
+        originInitialContractAddresses[0],
+        18,
+        18
+      );
+      await DestinationBridgeInstance.adminSetDecimals(
+        DestinationERC20HandlerInstance.address,
+        destinationInitialContractAddresses[0],
+        18,
+        18
+      );
   });
 
   it("[sanity] depositorAddress' balance should be equal to initialTokenAmount", async () => {
