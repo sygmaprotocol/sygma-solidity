@@ -63,16 +63,6 @@ contract ERCHandlerHelpers is IERCHandler {
 
     function withdraw(bytes memory data) external virtual override {}
 
-    /**
-        @notice First verifies {contractAddress} is whitelisted,
-        then sets {_decimals}[{contractAddress}] to it's decimals value.
-        @param contractAddress Address of contract to be used when making or executing deposits.
-        @param externalDecimals Decimal places of token that is transferred.
-     */
-    function setDecimals(address contractAddress, uint8 externalDecimals) external onlyBridge {
-        _setDecimals(contractAddress, externalDecimals);
-    }
-
     function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToResourceID[contractAddress] = resourceID;
@@ -85,6 +75,12 @@ contract ERCHandlerHelpers is IERCHandler {
         _burnList[contractAddress] = true;
     }
 
+    /**
+        @notice First verifies {contractAddress} is whitelisted,
+        then sets {_decimals}[{contractAddress}] to it's decimals value.
+        @param contractAddress Address of contract to be used when making or executing deposits.
+        @param externalDecimals Decimal places of token that is transferred.
+     */
     function _setDecimals(address contractAddress, uint8 externalDecimals) internal {
         require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
         _decimals[contractAddress] = Decimals({
