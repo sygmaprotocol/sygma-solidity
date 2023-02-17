@@ -33,7 +33,6 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
     let OriginERC20MintableInstance;
     let OriginERC20HandlerInstance;
     let originDepositData;
-    let originDepositProposalData;
     let originResourceID;
     let originInitialContractAddresses;
     let originBurnableContractAddresses;
@@ -47,7 +46,6 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
     let destinationInitialContractAddresses;
     let destinationBurnableContractAddresses;
 
-    let originDomainProposal;
     let destinationDomainProposal;
 
     beforeEach(async () => {
@@ -111,17 +109,9 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
         );
 
         originDepositData = Helpers.createERCDepositData(originDepositAmount, 20, recipientAddress);
-        originDepositProposalData = Helpers.createERCDepositData(relayerConvertedAmount, 20, recipientAddress);
 
         destinationDepositData = Helpers.createERCDepositData(destinationDepositAmount, 20, depositorAddress);
         destinationDepositProposalData = Helpers.createERCDepositData(relayerConvertedAmount, 20, depositorAddress);
-
-        originDomainProposal = {
-          originDomainID: originDomainID,
-          depositNonce: expectedDepositNonce,
-          data: originDepositProposalData,
-          resourceID: destinationResourceID
-        };
 
         destinationDomainProposal = {
           originDomainID: destinationDomainID,
@@ -137,10 +127,6 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
 
     it(`E2E: depositAmount of Origin ERC20 owned by depositAddress to Destination ERC20
         owned by recipientAddress and back again`, async () => {
-        const originProposalSignedData = await Helpers.signTypedProposal(
-          DestinationBridgeInstance.address,
-          [originDomainProposal]
-        );
         const destinationProposalSignedData = await Helpers.signTypedProposal(
           OriginBridgeInstance.address,
           [destinationDomainProposal]
@@ -150,14 +136,33 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
         let recipientBalance;
 
         // depositorAddress makes initial deposit of depositAmount
-        await TruffleAssert.passes(
-          OriginBridgeInstance.deposit(
-            destinationDomainID,
-            originResourceID,
-            originDepositData,
-            feeData,
-            {from: depositorAddress}
-          )
+        const originDepositTx = await OriginBridgeInstance.deposit(
+          destinationDomainID,
+          originResourceID,
+          originDepositData,
+          feeData,
+          {from: depositorAddress}
+        );
+        await TruffleAssert.passes(originDepositTx);
+
+        // this mocks depositProposal data for executing on
+        // destination chain which is returned from relayers
+        const originDepositProposalData = Helpers.createDepositProposalDataFromHandlerResponse(
+          originDepositTx,
+          20,
+          recipientAddress
+        );
+
+        const originDomainProposal = {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonce,
+          data: originDepositProposalData,
+          resourceID: destinationResourceID
+        };
+
+        const originProposalSignedData = await Helpers.signTypedProposal(
+          DestinationBridgeInstance.address,
+          [originDomainProposal]
         );
 
         // destinationRelayer1 executes the proposal

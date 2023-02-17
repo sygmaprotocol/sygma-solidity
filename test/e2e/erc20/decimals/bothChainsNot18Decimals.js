@@ -31,7 +31,6 @@ contract("E2E ERC20 - Two EVM Chains both with decimal places != 18", async acco
     let OriginERC20MintableInstance;
     let OriginERC20HandlerInstance;
     let originDepositData;
-    let originDepositProposalData;
     let originResourceID;
     let originInitialContractAddresses;
     let originBurnableContractAddresses;
@@ -40,13 +39,9 @@ contract("E2E ERC20 - Two EVM Chains both with decimal places != 18", async acco
     let DestinationERC20MintableInstance;
     let DestinationERC20HandlerInstance;
     let destinationDepositData;
-    let destinationDepositProposalData;
     let destinationResourceID;
     let destinationInitialContractAddresses;
     let destinationBurnableContractAddresses;
-
-    let originDomainProposal;
-    let destinationDomainProposal;
 
     beforeEach(async () => {
         await Promise.all([
@@ -110,24 +105,7 @@ contract("E2E ERC20 - Two EVM Chains both with decimal places != 18", async acco
         );
 
         originDepositData = Helpers.createERCDepositData(originDepositAmount, 20, recipientAddress);
-        originDepositProposalData = Helpers.createERCDepositData(relayerConvertedAmount, 20, recipientAddress);
-
         destinationDepositData = Helpers.createERCDepositData(destinationDepositAmount, 20, depositorAddress);
-        destinationDepositProposalData = Helpers.createERCDepositData(relayerConvertedAmount, 20, depositorAddress);
-
-        originDomainProposal = {
-          originDomainID: originDomainID,
-          depositNonce: expectedDepositNonce,
-          data: originDepositProposalData,
-          resourceID: destinationResourceID
-        };
-
-        destinationDomainProposal = {
-          originDomainID: destinationDomainID,
-          depositNonce: expectedDepositNonce,
-          data: destinationDepositProposalData,
-          resourceID: originResourceID
-        };
 
         // set MPC address to unpause the Bridge
         await OriginBridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -136,14 +114,7 @@ contract("E2E ERC20 - Two EVM Chains both with decimal places != 18", async acco
 
     it(`E2E: depositAmount of Origin ERC20 owned by depositAddress to Destination ERC20
         owned by recipientAddress and back again`, async () => {
-        const originProposalSignedData = await Helpers.signTypedProposal(
-          DestinationBridgeInstance.address,
-          [originDomainProposal]
-        );
-        const destinationProposalSignedData = await Helpers.signTypedProposal(
-          OriginBridgeInstance.address,
-          [destinationDomainProposal]
-        );
+
 
         let depositorBalance;
         let recipientBalance;
@@ -170,6 +141,26 @@ contract("E2E ERC20 - Two EVM Chains both with decimal places != 18", async acco
             event.handlerResponse === Helpers.toHex(relayerConvertedAmount, 32)
           );
         });
+
+        // this mocks depositProposal data for executing on
+        // destination chain which is returned from relayers
+        const originDepositProposalData = Helpers.createDepositProposalDataFromHandlerResponse(
+          originDepositTx,
+          20,
+          recipientAddress
+        );
+
+        const originDomainProposal = {
+          originDomainID: originDomainID,
+          depositNonce: expectedDepositNonce,
+          data: originDepositProposalData,
+          resourceID: destinationResourceID
+        };
+
+        const originProposalSignedData = await Helpers.signTypedProposal(
+          DestinationBridgeInstance.address,
+          [originDomainProposal]
+        );
 
         // destinationRelayer1 executes the proposal
         await TruffleAssert.passes(
@@ -232,6 +223,26 @@ contract("E2E ERC20 - Two EVM Chains both with decimal places != 18", async acco
 
           );
         });
+
+        // this mocks depositProposal data for executing on
+        // destination chain which is returned from relayers
+        const destinationDepositProposalData = Helpers.createDepositProposalDataFromHandlerResponse(
+          destinationDepositTx,
+          20,
+          depositorAddress
+        );
+
+        const destinationDomainProposal = {
+          originDomainID: destinationDomainID,
+          depositNonce: expectedDepositNonce,
+          data: destinationDepositProposalData,
+          resourceID: originResourceID
+        };
+
+        const destinationProposalSignedData = await Helpers.signTypedProposal(
+          OriginBridgeInstance.address,
+          [destinationDomainProposal]
+        );
 
         // Recipient should have a balance of 0 (deposit amount)
         recipientBalance = await DestinationERC20MintableInstance.balanceOf(

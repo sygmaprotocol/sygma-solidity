@@ -334,6 +334,16 @@ const mockSignTypedProposalWithInvalidChainID = (bridgeAddress, proposals) => {
   return signTypedProposal(bridgeAddress, proposals, 3);
 };
 
+const createDepositProposalDataFromHandlerResponse = (
+  depositTx,
+  lenRecipientAddress,
+  recipientAddress
+) => {
+  const amountFromHandlerResponse = Ethers.BigNumber.from(depositTx.logs[0].args.handlerResponse);
+  return createERCDepositData(amountFromHandlerResponse, lenRecipientAddress, recipientAddress);
+};
+
+
 module.exports = {
   advanceBlock,
   advanceTime,
@@ -363,4 +373,5 @@ module.exports = {
   deployBridge,
   signTypedProposal,
   mockSignTypedProposalWithInvalidChainID,
+  createDepositProposalDataFromHandlerResponse,
 };
