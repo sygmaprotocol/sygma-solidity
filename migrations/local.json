@@ -110,7 +110,6 @@
     }
   },
   "test3": {
-    "domainID": "3",
-    "MPCAddress": "0x1c5541A79AcC662ab2D2647F3B141a3B7Cdb2Ae4"
+    "domainID": "3"
   }
 }
