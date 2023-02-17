@@ -9,7 +9,7 @@ Read more [here](https://chainsafe.io/).
 ## Deployments
 
 To deploy contracts run `truffle migrate --network NETWORK_NAME --file <path_to_env_config>`.
-To deploy new handlers for tokens an register on bridge contract provide: `--redeploy-token-handlers` flag.
+To deploy new handlers for tokens and register them on bridge contract provide: `--redeploy-token-handlers` flag.
 To add another network do the following:
  * update `truffle-config.js` with the desired configuration
  * add the required params to config file for the desired environment (local,dev,testnet,mainnet)
