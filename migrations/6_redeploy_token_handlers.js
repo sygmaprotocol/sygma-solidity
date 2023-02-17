@@ -20,14 +20,12 @@ module.exports = async function (deployer, network) {
     const currentNetworkName = network.split("-")[0];
     const currentNetworkConfig = networksConfig[currentNetworkName];
 
-    let bridgeInstance;
-    let erc20HandlerInstance;
     let xc20HandlerInstance;
 
     // fetch deployed contracts addresses
+    const bridgeInstance = await BridgeContract.deployed();
+    const erc20HandlerInstance = await ERC20HandlerContract.deployed();
     try {
-      bridgeInstance = await BridgeContract.deployed();
-      erc20HandlerInstance = await ERC20HandlerContract.deployed();
       xc20HandlerInstance = await XC20HandlerContract.deployed();
     } catch(e){
       console.error(e)
