@@ -88,4 +88,43 @@ contract ERCHandlerHelpers is IERCHandler {
             externalDecimals: externalDecimals
         });
     }
+
+    /**
+        @notice Converts token amount based on decimal places difference between the nework
+        deposit is made on and bridge.
+        @param tokenAddress Address of contract to be used when executing proposals.
+        @param amount Decimals value to be set for {contractAddress}.
+    */
+    function convertToExternalBalance(address tokenAddress, uint256 amount) internal returns(uint256) {
+        Decimals memory decimals = _decimals[tokenAddress];
+
+        if (decimals.isSet != true) {
+            return amount;
+        } else if (decimals.externalDecimals >= defaultDecimals) {
+            return amount * (10 ** (decimals.externalDecimals - defaultDecimals));
+        } else {
+            return amount / (10 ** (defaultDecimals - decimals.externalDecimals));
+        }
+    }
+
+    /**
+        @notice Converts token amount based on decimal places difference between the bridge and nework
+        deposit is executed on.
+        @param tokenAddress Address of contract to be used when executing proposals.
+        @param amount Decimals value to be set for {contractAddress}.
+    */
+    function convertToInternalBalance(address tokenAddress, uint256 amount) internal returns(bytes memory) {
+        Decimals memory decimals = _decimals[tokenAddress];
+        uint256 convertedBalance;
+
+        if (!decimals.isSet) {
+            return "";
+        } else if (decimals.externalDecimals >= defaultDecimals) {
+            convertedBalance =  amount / (10 ** (decimals.externalDecimals - defaultDecimals));
+        } else {
+            convertedBalance = amount * (10 ** (defaultDecimals - decimals.externalDecimals));
+        }
+
+        return abi.encodePacked(convertedBalance);
+    }
 }
