@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.2](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.1.1...v2.1.2) (2023-02-20)
+
+
+### Miscellaneous
+
+* fix package tags ([#133](https://github.com/sygmaprotocol/sygma-solidity/issues/133)) ([edf66de](https://github.com/sygmaprotocol/sygma-solidity/commit/edf66dee597e933f084c75e1646dee2c7405a24c))
+
 ## [2.1.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.1.0...v2.1.1) (2023-02-20)
 
 
