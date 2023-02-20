@@ -40,7 +40,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          tags: ghcr.io/${{ github.repository }}:evm1-${{ needs.tag.outputs.tag }}
+          tags: ghcr.io/${{ github.repository }}:evm1-${{ github.ref_name }}
           push: true
 
       - name: Remove data
@@ -53,7 +53,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          tags: ghcr.io/${{ github.repository }}:evm2-${{ needs.tag.outputs.tag }}
+          tags: ghcr.io/${{ github.repository }}:evm2-${{ github.ref_name }}
           push: true
 
       - name: Remove data
@@ -76,8 +76,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.tag.outputs.tag }}
-          release_name: ${{ needs.tag.outputs.tag }}
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
 
       #in case of failure
       - name: Rollback on failure
@@ -85,7 +85,7 @@ jobs:
         uses: author/action-rollback@9ec72a6af74774e00343c6de3e946b0901c23013
         with:
           id: ${{ steps.create_release.outputs.id }}
-          tag: ${{ needs.tag.outputs.tag }}
+          tag: ${{ github.ref_name }}
           delete_orphan_tag: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
