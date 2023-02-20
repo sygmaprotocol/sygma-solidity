@@ -106,6 +106,7 @@ contract("Bridge - [execute proposal - ERC20]", async (accounts) => {
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
   });
 
   it("isProposalExecuted returns false if depositNonce is not used", async () => {

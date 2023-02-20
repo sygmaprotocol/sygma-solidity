@@ -12,6 +12,8 @@ import "../interfaces/IERCHandler.sol";
 contract ERCHandlerHelpers is IERCHandler {
     address public immutable _bridgeAddress;
 
+    uint8 public constant defaultDecimals = 18;
+
     // resourceID => token contract address
     mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
 
@@ -23,6 +25,14 @@ contract ERCHandlerHelpers is IERCHandler {
 
     // token contract address => is burnable
     mapping (address => bool) public _burnList;
+
+    // token contract address => decimals
+    mapping (address => Decimals) public _decimals;
+
+    struct Decimals {
+        bool isSet;
+        uint8 externalDecimals;
+    }
 
     modifier onlyBridge() {
         _onlyBridge();
@@ -63,5 +73,58 @@ contract ERCHandlerHelpers is IERCHandler {
     function _setBurnable(address contractAddress) internal {
         require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
         _burnList[contractAddress] = true;
+    }
+
+    /**
+        @notice First verifies {contractAddress} is whitelisted,
+        then sets {_decimals}[{contractAddress}] to it's decimals value.
+        @param contractAddress Address of contract to be used when making or executing deposits.
+        @param externalDecimals Decimal places of token that is transferred.
+     */
+    function _setDecimals(address contractAddress, uint8 externalDecimals) internal {
+        require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
+        _decimals[contractAddress] = Decimals({
+            isSet: true,
+            externalDecimals: externalDecimals
+        });
+    }
+
+    /**
+        @notice Converts token amount based on decimal places difference between the nework
+        deposit is made on and bridge.
+        @param tokenAddress Address of contract to be used when executing proposals.
+        @param amount Decimals value to be set for {contractAddress}.
+    */
+    function convertToExternalBalance(address tokenAddress, uint256 amount) internal returns(uint256) {
+        Decimals memory decimals = _decimals[tokenAddress];
+
+        if (!decimals.isSet) {
+            return amount;
+        } else if (decimals.externalDecimals >= defaultDecimals) {
+            return amount * (10 ** (decimals.externalDecimals - defaultDecimals));
+        } else {
+            return amount / (10 ** (defaultDecimals - decimals.externalDecimals));
+        }
+    }
+
+    /**
+        @notice Converts token amount based on decimal places difference between the bridge and nework
+        deposit is executed on.
+        @param tokenAddress Address of contract to be used when executing proposals.
+        @param amount Decimals value to be set for {contractAddress}.
+    */
+    function convertToInternalBalance(address tokenAddress, uint256 amount) internal returns(bytes memory) {
+        Decimals memory decimals = _decimals[tokenAddress];
+        uint256 convertedBalance;
+
+        if (!decimals.isSet) {
+            return "";
+        } else if (decimals.externalDecimals >= defaultDecimals) {
+            convertedBalance =  amount / (10 ** (decimals.externalDecimals - defaultDecimals));
+        } else {
+            convertedBalance = amount * (10 ** (defaultDecimals - decimals.externalDecimals));
+        }
+
+        return abi.encodePacked(convertedBalance);
     }
 }

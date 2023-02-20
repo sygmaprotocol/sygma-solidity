@@ -5,6 +5,7 @@ const Helpers = require("../test/helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
 const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser");
+const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721MinterBurnerPauserContract = artifacts.require(
   "ERC721MinterBurnerPauser"
 );
@@ -154,10 +155,41 @@ async function setupGeneric(
   );
 }
 
+async function migrateToNewTokenHandler(
+  deployer,
+  tokenConfig,
+  bridgeInstance,
+  handlerInstance,
+) {
+  const tokenContractAddress = await handlerInstance._resourceIDToTokenContractAddress(
+    tokenConfig.resourceID
+  );
+
+  const newHandlerInstance = await deployer.deploy(
+    ERC20HandlerContract,
+    bridgeInstance.address
+  );
+
+  await bridgeInstance.adminSetResource(
+    newHandlerInstance.address,
+    tokenConfig.resourceID,
+    tokenContractAddress,
+    // set decimal places if configured for token in 'local.json'
+    tokenConfig.decimals ?? emptySetResourceData
+  );
+
+  console.log("New handler address:", "\t", newHandlerInstance.address);
+  console.log("Associated resourceID:", "\t", tokenConfig.resourceID);
+  console.log(
+    "-------------------------------------------------------------------------------"
+  );
+}
+
 module.exports = {
   setupFee,
   setupErc20,
   setupErc721,
   setupGeneric,
   getNetworksConfig,
+  migrateToNewTokenHandler
 };

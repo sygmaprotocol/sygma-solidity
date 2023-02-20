@@ -216,7 +216,7 @@ contract("Bridge - [execute proposal]", async (accounts) => {
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
-  });
+});
 
   it("should create and execute executeProposal successfully", async () => {
     const proposalSignedData = await Helpers.signTypedProposal(

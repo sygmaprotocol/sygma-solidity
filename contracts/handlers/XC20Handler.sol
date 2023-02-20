@@ -49,6 +49,8 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         } else {
             lockERC20(tokenAddress, depositor, address(this), amount);
         }
+
+        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
     }
 
     /**
@@ -80,9 +82,9 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
-            mintERC20(tokenAddress, address(recipientAddress), amount);
+            mintERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
         } else {
-            releaseERC20(tokenAddress, address(recipientAddress), amount);
+            releaseERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
         }
     }
 
@@ -114,5 +116,11 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
         _setResource(resourceID, contractAddress);
+
+        uint8 externalTokenDecimals = uint8(bytes1(args));
+
+        if (externalTokenDecimals != 0) {
+            _setDecimals(contractAddress, externalTokenDecimals);
+        }
     }
 }

@@ -49,6 +49,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         } else {
             lockERC20(tokenAddress, depositor, address(this), amount);
         }
+
+        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
     }
 
     /**
@@ -80,9 +82,9 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
 
         if (_burnList[tokenAddress]) {
-            mintERC20(tokenAddress, address(recipientAddress), amount);
+            mintERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
         } else {
-            releaseERC20(tokenAddress, address(recipientAddress), amount);
+            releaseERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
         }
     }
 
@@ -108,11 +110,17 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_contractAddressToResourceID} with {resourceID} and
         {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
+        Sets decimals value for contractAddress if value is provided in args.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
         _setResource(resourceID, contractAddress);
+
+        if (args.length > 0) {
+            uint8 externalTokenDecimals = uint8(bytes1(args));
+            _setDecimals(contractAddress, externalTokenDecimals);
+        }
     }
 }

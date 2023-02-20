@@ -54,7 +54,6 @@ contract("Gas Benchmark - [contract deployments]", async (accounts) => {
         ERC1155SafeContract.new(),
       ])
     );
-
     for (const contractInstance of contractInstances) {
       const txReceipt = await web3.eth.getTransactionReceipt(
         contractInstance.transactionHash

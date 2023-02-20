@@ -113,6 +113,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
   });
 
   describe("lock/release strategy", async () => {
