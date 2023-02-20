@@ -7,10 +7,10 @@ const TruffleAssert = require("truffle-assertions");
 
 const Helpers = require("../../../helpers");
 
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
-contract("FeeHandlerWithOracle - [admin]", async (accounts) => {
+contract("DynamicFeeHandler - [admin]", async (accounts) => {
   const domainID = 1;
   const initialRelayers = accounts.slice(0, 3);
   const currentFeeHandlerAdmin = accounts[0];
@@ -23,7 +23,7 @@ contract("FeeHandlerWithOracle - [admin]", async (accounts) => {
   };
 
   let BridgeInstance;
-  let FeeHandlerWithOracleInstance;
+  let DynamicFeeHandlerInstance;
   let FeeHandlerRouterInstance;
   let ADMIN_ROLE;
 
@@ -32,28 +32,28 @@ contract("FeeHandlerWithOracle - [admin]", async (accounts) => {
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
-    FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(
+    DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    ADMIN_ROLE = await FeeHandlerWithOracleInstance.DEFAULT_ADMIN_ROLE();
+    ADMIN_ROLE = await DynamicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
   });
 
   it("should set fee oracle", async () => {
     const oracleAddress = accounts[1];
     assert.equal(
-      await FeeHandlerWithOracleInstance._oracleAddress.call(),
+      await DynamicFeeHandlerInstance._oracleAddress.call(),
       "0x0000000000000000000000000000000000000000"
     );
-    await FeeHandlerWithOracleInstance.setFeeOracle(oracleAddress);
-    const newOracle = await FeeHandlerWithOracleInstance._oracleAddress.call();
+    await DynamicFeeHandlerInstance.setFeeOracle(oracleAddress);
+    const newOracle = await DynamicFeeHandlerInstance._oracleAddress.call();
     assert.equal(newOracle, oracleAddress);
   });
 
   it("should require admin role to change fee oracle", async () => {
     const oracleAddress = accounts[1];
     await assertOnlyAdmin(
-      FeeHandlerWithOracleInstance.setFeeOracle,
+      DynamicFeeHandlerInstance.setFeeOracle,
       oracleAddress
     );
   });
@@ -61,12 +61,12 @@ contract("FeeHandlerWithOracle - [admin]", async (accounts) => {
   it("should set fee properties", async () => {
     const gasUsed = 100000;
     const feePercent = 5;
-    assert.equal(await FeeHandlerWithOracleInstance._gasUsed.call(), "0");
-    assert.equal(await FeeHandlerWithOracleInstance._feePercent.call(), "0");
-    await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
-    assert.equal(await FeeHandlerWithOracleInstance._gasUsed.call(), gasUsed);
+    assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), "0");
+    assert.equal(await DynamicFeeHandlerInstance._feePercent.call(), "0");
+    await DynamicFeeHandlerInstance.setFeeProperties(gasUsed, feePercent);
+    assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), gasUsed);
     assert.equal(
-      await FeeHandlerWithOracleInstance._feePercent.call(),
+      await DynamicFeeHandlerInstance._feePercent.call(),
       feePercent
     );
   });
@@ -75,38 +75,38 @@ contract("FeeHandlerWithOracle - [admin]", async (accounts) => {
     const gasUsed = 100000;
     const feePercent = 5;
     await assertOnlyAdmin(
-      FeeHandlerWithOracleInstance.setFeeProperties,
+      DynamicFeeHandlerInstance.setFeeProperties,
       gasUsed,
       feePercent
     );
   });
 
-  it("FeeHandlerWithOracle admin should be changed to expectedFeeHandlerWithOracleAdmin", async () => {
-    const expectedFeeHandlerWithOracleAdmin = accounts[1];
+  it("DynamicFeeHandler admin should be changed to expectedDynamicFeeHandlerAdmin", async () => {
+    const expectedDynamicFeeHandlerAdmin = accounts[1];
 
     // check current admin
     assert.isTrue(
-      await FeeHandlerWithOracleInstance.hasRole(
+      await DynamicFeeHandlerInstance.hasRole(
         ADMIN_ROLE,
         currentFeeHandlerAdmin
       )
     );
 
     await TruffleAssert.passes(
-      FeeHandlerWithOracleInstance.renounceAdmin(
-        expectedFeeHandlerWithOracleAdmin
+      DynamicFeeHandlerInstance.renounceAdmin(
+        expectedDynamicFeeHandlerAdmin
       )
     );
     assert.isTrue(
-      await FeeHandlerWithOracleInstance.hasRole(
+      await DynamicFeeHandlerInstance.hasRole(
         ADMIN_ROLE,
-        expectedFeeHandlerWithOracleAdmin
+        expectedDynamicFeeHandlerAdmin
       )
     );
 
     // check that former admin is no longer admin
     assert.isFalse(
-      await FeeHandlerWithOracleInstance.hasRole(
+      await DynamicFeeHandlerInstance.hasRole(
         ADMIN_ROLE,
         currentFeeHandlerAdmin
       )

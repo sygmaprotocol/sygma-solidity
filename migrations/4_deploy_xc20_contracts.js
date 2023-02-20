@@ -9,7 +9,7 @@ const BridgeContract = artifacts.require("Bridge");
 const XC20HandlerContract = artifacts.require("XC20Handler");
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   // trim suffix from network name and fetch current network config
@@ -29,8 +29,8 @@ module.exports = async function (deployer, network) {
   const bridgeInstance = await BridgeContract.deployed();
   const feeRouterInstance = await FeeRouterContract.deployed();
   const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
-  const feeHandlerWithOracleInstance =
-    await FeeHandlerWithOracleContract.deployed();
+  const dynamicFeeHandlerInstance =
+    await DynamicFeeHandlerContract.deployed();
 
   // deploy XC20 contracts
   await deployer.deploy(XC20HandlerContract, bridgeInstance.address);
@@ -42,7 +42,7 @@ module.exports = async function (deployer, network) {
     await Utils.setupFee(
       networksConfig,
       feeRouterInstance,
-      feeHandlerWithOracleInstance,
+      dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
       xc20
     );

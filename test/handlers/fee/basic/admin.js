@@ -54,8 +54,8 @@ contract("BasicFeeHandler - [admin]", async (accounts) => {
     await assertOnlyAdmin(BasicFeeHandlerInstance.changeFee, fee);
   });
 
-  it("FeeHandlerWithOracle admin should be changed to expectedFeeHandlerWithOracleAdmin", async () => {
-    const expectedFeeHandlerWithOracleAdmin = accounts[1];
+  it("BasicFeeHandler admin should be changed to expectedBasicFeeHandlerAdmin", async () => {
+    const expectedBasicFeeHandlerAdmin = accounts[1];
 
     // check current admin
     assert.isTrue(
@@ -63,12 +63,12 @@ contract("BasicFeeHandler - [admin]", async (accounts) => {
     );
 
     await TruffleAssert.passes(
-      BasicFeeHandlerInstance.renounceAdmin(expectedFeeHandlerWithOracleAdmin)
+      BasicFeeHandlerInstance.renounceAdmin(expectedBasicFeeHandlerAdmin)
     );
     assert.isTrue(
       await BasicFeeHandlerInstance.hasRole(
         ADMIN_ROLE,
-        expectedFeeHandlerWithOracleAdmin
+        expectedBasicFeeHandlerAdmin
       )
     );
 

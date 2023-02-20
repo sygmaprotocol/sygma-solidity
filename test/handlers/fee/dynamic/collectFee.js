@@ -10,10 +10,10 @@ const Helpers = require("../../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
-const FeeHandlerWithOracleContract = artifacts.require("FeeHandlerWithOracle");
+const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
-contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
+contract("DynamicFeeHandler - [collectFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const oracle = new Ethers.Wallet.createRandom();
@@ -28,7 +28,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
   const msgGasLimit = 0;
 
   let BridgeInstance;
-  let FeeHandlerWithOracleInstance;
+  let DynamicFeeHandlerInstance;
   let resourceID;
   let depositData;
 
@@ -76,13 +76,13 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
-    FeeHandlerWithOracleInstance = await FeeHandlerWithOracleContract.new(
+    DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
 
-    await FeeHandlerWithOracleInstance.setFeeOracle(oracle.address);
-    await FeeHandlerWithOracleInstance.setFeeProperties(gasUsed, feePercent);
+    await DynamicFeeHandlerInstance.setFeeOracle(oracle.address);
+    await DynamicFeeHandlerInstance.setFeeProperties(gasUsed, feePercent);
 
     resourceID = Helpers.createResourceID(
       ERC20MintableInstance.address,
@@ -100,14 +100,14 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
       ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, {
         from: depositorAddress,
       }),
-      ERC20MintableInstance.approve(FeeHandlerWithOracleInstance.address, fee, {
+      ERC20MintableInstance.approve(DynamicFeeHandlerInstance.address, fee, {
         from: depositorAddress,
       }),
       BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
       FeeHandlerRouterInstance.adminSetResourceHandler(
         destinationDomainID,
         resourceID,
-        FeeHandlerWithOracleInstance.address
+        DynamicFeeHandlerInstance.address
       ),
     ]);
 
@@ -141,7 +141,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
 
     const balanceBefore = (
       await ERC20MintableInstance.balanceOf(
-        FeeHandlerWithOracleInstance.address
+        DynamicFeeHandlerInstance.address
       )
     ).toString();
 
@@ -161,7 +161,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
       );
     });
     const internalTx = await TruffleAssert.createTransactionResult(
-      FeeHandlerWithOracleInstance,
+      DynamicFeeHandlerInstance,
       depositTx.tx
     );
     TruffleAssert.eventEmitted(internalTx, "FeeCollected", (event) => {
@@ -176,7 +176,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
     });
     const balanceAfter = (
       await ERC20MintableInstance.balanceOf(
-        FeeHandlerWithOracleInstance.address
+        DynamicFeeHandlerInstance.address
       )
     ).toString();
     assert.equal(balanceAfter, fee.add(balanceBefore).toString());
@@ -237,7 +237,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
       tokenAmount
     );
     await ERC20MintableInstance.approve(
-      FeeHandlerWithOracleInstance.address,
+      DynamicFeeHandlerInstance.address,
       0,
       {from: depositorAddress}
     );
@@ -255,7 +255,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
     );
   });
 
-  it("deposit should revert if not called by router on FeeHandlerWithOracle contract", async () => {
+  it("deposit should revert if not called by router on DynamicFeeHandler contract", async () => {
     const depositData = Helpers.createERCDepositData(
       tokenAmount,
       20,
@@ -278,12 +278,12 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
       tokenAmount
     );
     await ERC20MintableInstance.approve(
-      FeeHandlerWithOracleInstance.address,
+      DynamicFeeHandlerInstance.address,
       0,
       {from: depositorAddress}
     );
     await TruffleAssert.reverts(
-      FeeHandlerWithOracleInstance.collectFee(
+      DynamicFeeHandlerInstance.collectFee(
         depositorAddress,
         originDomainID,
         destinationDomainID,
@@ -322,7 +322,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
       tokenAmount
     );
     await ERC20MintableInstance.approve(
-      FeeHandlerWithOracleInstance.address,
+      DynamicFeeHandlerInstance.address,
       0,
       {from: depositorAddress}
     );
@@ -343,9 +343,9 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
     );
   });
 
-  it("should successfully change fee handler from FeeRouter to FeeHandlerWithOracle and collect fee", async () => {
+  it("should successfully change fee handler from FeeRouter to DynamicFeeHandler and collect fee", async () => {
     await BridgeInstance.adminChangeFeeHandler(
-      FeeHandlerWithOracleInstance.address
+      DynamicFeeHandlerInstance.address
     );
 
     const oracleResponse = {
@@ -367,7 +367,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
 
     const balanceBefore = (
       await ERC20MintableInstance.balanceOf(
-        FeeHandlerWithOracleInstance.address
+        DynamicFeeHandlerInstance.address
       )
     ).toString();
 
@@ -387,7 +387,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
       );
     });
     const internalTx = await TruffleAssert.createTransactionResult(
-      FeeHandlerWithOracleInstance,
+      DynamicFeeHandlerInstance,
       depositTx.tx
     );
     TruffleAssert.eventEmitted(internalTx, "FeeCollected", (event) => {
@@ -402,7 +402,7 @@ contract("FeeHandlerWithOracle - [collectFee]", async (accounts) => {
     });
     const balanceAfter = (
       await ERC20MintableInstance.balanceOf(
-        FeeHandlerWithOracleInstance.address
+        DynamicFeeHandlerInstance.address
       )
     ).toString();
     assert.equal(balanceAfter, fee.add(balanceBefore).toString());

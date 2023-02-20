@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
+abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
     address public immutable _bridgeAddress;
     address public immutable _feeHandlerRouterAddress;
 
@@ -40,7 +40,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     struct FeeDataType {
         bytes message;
         bytes sig;
-        uint256 amount;
+        uint256 amount; // not used
     }
 
     modifier onlyAdmin() {
@@ -64,7 +64,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address bridgeAddress, address feeHandlerRouterAddress) public {
+    constructor(address bridgeAddress, address feeHandlerRouterAddress) {
         _bridgeAddress = bridgeAddress;
         _feeHandlerRouterAddress = feeHandlerRouterAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -95,7 +95,8 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
     /**
         @notice Sets the fee properties.
         @param gasUsed Gas used for transfer.
-        @param feePercent Added to fee amount. total fee = fee_from_oracle.amount * feePercent / 1e4
+        @param feePercent Percent of deposited amount taken as a fee.
+            fee = depositAmount * feePercent / 1e4
      */
     function setFeeProperties(uint32 gasUsed, uint16 feePercent) external onlyAdmin {
         _gasUsed = gasUsed;
@@ -108,7 +109,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
-        @param depositData Additional data to be passed to specified handler.
+        @param depositData Additional data about the deposit.
         @param feeData Additional data to be passed to the fee handler.
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
@@ -124,7 +125,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param resourceID ResourceID to be used when making deposits.
-        @param depositData Additional data to be passed to specified handler.
+        @param depositData Additional data about the deposit.
         @param feeData Additional data to be passed to the fee handler.
         @return fee Returns the fee amount.
         @return tokenAddress Returns the address of the token to be used for fee.
@@ -133,67 +134,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         return _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
     }
 
-    function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view returns(uint256 fee, address tokenAddress) {
-        /**
-            Message:
-            ber * 10^18:  uint256
-            ter * 10^18:  uint256
-            dstGasPrice:  uint256
-            expiresAt:    uint256
-            fromDomainID: uint8 encoded as uint256
-            toDomainID:   uint8 encoded as uint256
-            resourceID:   bytes32
-            msgGasLimit:  uint256
-            sig:          bytes(65 bytes)
-
-            total in bytes:
-            message:
-            32 * 8  = 256
-            message + sig:
-            256 + 65 = 321
-
-            amount: uint256
-            total: 353
-        */
-
-        require(feeData.length == 353, "Incorrect feeData length");
-
-        FeeDataType memory feeDataDecoded;
-        uint256 txCost;
-
-        feeDataDecoded.message = bytes(feeData[: 256]);
-        feeDataDecoded.sig = bytes(feeData[256: 321]);
-        feeDataDecoded.amount = abi.decode(feeData[321:], (uint256));
-
-        OracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (OracleMessageType));
-        require(block.timestamp <= oracleMessage.expiresAt, "Obsolete oracle data");
-        require((oracleMessage.fromDomainID == fromDomainID)
-            && (oracleMessage.toDomainID == destinationDomainID)
-            && (oracleMessage.resourceID == resourceID),
-            "Incorrect deposit params"
-        );
-
-        bytes32 messageHash = keccak256(feeDataDecoded.message);
-
-        verifySig(messageHash, feeDataDecoded.sig, _oracleAddress);
-
-        address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
-        address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
-
-        if(oracleMessage.msgGasLimit > 0) {
-            // txCost = dstGasPrice * oracleMessage.msgGasLimit * Base Effective Rate (rate between base currencies of source and dest)
-            txCost = oracleMessage.dstGasPrice * oracleMessage.msgGasLimit * oracleMessage.ber / 1e18;
-        } else {
-            // txCost = dstGasPrice * _gasUsed * Token Effective Rate (rate of dest base currency to token)
-            txCost = oracleMessage.dstGasPrice * _gasUsed * oracleMessage.ter / 1e18;
-        }
-
-        fee = feeDataDecoded.amount * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
-
-        if (fee < txCost) {
-            fee = txCost;
-        }
-        return (fee, tokenAddress);
+    function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view virtual returns(uint256 fee, address tokenAddress) {
     }
 
     /**
@@ -213,7 +154,7 @@ contract FeeHandlerWithOracle is IFeeHandler, AccessControl, ERC20Safe {
         }
     }
 
-    function verifySig(bytes32 message, bytes memory signature, address signerAddress) internal view {
+    function verifySig(bytes32 message, bytes memory signature, address signerAddress) internal pure {
         address signerAddressRecovered = ECDSA.recover(message, signature);
         require(signerAddressRecovered == signerAddress, 'Invalid signature');
     }
