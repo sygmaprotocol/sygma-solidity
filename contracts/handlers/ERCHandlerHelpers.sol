@@ -98,7 +98,7 @@ contract ERCHandlerHelpers is IERCHandler {
     function convertToExternalBalance(address tokenAddress, uint256 amount) internal returns(uint256) {
         Decimals memory decimals = _decimals[tokenAddress];
 
-        if (decimals.isSet != true) {
+        if (!decimals.isSet) {
             return amount;
         } else if (decimals.externalDecimals >= defaultDecimals) {
             return amount * (10 ** (decimals.externalDecimals - defaultDecimals));
