@@ -106,18 +106,19 @@ contract("PermissionedGenericHandler - [constructor]", async (accounts) => {
       );
 
       const retrievedResourceID =
-        await PermissionedGenericHandlerInstance._contractAddressToResourceID.call(
+        (await PermissionedGenericHandlerInstance._tokenContractAddressToTokenProperties.call(
           initialContractAddresses[i]
-        );
+        )).resourceID;
       assert.strictEqual(
         initialResourceIDs[i].toLowerCase(),
         retrievedResourceID.toLowerCase()
       );
 
       const retrievedDepositFunctionSig =
-        await PermissionedGenericHandlerInstance._contractAddressToDepositFunctionSignature.call(
+        (await PermissionedGenericHandlerInstance._tokenContractAddressToTokenProperties.call(
           initialContractAddresses[i]
-        );
+        )).depositFunctionSignature;
+
       // compare bytes 0-4 from permissionedGenericHandlerSetResourceData
       assert.strictEqual(
         permissionedGenericHandlerSetResourceData[i]
@@ -127,9 +128,10 @@ contract("PermissionedGenericHandler - [constructor]", async (accounts) => {
       );
 
       const retrievedDepositFunctionDepositorOffset =
-        await PermissionedGenericHandlerInstance._contractAddressToDepositFunctionDepositorOffset.call(
+        (await PermissionedGenericHandlerInstance._tokenContractAddressToTokenProperties.call(
           initialContractAddresses[i]
-        );
+        )).depositFunctionDepositorOffset;
+
       // compare bytes 4 - 36 from permissionedGenericHandlerSetResourceData
       assert.strictEqual(
         "0x" + permissionedGenericHandlerSetResourceData[i].substr(10, 64),
@@ -137,9 +139,10 @@ contract("PermissionedGenericHandler - [constructor]", async (accounts) => {
       );
 
       const retrievedExecuteFunctionSig =
-        await PermissionedGenericHandlerInstance._contractAddressToExecuteFunctionSignature.call(
+        (await PermissionedGenericHandlerInstance._tokenContractAddressToTokenProperties.call(
           initialContractAddresses[i]
-        );
+        )).executeFunctionSignature;
+
       // compare bytes 36 - 40 from permissionedGenericHandlerSetResourceData
       assert.strictEqual(
         "0x" +

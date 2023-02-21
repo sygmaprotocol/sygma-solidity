@@ -255,12 +255,11 @@ contract("Bridge - [admin]", async (accounts) => {
       ),
       TestStoreInstance.address
     );
-    assert.equal(
-      await PermissionedGenericHandlerInstance._contractAddressToResourceID.call(
-        TestStoreInstance.address
-      ),
-      resourceID.toLowerCase()
-    );
+    const retrievedResourceID = (await PermissionedGenericHandlerInstance._tokenContractAddressToTokenProperties.call(
+      TestStoreInstance.address
+    )).resourceID;
+
+    assert.equal(retrievedResourceID, resourceID.toLowerCase());
   });
 
   it("Should require admin role to set a Generic Resource ID and contract address", async () => {
