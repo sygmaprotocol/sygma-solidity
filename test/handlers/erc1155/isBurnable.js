@@ -59,7 +59,7 @@ contract("ERC1155Handler - [Burn ERC1155]", async (accounts) => {
     );
   });
 
-  it("burnableContractAddresses should be marked true in _burnList", async () => {
+  it("burnableContractAddresses should be marked as burnable", async () => {
     const ERC1155HandlerInstance = await ERC1155HandlerContract.new(
       BridgeInstance.address
     );
@@ -85,14 +85,15 @@ contract("ERC1155Handler - [Burn ERC1155]", async (accounts) => {
     }
 
     for (const burnableAddress of burnableContractAddresses) {
-      const isBurnable = await ERC1155HandlerInstance._burnList.call(
+      const isBurnable = (await ERC1155HandlerInstance._tokenContractAddressToTokenProperties.call(
         burnableAddress
-      );
+      )).isBurnable;
+
       assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
     }
   });
 
-  it("ERC1155MintableInstance2.address should not be marked true in _burnList", async () => {
+  it("ERC1155MintableInstance2.address should not be marked as burnable", async () => {
     const ERC1155HandlerInstance = await ERC1155HandlerContract.new(
       BridgeInstance.address
     );
@@ -117,13 +118,14 @@ contract("ERC1155Handler - [Burn ERC1155]", async (accounts) => {
       );
     }
 
-    const isBurnable = await ERC1155HandlerInstance._burnList.call(
+    const isBurnable = (await ERC1155HandlerInstance._tokenContractAddressToTokenProperties.call(
       ERC1155MintableInstance2.address
-    );
+    )).isBurnable
+
     assert.isFalse(isBurnable, "Contract shouldn't be marked burnable");
   });
 
-  it("ERC1155MintableInstance2.address should be marked true in _burnList after setBurnable is called", async () => {
+  it("ERC1155MintableInstance2.address should be marked as burnable after setBurnable is called", async () => {
     const ERC1155HandlerInstance = await ERC1155HandlerContract.new(
       BridgeInstance.address
     );
@@ -152,9 +154,10 @@ contract("ERC1155Handler - [Burn ERC1155]", async (accounts) => {
       ERC1155HandlerInstance.address,
       ERC1155MintableInstance2.address
     );
-    const isBurnable = await ERC1155HandlerInstance._burnList.call(
+    const isBurnable = (await ERC1155HandlerInstance._tokenContractAddressToTokenProperties.call(
       ERC1155MintableInstance2.address
-    );
+    )).isBurnable;
+
     assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
   });
 });

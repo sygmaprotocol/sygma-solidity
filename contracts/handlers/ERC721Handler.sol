@@ -41,7 +41,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         @notice If the corresponding {tokenAddress} for the parsed {resourceID} supports {_INTERFACE_ERC721_METADATA},
         then {metaData} will be set according to the {tokenURI} method in the token contract.
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
-        marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
+        marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
         @return metaData : the deposited token metadata acquired by calling a {tokenURI} method in the token contract.
      */
     function deposit(
@@ -54,7 +54,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         (tokenID) = abi.decode(data, (uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
+        require(_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted, "provided tokenAddress is not whitelisted");
 
         // Check if the contract supports metadata, fetch it if it does
         if (tokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
@@ -62,7 +62,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
             metaData = bytes(erc721.tokenURI(tokenID));
         }
 
-        if (_burnList[tokenAddress]) {
+        if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             burnERC721(tokenAddress, depositor, tokenID);
         } else {
             lockERC721(tokenAddress, depositor, address(this), tokenID);
@@ -103,9 +103,9 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         }
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_contractWhitelist[address(tokenAddress)], "provided tokenAddress is not whitelisted");
+        require(_tokenContractAddressToTokenProperties[address(tokenAddress)].isWhitelisted, "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
+        if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);
         } else {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
@@ -132,8 +132,8 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
 
     /**
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
-        {_contractAddressToResourceID} with {resourceID} and
-        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
+        {_tokenContractAddressToTokenProperties[tokenAddress].resourceID} with {resourceID} and
+        {_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted} to true for {contractAddress} in ERCHandlerHelpers contract.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.

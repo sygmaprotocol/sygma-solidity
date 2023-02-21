@@ -210,10 +210,13 @@ contract("Bridge - [admin]", async (accounts) => {
       ),
       ERC20MintableInstance.address
     );
+
+    const retrievedResourceID = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+      ERC20MintableInstance.address
+    )).resourceID
+
     assert.equal(
-      await ERC20HandlerInstance._tokenContractAddressToResourceID.call(
-        ERC20MintableInstance.address
-      ),
+      retrievedResourceID.toLowerCase(),
       resourceID.toLowerCase()
     );
   });
@@ -299,9 +302,11 @@ contract("Bridge - [admin]", async (accounts) => {
         ERC20MintableInstance.address
       )
     );
-    assert.isTrue(
-      await ERC20HandlerInstance._burnList.call(ERC20MintableInstance.address)
-    );
+    const isBurnable = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+      ERC20MintableInstance.address
+    )).isBurnable;
+
+    assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
   });
 
   it("Should require admin role to set ERC20MintableInstance.address as burnable", async () => {

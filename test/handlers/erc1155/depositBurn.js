@@ -100,11 +100,12 @@ contract("ERC1155Handler - [Deposit Burn ERC1155]", async (accounts) => {
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
   });
 
-  it("[sanity] burnableContractAddresses should be marked true in _burnList", async () => {
+  it("[sanity] burnableContractAddresses should be marked as burnable", async () => {
     for (const burnableAddress of burnableContractAddresses) {
-      const isBurnable = await ERC1155HandlerInstance._burnList.call(
+      const isBurnable = (await ERC1155HandlerInstance._tokenContractAddressToTokenProperties.call(
         burnableAddress
-      );
+      )).isBurnable
+
       assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
     }
   });
