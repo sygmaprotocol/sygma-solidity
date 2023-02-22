@@ -13,8 +13,7 @@ const AccessControlSegregatorContract = artifacts.require(
 const BridgeContract = artifacts.require("Bridge");
 
 const blankFunctionSig = "0x00000000";
-const blankFunctionDepositorOffset =
-  "0x0000000000000000000000000000000000000000000000000000000000000000";
+const blankFunctionDepositorOffset = "0x0000";
 const AbiCoder = new Ethers.utils.AbiCoder();
 const mpcAddress = "0x1Ad4b1efE3Bc6FEE085e995FCF48219430e615C3";
 const mpcPrivateKey =
@@ -161,7 +160,7 @@ const createPermissionlessGenericDepositData = (
 const constructGenericHandlerSetResourceData = (...args) => {
   return args.reduce((accumulator, currentArg) => {
     if (typeof currentArg === "number") {
-      currentArg = toHex(currentArg, 32);
+      currentArg = toHex(currentArg, 2);
     }
     return accumulator + currentArg.substr(2);
   });

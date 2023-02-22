@@ -132,10 +132,10 @@ contract("PermissionedGenericHandler - [constructor]", async (accounts) => {
           initialContractAddresses[i]
         )).depositFunctionDepositorOffset;
 
-      // compare bytes 4 - 36 from permissionedGenericHandlerSetResourceData
+      // compare bytes 4 - 6 from permissionedGenericHandlerSetResourceData
       assert.strictEqual(
-        "0x" + permissionedGenericHandlerSetResourceData[i].substr(10, 64),
-        Helpers.toHex(retrievedDepositFunctionDepositorOffset.toNumber(), 32)
+        "0x" + permissionedGenericHandlerSetResourceData[i].substr(10, 4),
+        Helpers.toHex(retrievedDepositFunctionDepositorOffset.toNumber(), 2)
       );
 
       const retrievedExecuteFunctionSig =
@@ -143,11 +143,11 @@ contract("PermissionedGenericHandler - [constructor]", async (accounts) => {
           initialContractAddresses[i]
         )).executeFunctionSignature;
 
-      // compare bytes 36 - 40 from permissionedGenericHandlerSetResourceData
+      // compare bytes 6 - 10 from permissionedGenericHandlerSetResourceData
       assert.strictEqual(
         "0x" +
           permissionedGenericHandlerSetResourceData[i]
-            .substr(74, 8)
+            .substr(14, 8)
             .toLowerCase(),
         retrievedExecuteFunctionSig.toLowerCase()
       );
