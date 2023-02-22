@@ -15,7 +15,7 @@ contract PermissionedGenericHandler is IHandler {
     struct TokenContractProperties {
       bytes32 resourceID;
       bytes4 depositFunctionSignature; // deposit function signature
-      uint256 depositFunctionDepositorOffset; // depositor address position offset in the metadata
+      uint16 depositFunctionDepositorOffset; // depositor address position offset in the metadata
       bytes4 executeFunctionSignature; // execute proposal function signature
       bool isWhitelisted;
     }
@@ -57,18 +57,18 @@ contract PermissionedGenericHandler is IHandler {
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
         Permissioned handler structure should be it constructed as follows:
-          depositFunctionSig:              bytes4   bytes 0  - 4
-          depositFunctionDepositorOffset:  uint256  bytes 4  - 36
-          executeFunctionSig:              bytes4   bytes 36 - 40
+          depositFunctionSig:              bytes4  bytes 0 - 4
+          depositFunctionDepositorOffset:  uint16  bytes 4 - 6
+          executeFunctionSig:              bytes4  bytes 6 - 10
      */
     function setResource(
         bytes32 resourceID,
         address contractAddress,
         bytes calldata args
     ) external onlyBridge {
-        bytes4   depositFunctionSig = bytes4(args[0:4]);
-        uint256  depositFunctionDepositorOffset = uint256(bytes32(args[4:36]));
-        bytes4   executeFunctionSig = bytes4(args[36:40]);
+        bytes4  depositFunctionSig = bytes4(args[0:4]);
+        uint16  depositFunctionDepositorOffset = uint16(bytes2(args[4:6]));
+        bytes4  executeFunctionSig = bytes4(args[6:10]);
 
         _setResource(resourceID, contractAddress, depositFunctionSig, depositFunctionDepositorOffset, executeFunctionSig);
     }
@@ -80,7 +80,7 @@ contract PermissionedGenericHandler is IHandler {
         @param data Consists of: {resourceID}, {lenMetaData}, and {metaData} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         len(data)                              uint256     bytes  0  - 32
-        data                                   bytes       bytes  64 - END
+        data                                   bytes       bytes  32 - END
         @notice {contractAddress} is required to be whitelisted
         @notice If {_tokenContractAddressToTokenProperties[contractAddress].depositFunctionSignature} is set,
         {metaData} is expected to consist of needed function arguments.
@@ -94,7 +94,7 @@ contract PermissionedGenericHandler is IHandler {
         metadata = bytes(data[32:32 + lenMetadata]);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
-        uint256 depositorOffset = _tokenContractAddressToTokenProperties[contractAddress].depositFunctionDepositorOffset;
+        uint16 depositorOffset = _tokenContractAddressToTokenProperties[contractAddress].depositFunctionDepositorOffset;
         if (depositorOffset > 0) {
             uint256 metadataDepositor;
             // Skipping 32 bytes of length prefix and depositorOffset bytes.
@@ -153,7 +153,7 @@ contract PermissionedGenericHandler is IHandler {
         bytes32 resourceID,
         address contractAddress,
         bytes4 depositFunctionSig,
-        uint256 depositFunctionDepositorOffset,
+        uint16 depositFunctionDepositorOffset,
         bytes4 executeFunctionSig
     ) internal {
 
