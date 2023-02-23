@@ -13,18 +13,17 @@ contract ERCHandlerHelpers is IERCHandler {
     address public immutable _bridgeAddress;
 
     uint8 public constant defaultDecimals = 18;
+    struct ERCTokenContractProperties {
+      bytes32 resourceID;
+      bool isWhitelisted;
+      bool isBurnable;
+    }
 
     // resourceID => token contract address
     mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
 
-    // token contract address => resourceID
-    mapping (address => bytes32) public _tokenContractAddressToResourceID;
-
-    // token contract address => is whitelisted
-    mapping (address => bool) public _contractWhitelist;
-
-    // token contract address => is burnable
-    mapping (address => bool) public _burnList;
+    // token contract address => ERCTokenContractProperties
+    mapping (address => ERCTokenContractProperties) public _tokenContractAddressToTokenProperties;
 
     // token contract address => decimals
     mapping (address => Decimals) public _decimals;
@@ -53,8 +52,8 @@ contract ERCHandlerHelpers is IERCHandler {
     }
 
     /**
-        @notice First verifies {contractAddress} is whitelisted, then sets {_burnList}[{contractAddress}]
-        to true.
+        @notice First verifies {contractAddress} is whitelisted, then sets
+        {_tokenContractAddressToTokenProperties[contractAddress].isBurnable} to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
      */
     function setBurnable(address contractAddress) external override onlyBridge{
@@ -65,24 +64,24 @@ contract ERCHandlerHelpers is IERCHandler {
 
     function _setResource(bytes32 resourceID, address contractAddress) internal {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
-        _tokenContractAddressToResourceID[contractAddress] = resourceID;
-
-        _contractWhitelist[contractAddress] = true;
+        _tokenContractAddressToTokenProperties[contractAddress].resourceID = resourceID;
+        _tokenContractAddressToTokenProperties[contractAddress].isWhitelisted = true;
     }
 
     function _setBurnable(address contractAddress) internal {
-        require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
-        _burnList[contractAddress] = true;
+        require(_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted, "provided contract is not whitelisted");
+        _tokenContractAddressToTokenProperties[contractAddress].isBurnable = true;
     }
 
     /**
         @notice First verifies {contractAddress} is whitelisted,
-        then sets {_decimals}[{contractAddress}] to it's decimals value.
+        then sets {_decimals[contractAddress].externalDecimals} to it's decimals value and
+        {_decimals[contractAddress].isSet} to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
         @param externalDecimals Decimal places of token that is transferred.
      */
     function _setDecimals(address contractAddress, uint8 externalDecimals) internal {
-        require(_contractWhitelist[contractAddress], "provided contract is not whitelisted");
+        require(_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted, "provided contract is not whitelisted");
         _decimals[contractAddress] = Decimals({
             isSet: true,
             externalDecimals: externalDecimals

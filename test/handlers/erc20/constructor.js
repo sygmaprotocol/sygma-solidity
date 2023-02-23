@@ -112,10 +112,10 @@ contract("ERC20Handler - [constructor]", async (accounts) => {
         retrievedTokenAddress.toLowerCase()
       );
 
-      const retrievedResourceID =
-        await ERC20HandlerInstance._tokenContractAddressToResourceID.call(
-          tokenAddress
-        );
+      const retrievedResourceID = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+        tokenAddress
+      )).resourceID
+
       assert.strictEqual(
         resourceID.toLowerCase(),
         retrievedResourceID.toLowerCase()

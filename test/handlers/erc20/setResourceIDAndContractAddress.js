@@ -60,10 +60,10 @@ contract(
         retrievedTokenAddress
       );
 
-      const retrievedResourceID =
-        await ERC20HandlerInstance._tokenContractAddressToResourceID.call(
-          ERC20MintableInstance1.address
-        );
+      const retrievedResourceID = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+        ERC20MintableInstance1.address
+      )).resourceID
+
       assert.strictEqual(
         initialResourceIDs[0].toLowerCase(),
         retrievedResourceID.toLowerCase()
@@ -97,10 +97,10 @@ contract(
         retrievedTokenAddress.toLowerCase()
       );
 
-      const retrievedResourceID =
-        await ERC20HandlerInstance._tokenContractAddressToResourceID.call(
-          ERC20MintableInstance2.address
-        );
+      const retrievedResourceID = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+        ERC20MintableInstance2.address
+      )).resourceID
+
       assert.strictEqual(
         secondERC20ResourceID.toLowerCase(),
         retrievedResourceID.toLowerCase()
@@ -132,10 +132,10 @@ contract(
         );
       assert.strictEqual(ERC20MintableInstance2.address, retrievedTokenAddress);
 
-      const retrievedResourceID =
-        await ERC20HandlerInstance._tokenContractAddressToResourceID.call(
-          ERC20MintableInstance2.address
-        );
+      const retrievedResourceID = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+        ERC20MintableInstance2.address
+      )).resourceID
+
       assert.strictEqual(
         initialResourceIDs[0].toLowerCase(),
         retrievedResourceID.toLowerCase()
@@ -200,10 +200,10 @@ contract(
         emptySetResourceData
       );
 
-      const retrievedResourceID =
-        await ERC20HandlerInstance._tokenContractAddressToResourceID.call(
-          ERC20MintableInstance1.address
-        );
+      const retrievedResourceID = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+        ERC20MintableInstance1.address
+      )).resourceID
+
       assert.strictEqual(
         secondERC20ResourceID.toLowerCase(),
         retrievedResourceID.toLowerCase()
@@ -213,6 +213,7 @@ contract(
         await ERC20HandlerInstance._resourceIDToTokenContractAddress.call(
           secondERC20ResourceID
         );
+
       assert.strictEqual(
         retrievedContractAddress.toLowerCase(),
         ERC20MintableInstance1.address.toLowerCase()

@@ -30,7 +30,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         destinationRecipientAddress     length      uint256     bytes  32 - 64
         destinationRecipientAddress                 bytes       bytes  64 - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
-        marked true in {_burnList}, deposited tokens will be burned, if not, they will be locked.
+        marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
         @return an empty data.
      */
     function deposit(
@@ -42,9 +42,9 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         (amount) = abi.decode(data, (uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
+        require(_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted, "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
+        if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             burnERC20(tokenAddress, depositor, amount);
         } else {
             lockERC20(tokenAddress, depositor, address(this), amount);
@@ -79,9 +79,9 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
         }
 
-        require(_contractWhitelist[tokenAddress], "provided tokenAddress is not whitelisted");
+        require(_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted, "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
+        if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             mintERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
         } else {
             releaseERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
@@ -108,8 +108,8 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
 
     /**
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
-        {_contractAddressToResourceID} with {resourceID} and
-        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
+        {_tokenContractAddressToTokenProperties[contractAddress].resourceID} with {resourceID} and
+        {_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted} to true for {contractAddress} in ERCHandlerHelpers contract.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.

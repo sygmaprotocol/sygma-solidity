@@ -42,7 +42,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         require(tokenAddress != address(0), "provided resourceID does not exist");
 
-        if (_burnList[tokenAddress]) {
+        if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             burnBatchERC1155(tokenAddress, depositor, tokenIDs, amounts);
         } else {
             lockBatchERC1155(tokenAddress, depositor, address(this), tokenIDs, amounts, EMPTY_BYTES);
@@ -76,9 +76,9 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         }
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_contractWhitelist[address(tokenAddress)], "provided tokenAddress is not whitelisted");
+        require(_tokenContractAddressToTokenProperties[address(tokenAddress)].isWhitelisted, "provided tokenAddress is not whitelisted");
 
-        if (_burnList[tokenAddress]) {
+        if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             mintBatchERC1155(tokenAddress, address(recipientAddress), tokenIDs, amounts, transferData);
         } else {
             releaseBatchERC1155(tokenAddress, address(this), address(recipientAddress), tokenIDs, amounts, transferData);
@@ -104,8 +104,8 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
 
     /**
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
-        {_contractAddressToResourceID} with {resourceID} and
-        {_contractWhitelist} to true for {contractAddress} in ERCHandlerHelpers contract.
+        {_tokenContractAddressToTokenProperties[tokenAddress].resourceID} with {resourceID} and
+        {_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted} to true for {contractAddress} in ERCHandlerHelpers contract.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.

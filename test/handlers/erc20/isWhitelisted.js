@@ -56,9 +56,10 @@ contract("ERC20Handler - [isWhitelisted]", async (accounts) => {
       ERC20MintableInstance1.address,
       emptySetResourceData
     );
-    const isWhitelisted = await ERC20HandlerInstance._contractWhitelist.call(
+    const isWhitelisted = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
       ERC20MintableInstance1.address
-    );
+    )).isWhitelisted;
+
     assert.isTrue(isWhitelisted, "Contract wasn't successfully whitelisted");
   })
 })
