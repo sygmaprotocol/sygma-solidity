@@ -5,7 +5,7 @@ const Ethers = require("ethers");
 const Helpers = require("../test/helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
-const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser_Decimals");
+const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauserDecimals");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721MinterBurnerPauserContract = artifacts.require(
   "ERC721MinterBurnerPauser"

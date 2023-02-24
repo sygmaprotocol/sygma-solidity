@@ -160,7 +160,7 @@ contract XC20Test is ERC20 {
     }
 }
 
-contract ERC20PresetMinterPauser_Decimals is ERC20PresetMinterPauser {
+contract ERC20PresetMinterPauserDecimals is ERC20PresetMinterPauser {
 
     uint8 private customDecimals;
     constructor(string memory name, string memory symbol, uint8 decimals) public ERC20PresetMinterPauser(name, symbol){

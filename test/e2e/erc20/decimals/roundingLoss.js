@@ -3,7 +3,7 @@ const TruffleAssert = require("truffle-assertions");
 
 const Helpers = require("../../../helpers");
 
-const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser_Decimals");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauserDecimals");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("E2E ERC20 - Two EVM Chains both with decimal places != 18 with rounding loss", async accounts => {
