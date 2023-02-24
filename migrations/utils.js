@@ -1,10 +1,11 @@
 const parseArgs = require("minimist");
 const fs = require("fs");
+const Ethers = require("ethers");
 
 const Helpers = require("../test/helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
-const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser");
+const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauser_Decimals");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721MinterBurnerPauserContract = artifacts.require(
   "ERC721MinterBurnerPauser"
@@ -12,6 +13,7 @@ const ERC721MinterBurnerPauserContract = artifacts.require(
 
 const DEFAULT_CONFIG_PATH = "./migrations/local.json";
 const emptySetResourceData = "0x";
+const erc20TokenAmount = Ethers.utils.parseUnits("1000", 18);
 
 function getNetworksConfig() {
   let path = parseArgs(process.argv.slice(2))["file"];
@@ -57,7 +59,8 @@ async function setupErc20(
     erc20Instance = await deployer.deploy(
       ERC20PresetMinterPauser,
       erc20.name,
-      erc20.symbol
+      erc20.symbol,
+      erc20.decimals
     );
     erc20.address = erc20Instance.address;
   } else {
@@ -83,6 +86,15 @@ async function setupErc20(
       erc20Instance.address
     );
   }
+
+  await erc20Instance.mint(
+    await getDeployerAddress(deployer),
+    erc20TokenAmount
+  );
+  await erc20Instance.mint(
+    erc20HandlerInstance.address,
+    erc20TokenAmount
+  );
 }
 
 async function setupErc721(
@@ -174,8 +186,8 @@ async function migrateToNewTokenHandler(
     newHandlerInstance.address,
     tokenConfig.resourceID,
     tokenContractAddress,
-    // set decimal places if configured for token in 'local.json'
-    tokenConfig.decimals ?? emptySetResourceData
+    // set decimal places if !=18 in 'local.json'
+    tokenConfig.decimals != "18" ? tokenConfig.decimals : emptySetResourceData
   );
 
   console.log("New handler address:", "\t", newHandlerInstance.address);
@@ -185,11 +197,18 @@ async function migrateToNewTokenHandler(
   );
 }
 
+async function getDeployerAddress(deployer) {
+  return await deployer["networks"][deployer["network"]][
+    "from"
+  ];
+}
+
 module.exports = {
   setupFee,
   setupErc20,
   setupErc721,
   setupGeneric,
   getNetworksConfig,
-  migrateToNewTokenHandler
+  migrateToNewTokenHandler,
+  getDeployerAddress
 };

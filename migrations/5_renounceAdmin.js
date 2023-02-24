@@ -52,7 +52,7 @@ module.exports = async function (deployer, network) {
     );
     await feeRouterInstance.renounceRole(
       "0x00",
-      await deployer["networks"][deployer["network"]]["from"]
+      await Utils.getDeployerAddress(deployer)
     );
   }
 
