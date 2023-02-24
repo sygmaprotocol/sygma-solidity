@@ -13,10 +13,17 @@ contract ERCHandlerHelpers is IERCHandler {
     address public immutable _bridgeAddress;
 
     uint8 public constant defaultDecimals = 18;
+
+    struct Decimals {
+        bool isSet;
+        uint8 externalDecimals;
+    }
+
     struct ERCTokenContractProperties {
       bytes32 resourceID;
       bool isWhitelisted;
       bool isBurnable;
+      Decimals decimals;
     }
 
     // resourceID => token contract address
@@ -25,13 +32,7 @@ contract ERCHandlerHelpers is IERCHandler {
     // token contract address => ERCTokenContractProperties
     mapping (address => ERCTokenContractProperties) public _tokenContractAddressToTokenProperties;
 
-    // token contract address => decimals
-    mapping (address => Decimals) public _decimals;
 
-    struct Decimals {
-        bool isSet;
-        uint8 externalDecimals;
-    }
 
     modifier onlyBridge() {
         _onlyBridge();
@@ -75,14 +76,14 @@ contract ERCHandlerHelpers is IERCHandler {
 
     /**
         @notice First verifies {contractAddress} is whitelisted,
-        then sets {_decimals[contractAddress].externalDecimals} to it's decimals value and
-        {_decimals[contractAddress].isSet} to true.
+        then sets {_tokenContractAddressToTokenProperties[contractAddress].decimals.externalDecimals} to it's decimals value and
+        {_tokenContractAddressToTokenProperties[contractAddress].decimals.isSet} to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
         @param externalDecimals Decimal places of token that is transferred.
      */
     function _setDecimals(address contractAddress, uint8 externalDecimals) internal {
         require(_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted, "provided contract is not whitelisted");
-        _decimals[contractAddress] = Decimals({
+        _tokenContractAddressToTokenProperties[contractAddress].decimals = Decimals({
             isSet: true,
             externalDecimals: externalDecimals
         });
@@ -95,8 +96,7 @@ contract ERCHandlerHelpers is IERCHandler {
         @param amount Decimals value to be set for {contractAddress}.
     */
     function convertToExternalBalance(address tokenAddress, uint256 amount) internal returns(uint256) {
-        Decimals memory decimals = _decimals[tokenAddress];
-
+        Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
         if (!decimals.isSet) {
             return amount;
         } else if (decimals.externalDecimals >= defaultDecimals) {
@@ -113,9 +113,8 @@ contract ERCHandlerHelpers is IERCHandler {
         @param amount Decimals value to be set for {contractAddress}.
     */
     function convertToInternalBalance(address tokenAddress, uint256 amount) internal returns(bytes memory) {
-        Decimals memory decimals = _decimals[tokenAddress];
+        Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
         uint256 convertedBalance;
-
         if (!decimals.isSet) {
             return "";
         } else if (decimals.externalDecimals >= defaultDecimals) {
