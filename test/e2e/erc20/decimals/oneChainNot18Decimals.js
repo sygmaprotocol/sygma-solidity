@@ -3,7 +3,7 @@ const TruffleAssert = require("truffle-assertions");
 
 const Helpers = require("../../../helpers");
 
-const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauserDecimals");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with != 18", async accounts => {
@@ -52,8 +52,12 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
         await Promise.all([
             OriginBridgeInstance = await Helpers.deployBridge(originDomainID, adminAddress),
             DestinationBridgeInstance = await Helpers.deployBridge(destinationDomainID, adminAddress),
-            ERC20MintableContract.new("token", "TOK").then(instance => OriginERC20MintableInstance = instance),
-            ERC20MintableContract.new("token", "TOK").then(instance => DestinationERC20MintableInstance = instance)
+            ERC20MintableContract.new("token", "TOK", originDecimalPlaces).then(
+              instance => OriginERC20MintableInstance = instance
+            ),
+            ERC20MintableContract.new("token", "TOK", destinationDecimalPlaces).then(
+              instance => DestinationERC20MintableInstance = instance
+            )
         ]);
 
         originResourceID = Helpers.createResourceID(OriginERC20MintableInstance.address, originDomainID);
@@ -123,6 +127,28 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
         // set MPC address to unpause the Bridge
         await OriginBridgeInstance.endKeygen(Helpers.mpcAddress);
         await DestinationBridgeInstance.endKeygen(Helpers.mpcAddress);
+    });
+
+    it("[sanity] check token contract decimals match set decimals on handlers", async () => {
+      const originTokenContractDecimals = (await OriginERC20MintableInstance.decimals()).toNumber();
+      const originDecimalsSetOnHandler =  (
+        await OriginERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+          OriginERC20MintableInstance.address
+      )).decimals
+
+      const destinationDecimalsSetOnHandler =  (await DestinationERC20HandlerInstance
+        ._tokenContractAddressToTokenProperties.call(DestinationERC20MintableInstance.address
+      )).decimals
+
+      assert.strictEqual(
+        originTokenContractDecimals.toString(),
+        originDecimalsSetOnHandler["externalDecimals"]
+      );
+      assert.isFalse(destinationDecimalsSetOnHandler["isSet"]);
+      assert.strictEqual(
+        "0",
+        destinationDecimalsSetOnHandler["externalDecimals"]
+      );
     });
 
     it(`E2E: depositAmount of Origin ERC20 owned by depositAddress to Destination ERC20

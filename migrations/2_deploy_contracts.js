@@ -25,9 +25,7 @@ const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM")
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
   // fetch deployer address
-  const deployerAddress = await deployer["networks"][deployer["network"]][
-    "from"
-  ];
+  const deployerAddress = await Utils.getDeployerAddress(deployer);
   // assign addresses for access segregation
   const functionAccessAddresses = Array(13).fill(deployerAddress);
 
@@ -128,6 +126,7 @@ module.exports = async function (deployer, network) {
     );
     console.log("ERC20 address:", "\t", erc20.address);
     console.log("ResourceID:", "\t", erc20.resourceID);
+    console.log("Decimal places:", "\t", erc20.decimals);
     console.log(
       "-------------------------------------------------------------------------------"
     );

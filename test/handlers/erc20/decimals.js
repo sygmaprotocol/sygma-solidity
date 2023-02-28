@@ -6,7 +6,7 @@
 
 const Helpers = require("../../helpers");
 
-const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauserDecimals");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("ERC20Handler - [decimals]", async (accounts) => {
@@ -33,7 +33,7 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
   beforeEach(async () => {
       await Promise.all([
           BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]),
-          ERC20MintableContract.new("token", "TOK").then(instance => ERC20MintableInstance = instance)
+          ERC20MintableContract.new("token", "TOK", 11).then(instance => ERC20MintableInstance = instance)
       ]);
 
       resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
@@ -70,10 +70,14 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
   });
 
   it("[sanity] decimals value is not set if 'adminSetResource' is called with empty args", async () => {
-      const ERC20MintableInstanceDecimals = await ERC20HandlerInstance._decimals.call(ERC20MintableInstance.address);
+      const ERC20MintableInstanceDecimals = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+        await ERC20MintableInstance.address
+      )).decimals;
+
+      console.log("ERC20MintableInstanceDecimals",ERC20MintableInstanceDecimals["externalDecimals"])
 
       assert.strictEqual(ERC20MintableInstanceDecimals.isSet, false)
-      assert.strictEqual(ERC20MintableInstanceDecimals.externalDecimals.toNumber(), 0)
+      assert.strictEqual(ERC20MintableInstanceDecimals["externalDecimals"], "0")
   });
 
   it("[sanity] decimals value is set if args are provided to 'adminSetResource'", async () => {
@@ -85,9 +89,15 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
         setDecimalPlaces
       );
 
-      const ERC20MintableInstanceDecimals = await ERC20HandlerInstance._decimals.call(ERC20MintableInstance.address);
+      const ERC20MintableInstanceDecimals = (await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+        ERC20MintableInstance.address
+      )).decimals;
 
-      assert.strictEqual(ERC20MintableInstanceDecimals.isSet, true)
-      assert.strictEqual(ERC20MintableInstanceDecimals.externalDecimals.toNumber(), 11)
+      assert.strictEqual(ERC20MintableInstanceDecimals.isSet, true);
+      assert.strictEqual(ERC20MintableInstanceDecimals["externalDecimals"], "11");
+      assert.strictEqual(
+        ERC20MintableInstanceDecimals["externalDecimals"],
+        (await ERC20MintableInstance.decimals()).toString()
+      );
   });
 });
