@@ -8,28 +8,32 @@ const Ethers = require("ethers");
 
 const Helpers = require("../../../helpers");
 
-const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
-const ERC20HandlerContract = artifacts.require("ERC20Handler");
+const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 const DynamicGenericFeeHandlerEVMContract = artifacts.require("DynamicGenericFeeHandlerEVM");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
+const TestStoreContract = artifacts.require("TestStore");
 
 contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 1;
   const oracle = new Ethers.Wallet.createRandom();
   const sender = accounts[0];
-  const recipientAddress = accounts[1];
-  const gasUsed = 100000;
-  const feePercent = 0;
+  const depositorAddress = accounts[1];
   const emptySetResourceData = "0x";
+  const destinationMaxFee = 2000000;
   const msgGasLimit = 2300000;
   const ter = 0; // Not used
   const feeDataAmount = 0; // Not used
+  const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
+
 
   let BridgeInstance;
   let DynamicGenericFeeHandlerEVMInstance;
-  let resourceID;
   let FeeHandlerRouterInstance;
+
+  let resourceID;
+  let depositData;
+  let depositFunctionSignature;
 
   /**
       Message:
@@ -59,13 +63,9 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
         destinationDomainID,
         accounts[0]
       )),
-      (ERC20MintableInstance = await ERC20MintableContract.new(
-        "token",
-        "TOK"
-      ).then((instance) => (ERC20MintableInstance = instance))),
     ]);
 
-    ERC20HandlerInstance = await ERC20HandlerContract.new(
+    PermissionlessGenericHandlerInstance = await PermissionlessGenericHandlerContract.new(
       BridgeInstance.address
     );
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
@@ -75,19 +75,23 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
+    TestStoreInstance = await TestStoreContract.new();
 
     resourceID = Helpers.createResourceID(
-      ERC20MintableInstance.address,
+      TestStoreInstance.address,
       originDomainID
     );
 
+    depositFunctionSignature = Helpers.getFunctionSignature(
+      TestStoreInstance,
+      "storeWithDepositor"
+    );
+
     await Promise.all([
-      DynamicGenericFeeHandlerEVMInstance.setFeeOracle(oracle.address),
-      DynamicGenericFeeHandlerEVMInstance.setFeeProperties(gasUsed, feePercent),
       BridgeInstance.adminSetResource(
-        ERC20HandlerInstance.address,
+        PermissionlessGenericHandlerInstance.address,
         resourceID,
-        ERC20MintableInstance.address,
+        TestStoreInstance.address,
         emptySetResourceData
       ),
       BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
@@ -97,16 +101,20 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
         DynamicGenericFeeHandlerEVMInstance.address
       ),
     ]);
-  });
 
-  it("should calculate amount of fee with msgGasLimit and return token address", async () => {
-    const tokenAmount = 100;
-    const depositData = Helpers.createERCDepositData(
-      tokenAmount,
-      20,
-      recipientAddress
+    depositData = Helpers.createPermissionlessGenericDepositData(
+      depositFunctionSignature,
+      TestStoreInstance.address,
+      destinationMaxFee,
+      depositorAddress,
+      hashOfTestStore
     );
 
+    await DynamicGenericFeeHandlerEVMInstance.setFeeOracle(oracle.address);
+
+  });
+
+  it("should calculate amount of fee with msgGasLimit and return zero address as token address", async () => {
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.000533"),
       ter,
@@ -132,19 +140,12 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       feeData
     );
     assert.equal(Ethers.utils.formatEther(res.fee.toString()), "0.000036777");
-    assert.equal(res.tokenAddress, ERC20MintableInstance.address);
+    assert.equal(res.tokenAddress, Ethers.constants.AddressZero);
   });
 
-  it("should return percent fee", async () => {
-    const feePercent = 1000; // 10%
-    await DynamicGenericFeeHandlerEVMInstance.setFeeProperties(gasUsed, feePercent);
+  it("should return calculated fee", async () => {
     const msgGasLimit = 3000000;
-    const tokenAmount = Ethers.utils.parseEther("1");
-    const depositData = Helpers.createERCDepositData(
-      tokenAmount,
-      20,
-      recipientAddress
-    );
+
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.0005"),
       ter,
@@ -169,18 +170,11 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       depositData,
       feeData
     );
-    assert.equal(web3.utils.fromWei(res.fee, "ether"), "0.0000495");
-    assert.equal(res.tokenAddress, ERC20MintableInstance.address);
+    assert.equal(web3.utils.fromWei(res.fee, "ether"), "0.000045");
+    assert.equal(res.tokenAddress, Ethers.constants.AddressZero);
   });
 
   it("should not calculate fee if fee data is misformed", async () => {
-    const tokenAmount = 100;
-    const depositData = Helpers.createERCDepositData(
-      tokenAmount,
-      20,
-      recipientAddress
-    );
-
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.0005"),
       ter,
@@ -192,12 +186,12 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       msgGasLimit,
     };
 
-    const feeData =
-      Helpers.createOracleFeeData(
-        oracleResponse,
-        oracle.privateKey,
-        feeDataAmount
-      ) + "11";
+    const feeData = Helpers.createOracleFeeData(
+      oracleResponse,
+      oracle.privateKey,
+      feeDataAmount
+    ) + "11";
+
     await TruffleAssert.reverts(
       FeeHandlerRouterInstance.calculateFee(
         sender,
@@ -213,12 +207,6 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
 
   it("should not calculate fee if deposit data differ from fee data", async () => {
     const otherDestinationDomainID = 3;
-    const tokenAmount = 100;
-    const depositData = Helpers.createERCDepositData(
-      tokenAmount,
-      20,
-      recipientAddress
-    );
 
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.0005"),
@@ -250,13 +238,6 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
   });
 
   it("should not calculate fee if oracle signature is incorrect", async () => {
-    const tokenAmount = 100;
-    const depositData = Helpers.createERCDepositData(
-      tokenAmount,
-      20,
-      recipientAddress
-    );
-
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.0005"),
       ter,
@@ -289,16 +270,6 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
   });
 
   it("should not calculate fee if oracle data are outdated", async () => {
-    const gasUsed = 100000;
-    const feePercent = 500;
-    await DynamicGenericFeeHandlerEVMInstance.setFeeProperties(gasUsed, feePercent);
-
-    const tokenAmount = Ethers.utils.parseEther("1");
-    const depositData = Helpers.createERCDepositData(
-      tokenAmount,
-      20,
-      recipientAddress
-    );
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.000533"),
       ter,
@@ -328,13 +299,6 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
   });
 
   it("should not calculate amount of fee if msgGasLimit == 0", async () => {
-    const tokenAmount = 100;
-    const depositData = Helpers.createERCDepositData(
-      tokenAmount,
-      20,
-      recipientAddress
-    );
-
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.000533"),
       ter,
