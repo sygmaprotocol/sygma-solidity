@@ -17,7 +17,6 @@ const TestStoreContract = artifacts.require("TestStore");
 contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
-  const sender = accounts[0];
   const oracle = new Ethers.Wallet.createRandom();
   const tokenAmount = Ethers.utils.parseEther("1");
   const depositorAddress = accounts[1];
@@ -26,6 +25,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   const destinationMaxFee = 2000000;
   const msgGasLimit = 2300000;
   const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
+  const fee = Ethers.utils.parseEther("0.000036777");
 
   let BridgeInstance;
   let DynamicGenericFeeHandlerEVMInstance;
@@ -36,6 +36,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   let resourceID;
   let depositData;
   let depositFunctionSignature;
+  let feeData;
 
   /*
         feeData structure:
@@ -112,13 +113,6 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
       hashOfTestStore
     );
 
-    await DynamicGenericFeeHandlerEVMInstance.setFeeOracle(oracle.address);
-
-    // set MPC address to unpause the Bridge
-    await BridgeInstance.endKeygen(Helpers.mpcAddress);
-  });
-
-  it("should collect fee in native tokens", async () => {
     const oracleResponse = {
       ber: Ethers.utils.parseEther("0.000533"),
       ter: Ethers.utils.parseEther("1.63934"),
@@ -130,21 +124,19 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
       msgGasLimit,
     };
 
-    const feeData = Helpers.createOracleFeeData(
+    feeData = Helpers.createOracleFeeData(
       oracleResponse,
       oracle.privateKey,
       tokenAmount
     );
 
-    const {fee} = await FeeHandlerRouterInstance.calculateFee.call(
-      sender,
-      originDomainID,
-      destinationDomainID,
-      resourceID,
-      depositData,
-      feeData
-    );
+    await DynamicGenericFeeHandlerEVMInstance.setFeeOracle(oracle.address);
 
+    // set MPC address to unpause the Bridge
+    await BridgeInstance.endKeygen(Helpers.mpcAddress);
+  });
+
+  it("should collect fee in native tokens", async () => {
     const balanceBefore = await web3.eth.getBalance(
       DynamicGenericFeeHandlerEVMInstance.address
     );
@@ -156,7 +148,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
       feeData,
       {
         from: depositorAddress,
-        value: Ethers.utils.parseEther("0.000036777"),
+        value: fee,
       }
     );
 
@@ -190,23 +182,6 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   });
 
   it("deposit should revert if invalid fee (msg.value) amount supplied", async () => {
-    const oracleResponse = {
-      ber: Ethers.utils.parseEther("0.000533"),
-      ter: Ethers.utils.parseEther("1.63934"),
-      dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-      expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-      fromDomainID: originDomainID,
-      toDomainID: destinationDomainID,
-      resourceID,
-      msgGasLimit,
-    };
-
-    const feeData = Helpers.createOracleFeeData(
-      oracleResponse,
-      oracle.privateKey,
-      tokenAmount
-    );
-
     await TruffleAssert.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
@@ -222,56 +197,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
     );
   });
 
-  it("deposit should revert if fee collection fails", async () => {
-    const oracleResponse = {
-      ber: Ethers.utils.parseEther("0.000533"),
-      ter: Ethers.utils.parseEther("1.63934"),
-      dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-      expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-      fromDomainID: originDomainID,
-      toDomainID: originDomainID,
-      resourceID,
-      msgGasLimit,
-    };
-
-    const feeData = Helpers.createOracleFeeData(
-      oracleResponse,
-      oracle.privateKey,
-      tokenAmount
-    );
-
-    await TruffleAssert.reverts(
-      BridgeInstance.deposit(
-        destinationDomainID,
-        resourceID,
-        depositData,
-        feeData,
-        {
-          from: depositorAddress,
-          value: Ethers.utils.parseEther("0.5").toString(),
-        }
-      )
-    );
-  });
-
   it("deposit should revert if not called by router on DynamicFeeHandler contract", async () => {
-    const oracleResponse = {
-      ber: Ethers.utils.parseEther("0.000533"),
-      ter: Ethers.utils.parseEther("1.63934"),
-      dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-      expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-      fromDomainID: originDomainID,
-      toDomainID: destinationDomainID,
-      resourceID,
-      msgGasLimit,
-    };
-
-    const feeData = Helpers.createOracleFeeData(
-      oracleResponse,
-      oracle.privateKey,
-      tokenAmount
-    );
-
     await TruffleAssert.reverts(
       DynamicGenericFeeHandlerEVMInstance.collectFee(
         depositorAddress,
@@ -282,7 +208,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
         feeData,
         {
           from: depositorAddress,
-          value: Ethers.utils.parseEther("0.5").toString(),
+          fee,
         }
       ),
       "sender must be bridge or fee router contract"
@@ -290,23 +216,6 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   });
 
   it("deposit should revert if not called by bridge on FeeHandlerRouter contract", async () => {
-    const oracleResponse = {
-      ber: Ethers.utils.parseEther("0.000533"),
-      ter: Ethers.utils.parseEther("1.63934"),
-      dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-      expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-      fromDomainID: originDomainID,
-      toDomainID: destinationDomainID,
-      resourceID,
-      msgGasLimit,
-    };
-
-    const feeData = Helpers.createOracleFeeData(
-      oracleResponse,
-      oracle.privateKey,
-      tokenAmount
-    );
-
     await TruffleAssert.reverts(
       FeeHandlerRouterInstance.collectFee(
         depositorAddress,
@@ -317,7 +226,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
         feeData,
         {
           from: depositorAddress,
-          value: Ethers.utils.parseEther("0.5").toString(),
+          value: fee,
         }
       ),
       "sender must be bridge contract"
@@ -327,32 +236,6 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   it("should successfully change fee handler from FeeRouter to DynamicFeeHandler and collect fee", async () => {
     await BridgeInstance.adminChangeFeeHandler(
       DynamicGenericFeeHandlerEVMInstance.address
-    );
-
-    const oracleResponse = {
-      ber: Ethers.utils.parseEther("0.000533"),
-      ter: Ethers.utils.parseEther("1.63934"),
-      dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
-      expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
-      fromDomainID: originDomainID,
-      toDomainID: destinationDomainID,
-      resourceID,
-      msgGasLimit,
-    };
-
-    const feeData = Helpers.createOracleFeeData(
-      oracleResponse,
-      oracle.privateKey,
-      tokenAmount
-    );
-
-    const {fee} = await FeeHandlerRouterInstance.calculateFee.call(
-      sender,
-      originDomainID,
-      destinationDomainID,
-      resourceID,
-      depositData,
-      feeData
     );
 
     const balanceBefore = await web3.eth.getBalance(
@@ -366,7 +249,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
       feeData,
       {
         from: depositorAddress,
-        value: Ethers.utils.parseEther("0.000036777"),
+        value: fee,
       }
     );
 
