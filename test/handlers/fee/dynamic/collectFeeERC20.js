@@ -13,7 +13,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
-contract("DynamicFeeHandler - [collectFee]", async (accounts) => {
+contract("DynamicERC20FeeHandlerEVM - [collectFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const oracle = new Ethers.Wallet.createRandom();

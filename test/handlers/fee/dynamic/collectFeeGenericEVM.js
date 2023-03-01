@@ -14,7 +14,7 @@ const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const TestStoreContract = artifacts.require("TestStore");
 
 
-contract("DynamicFeeHandler - [collectFee]", async (accounts) => {
+contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const sender = accounts[0];
