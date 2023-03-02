@@ -71,8 +71,34 @@ Each concrete implementation needs to implement [custom logic for calculating fe
 
 _Based on resource type and different destination chains, we have multiple concrete implementations of `DynamicFeeHandler`._
 
-##### DynamicERC20FeeHandlerEVM (WIP)
+##### DynamicERC20FeeHandlerEVM
 
-##### DynamicERC20FeeHandlerSubstrate (WIP)
+*Used when destination network (domain) is an EVM based chain*
 
-##### DynamicGenericFeeHandlerEVM (WIP)
+###### Final fee calculation:
+
+`final_fee = feeOracleMsg.dstGasPrice * _gasUsed * feeOracleMsg.ter`
+
+##### DynamicERC20FeeHandlerSubstrate
+
+*Used when destination network (domain) is an Substrate based chain*
+
+###### Final fee calculation:
+
+`final_fee = feeOracleMsg.inclusionFee * feeOracleMsg.ter`
+
+##### DynamicGenericFeeHandlerEVM
+
+*Used when destination network (domain) is an EVM based chain and generic message is being bridged*
+
+###### Final fee calculation:
+
+`final_fee = feeOracleMsg.dstGasPrice * feeOracleMsg.msgGasLimit * feeOracleMsg.ber`
+
+##### DynamicGenericFeeHandlerSubstrate (NOT IMPLEMENTED)
+
+*Used when destination network (domain) is an EVM based chain and generic message is being bridged*
+
+###### Final fee calculation:
+
+`final_fee = feeOracleMsg.inclusionFee * feeOracleMsg.ber`
