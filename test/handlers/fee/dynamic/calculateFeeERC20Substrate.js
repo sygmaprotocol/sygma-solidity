@@ -35,7 +35,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
       Message:
       ber * 10^18:  uint256 (not used)
       ter * 10^18:  uint256
-      finalFee:     uint256
+      inclusionFee: uint256
       expiresAt:    uint256
       fromDomainID: uint8 encoded as uint256
       toDomainID:   uint8 encoded as uint256
@@ -110,7 +110,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.63934"),
-      // dstGasPrice is used as finalFee for Substrate calculations
+      // dstGasPrice is used as inclusionFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -146,7 +146,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.63934"),
-      // dstGasPrice is used as finalFee for Substrate calculations
+      // dstGasPrice is used as inclusionFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -183,7 +183,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
+      // dstGasPrice is used as inclusionFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseEther("0.003"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -220,7 +220,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
+      // dstGasPrice is used as inclusionFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -260,7 +260,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
+      // dstGasPrice is used as inclusionFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -298,7 +298,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.5"),
-      // dstGasPrice is used as finalFee for Substrate calculations
+      // dstGasPrice is used as inclusionFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) + 500,
       fromDomainID: originDomainID,
@@ -341,7 +341,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
     const oracleResponse = {
       ber,
       ter: Ethers.utils.parseEther("1.63934"),
-      // dstGasPrice is used as finalFee for Substrate calculations
+      // dstGasPrice is used as inclusionFee for Substrate calculations
       dstGasPrice: Ethers.utils.parseUnits("30000000000", "wei"),
       expiresAt: Math.floor(new Date().valueOf() / 1000) - 500,
       fromDomainID: originDomainID,
