@@ -17,14 +17,14 @@ contract DynamicERC20FeeHandlerEVM is DynamicFeeHandler {
      */
     constructor(address bridgeAddress, address feeHandlerRouterAddress) DynamicFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
     }
-    
+
      /**
         @notice Calculates fee for deposit for Substrate.
         This function is almost identical to the _calculateFee function in the base contract.
         The differences are: unpacking of the oracle message and the txCost calculation formula.
         Oracle will do the calculation of the tx cost and provide the resulting fee to the contract.
         The resulting calculation is:
-        txCost = finalFee * oracleMessage.ter / 1e18
+        txCost = inclusionFee * oracleMessage.ter / 1e18
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.

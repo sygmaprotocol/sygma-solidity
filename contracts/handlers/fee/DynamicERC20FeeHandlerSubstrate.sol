@@ -17,7 +17,7 @@ contract DynamicERC20FeeHandlerSubstrate is DynamicFeeHandler {
         // Token Effective Rate - rate between base currency of destination network and token that is being trasferred (eg. MATIC/USDT)
         uint256 ter;
         // Final fee - resulting fee calculated by the oracle
-        uint256 finalFee;
+        uint256 inclusionFee;
         uint256 expiresAt;
         uint8 fromDomainID;
         uint8 toDomainID;
@@ -31,14 +31,14 @@ contract DynamicERC20FeeHandlerSubstrate is DynamicFeeHandler {
      */
     constructor(address bridgeAddress, address feeHandlerRouterAddress) DynamicFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
     }
-    
+
      /**
         @notice Calculates fee for deposit for Substrate.
         This function is almost identical to the _calculateFee function in the base contract.
         The differences are: unpacking of the oracle message and the txCost calculation formula.
         Oracle will do the calculation of the tx cost and provide the resulting fee to the contract.
         The resulting calculation is:
-        txCost = finalFee * oracleMessage.ter / 1e18
+        txCost = inclusionFee * oracleMessage.ter / 1e18
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.
         @param destinationDomainID ID of chain deposit will be bridged to.
@@ -53,7 +53,7 @@ contract DynamicERC20FeeHandlerSubstrate is DynamicFeeHandler {
             Message:
             ber * 10^18:  uint256 (not used)
             ter * 10^18:  uint256
-            finalFee:     uint256
+            inclusionFee: uint256
             expiresAt:    uint256
             fromDomainID: uint8 encoded as uint256
             toDomainID:   uint8 encoded as uint256
@@ -94,7 +94,7 @@ contract DynamicERC20FeeHandlerSubstrate is DynamicFeeHandler {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
 
-        txCost = oracleMessage.finalFee * oracleMessage.ter / 1e18;
+        txCost = oracleMessage.inclusionFee * oracleMessage.ter / 1e18;
 
         uint256 depositAmount;
         (depositAmount) = abi.decode(depositData, (uint256));
