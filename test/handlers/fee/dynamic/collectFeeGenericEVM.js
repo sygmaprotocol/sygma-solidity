@@ -208,7 +208,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
         feeData,
         {
           from: depositorAddress,
-          fee,
+          value: fee,
         }
       ),
       "sender must be bridge or fee router contract"
