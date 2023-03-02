@@ -113,9 +113,13 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
         @param feeData Additional data to be passed to the fee handler.
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
-        require(msg.value == 0, "collectFee: msg.value != 0");
         (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
-        lockERC20(tokenAddress, sender, address(this), fee);
+        if(tokenAddress == address(0)){
+            require(msg.value == fee, "Incorrect fee supplied");
+        } else {
+            require(msg.value == 0, "collectFee: msg.value != 0");
+            lockERC20(tokenAddress, sender, address(this), fee);
+        }
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, fee, tokenAddress);
     }
 

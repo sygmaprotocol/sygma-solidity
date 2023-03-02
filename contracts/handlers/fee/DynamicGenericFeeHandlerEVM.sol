@@ -17,7 +17,7 @@ contract DynamicGenericFeeHandlerEVM is DynamicFeeHandler {
      */
     constructor(address bridgeAddress, address feeHandlerRouterAddress) DynamicFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
     }
-    
+
      /**
         @notice Calculates fee for generic messages.
         This function is almost identical to the _calculateFee function in the base contract.
@@ -68,21 +68,18 @@ contract DynamicGenericFeeHandlerEVM is DynamicFeeHandler {
             && (oracleMessage.toDomainID == destinationDomainID)
             && (oracleMessage.resourceID == resourceID),
             "Incorrect deposit params"
-        );                                                                                           
+        );
         require(oracleMessage.msgGasLimit > 0, "msgGasLimit == 0");
 
         bytes32 messageHash = keccak256(feeDataDecoded.message);
 
         verifySig(messageHash, feeDataDecoded.sig, _oracleAddress);
 
-        address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
-        tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
-
         // txCost = dstGasPrice * oracleMessage.msgGasLimit * Base Effective Rate (rate between base currencies of source and dest)
         txCost = oracleMessage.dstGasPrice * oracleMessage.msgGasLimit * oracleMessage.ber / 1e18;
 
         fee = txCost + txCost * _feePercent / 1e4; // 100 for percent and 100 to avoid precision loss
 
-        return (fee, tokenAddress);
+        return (fee, address(0));
     }
 }
