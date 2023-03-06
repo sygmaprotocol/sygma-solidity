@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.2.0...v2.2.1) (2023-03-06)
+
+
+### Bug Fixes
+
+* remove redundant release ([#152](https://github.com/sygmaprotocol/sygma-solidity/issues/152)) ([010e82a](https://github.com/sygmaprotocol/sygma-solidity/commit/010e82a8783339a4e17007bc3c51273faa86890d))
+
+
 ## [2.2.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.1.2...v2.2.0) (2023-023-02)
 
 
