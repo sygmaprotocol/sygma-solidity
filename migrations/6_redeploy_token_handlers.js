@@ -9,6 +9,10 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const XC20HandlerContract = artifacts.require("XC20Handler");
 
+const TOKEN_TYPE = {
+  ERC20: "erc20",
+  XC20: "xc20"
+}
 
 module.exports = async function (deployer, network) {
   // check if "redeploy-token-handlers" is provided -> redeploys
@@ -31,27 +35,26 @@ module.exports = async function (deployer, network) {
       console.error(e)
     }
 
-    // deploy and migrate erc20 handler to new handler
-    for (const erc20 of currentNetworkConfig.erc20) {
-      await Utils.migrateToNewTokenHandler(
-        deployer,
-        erc20,
-        bridgeInstance,
-        erc20HandlerInstance,
-      );
-    }
+    // redeploy and register ERC20 handler
+    await Utils.redeployHandler(
+      deployer,
+      currentNetworkConfig,
+      bridgeInstance,
+      ERC20HandlerContract,
+      erc20HandlerInstance,
+      TOKEN_TYPE.ERC20
+    );
 
-    // deploy and migrate erc20 handler to new handler if
-    // xc20 handler is deployed on current network
-    if (xc20HandlerInstance) {
-      for (const xc20 of currentNetworkConfig.xc20) {
-        await Utils.migrateToNewTokenHandler(
-          deployer,
-          xc20,
-          bridgeInstance,
-          xc20HandlerInstance,
-        );
-      }
+    // redeploy XC20 handler and register (if deployed to current network)
+    if(currentNetworkConfig.xc20 && xc20HandlerInstance){
+      await Utils.redeployHandler(
+        deployer,
+        currentNetworkConfig,
+        bridgeInstance,
+        XC20HandlerContract,
+        xc20HandlerInstance,
+        TOKEN_TYPE.XC20
+      );
     }
   }
 }

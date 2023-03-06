@@ -6,7 +6,6 @@ const Helpers = require("../test/helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
 const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauserDecimals");
-const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721MinterBurnerPauserContract = artifacts.require(
   "ERC721MinterBurnerPauser"
 );
@@ -167,19 +166,46 @@ async function setupGeneric(
   );
 }
 
+async function redeployHandler(
+    deployer,
+    currentNetworkConfig,
+    bridgeInstance,
+    handlerContract,
+    handlerInstance,
+    tokenType
+  ) {
+  let deployNewHandler = true;
+  let newHandlerInstance;
+
+  for (const erc20 of currentNetworkConfig[tokenType]) {
+    if (deployNewHandler) {
+      newHandlerInstance = await deployer.deploy(
+        handlerContract,
+        bridgeInstance.address
+      );
+      console.log("New handler address:", "\t", newHandlerInstance.address);
+      deployNewHandler = false;
+    }
+
+    await migrateToNewTokenHandler(
+      deployer,
+      erc20,
+      bridgeInstance,
+      handlerInstance,
+      newHandlerInstance
+    );
+  }
+}
+
 async function migrateToNewTokenHandler(
   deployer,
   tokenConfig,
   bridgeInstance,
   handlerInstance,
+  newHandlerInstance
 ) {
   const tokenContractAddress = await handlerInstance._resourceIDToTokenContractAddress(
     tokenConfig.resourceID
-  );
-
-  const newHandlerInstance = await deployer.deploy(
-    ERC20HandlerContract,
-    bridgeInstance.address
   );
 
   await bridgeInstance.adminSetResource(
@@ -190,7 +216,6 @@ async function migrateToNewTokenHandler(
     tokenConfig.decimals != "18" ? tokenConfig.decimals : emptySetResourceData
   );
 
-  console.log("New handler address:", "\t", newHandlerInstance.address);
   console.log("Associated resourceID:", "\t", tokenConfig.resourceID);
   console.log(
     "-------------------------------------------------------------------------------"
@@ -210,5 +235,6 @@ module.exports = {
   setupGeneric,
   getNetworksConfig,
   migrateToNewTokenHandler,
+  redeployHandler,
   getDeployerAddress
 };
