@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.2.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.1.2...v2.2.0) (2023-023-02)
+
+
+### Features
+
+* feat: contract storage optimization ([#134](https://github.com/sygmaprotocol/sygma-solidity/issues/134)) ([8acbcf0](https://github.com/sygmaprotocol/sygma-solidity/commit/8acbcf051959da21180cf8b9ea708860b0f2fb8e))
+
+
+### Bug Fixes
+
+* deploy and register one token handler per network ([#148](https://github.com/sygmaprotocol/sygma-solidity/issues/148)) ([49a6b39](https://github.com/sygmaprotocol/sygma-solidity/commit/49a6b3944f8156b5b9668fc0e2e7ac3ad9c0d322))
+
+* fix: dynamic generic fee handler fee calcualtion ([#141](https://github.com/sygmaprotocol/sygma-solidity/issues/137)) ([e75c880](https://github.com/sygmaprotocol/sygma-solidity/commit/e75c8808b98934c5256a3cf50ae7df589a6a4394))
+
+
+### Miscellaneous
+
+* improvements for ERC20 decimals values ([#139](https://github.com/sygmaprotocol/sygma-solidity/issues/139)) ([69177e2](https://github.com/sygmaprotocol/sygma-solidity/commit/69177e2cc9866bcab0e55aaa59dc7d9712505db9))
+
+* rename finalFee to inclusionFee on substrate handler ([#145](https://github.com/sygmaprotocol/sygma-solidity/issues/145)) ([ccaabe7](https://github.com/sygmaprotocol/sygma-solidity/commit/ccaabe718fb5315e4c8b3b2adb9756fadc662c91))
+
 ## [2.1.2](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.1.1...v2.1.2) (2023-02-20)
 
 
