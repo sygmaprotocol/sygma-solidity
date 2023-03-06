@@ -7,11 +7,55 @@ Sygma uses Solidity smart contracts to enable transfers to and from EVM compatib
 ## Deployments
 
 To deploy contracts run `truffle migrate --network NETWORK_NAME --file <path_to_env_config>`.
+
 To deploy new handlers for tokens and register them on bridge contract provide: `--redeploy-token-handlers` flag.
+
 To add another network do the following:
  * update `truffle-config.js` with the desired configuration
  * add the required params to config file for the desired environment (local,dev,testnet,mainnet)
  * create a deploy script in `migrations` directory
+
+### Environment configuration
+
+Each domain is defined with:
+
+- `domainID`: a string representing the domain ID
+- `MPCAddress`: a string representing the MPC address. If omitted endKeygen will not be called as part of migration script.
+- `fee`: an object containing definition of the fee handlers that will be deployed (current limitation is that only one `BasicFeeHandler` and one `DynamicERC20FeeHandlerEVM` can be deployed)
+  - `basic`: _fee handler properties that will be conigured after deployment_
+    - `fee`: a string representing fee amount
+  - `oracle`: _fee handler properties that will be conigured after deployment_
+    - `gasUsed`: a string representing amount of units of gas that should be used for calculating transaction cost
+    - `feePercentage`: a number representing percentage of total deposit that will be taken as fee (this is only applicable if calculated transaction cost is smaller then fee calculated as percentage of deposit)
+- `access`: an object containing access control information used for transfering admin access as the final step of the migration. If omitted this migration step will be skipped.
+  - `feeHandlerAdmin`: an address to which admin acces for all deployed fee handlers will be renounced
+  - `feeRouterAdmin`: an address to which admin acces for deployed fee router will be renounced
+  - `accessControl`: an object representing access control map (each property defines specific function and address that will be granted access to this function)
+- `erc721`: an array of ERC721 tokens, with the following properties:
+  - `name`: a string representing the name of the token
+  - `symbol`: a string representing the symbol of the token
+  - `uri`: a string representing the URI of the metadata
+  - `resourceID`: a string representing the Sygma's cross-chain resourceID
+  - `feeType`: a string representing the type of fee handler that should be registered for this token for all destination networks (`oracle` or `basic`)
+- `erc20`: an array of ERC20 tokens, with the following properties:
+  - `name`: a string representing the name of the token
+  - `symbol`: a string representing the symbol of the token
+  - `resourceID`: a string representing the Sygma's cross-chain resourceID
+  - `feeType`: a string representing the type of fee handler that should be registered for this token for all destination networks (`oracle` or `basic`)
+  - `strategy`: a string representing the token issuance strategy (`mb` for mint/burn or `lr` for lock/release)
+  - `decimals`: a string representing the number of decimals for the token
+- `permissionedGeneric`: an array of permissioned generic resources, with the following properties:
+  - `resourceID`: a string representing the Sygma's cross-chain resourceID
+  - `feeType`: a string representing the type of fee handler that should be registered for this resource for all destination networks (`oracle` or `basic`)
+  - `depositFunctionSig`: a string representing the deposit function signature
+  - `depositorOffset`: a number representing the depositor offset
+  - `executeFunctionSig`: a string representing function signature of function that should be called on execution
+- `permissionlessGeneric`: permissionless generic handler deployment defintion:
+  - `resourceID`: a string representing the Sygma's cross-chain resourceID
+  - `feeType`: a string representing the type of fee handler that should be registered for this resource for all destination networks (`oracle` or `basic`)
+
+
+
 
 ## Dependencies
 
