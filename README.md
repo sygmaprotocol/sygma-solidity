@@ -7,7 +7,9 @@ Sygma uses Solidity smart contracts to enable transfers to and from EVM compatib
 ## Deployments
 
 To deploy contracts run `truffle migrate --network NETWORK_NAME --file <path_to_env_config>`.
-To deploy new handlers for tokens and register them on bridge contract provide: `--redeploy-token-handlers` flag.
+
+For more details on specific flags that can be used and format of environemnt configuration check out [migrations documentation page](/docs/migrations.md).
+
 To add another network do the following:
  * update `truffle-config.js` with the desired configuration
  * add the required params to config file for the desired environment (local,dev,testnet,mainnet)
