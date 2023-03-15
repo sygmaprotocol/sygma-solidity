@@ -15,6 +15,8 @@ The [`IFeeHandler`](https://github.com/sygmaprotocol/sygma-solidity/blob/master/
 
 The fee handler implementation should emit the `FeeCollected` event every time the fee is successfully collected on the source chain. The `tokenAddress` parameter represents the token address in which the fee was collected, with `0` representing the base currency.
 
+With current handler implementations, fees can be collected in base currency (`tokenAddress == 0`) with: `DynamicGenericFeeHandlerEVM` and `BasicFeeHandler`.
+
 ```solidity
 event FeeCollected(
     address sender,
