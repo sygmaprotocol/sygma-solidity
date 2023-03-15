@@ -62,7 +62,7 @@ module.exports = {
     },
     test2: {
       host: "127.0.0.1",     // Localhost (default: none)
-      port: 8545,            // Standard Ethereum port (default: none)
+      port: 8547,            // Standard Ethereum port (default: none)
       network_id: "*",       // Any network (default: none)
       disableConfirmationListener: true,
     },
