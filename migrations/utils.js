@@ -216,6 +216,10 @@ async function migrateToNewTokenHandler(
     tokenConfig.decimals != "18" ? tokenConfig.decimals : emptySetResourceData
   );
 
+  if(tokenConfig.strategy === "mb"){
+    await bridgeInstance.adminSetBurnable(newHandlerInstance.address, tokenContractAddress);
+  }
+
   console.log("Associated resourceID:", "\t", tokenConfig.resourceID);
   console.log(
     "-------------------------------------------------------------------------------"
