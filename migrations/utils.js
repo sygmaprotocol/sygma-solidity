@@ -216,8 +216,18 @@ async function migrateToNewTokenHandler(
     tokenConfig.decimals != "18" ? tokenConfig.decimals : emptySetResourceData
   );
 
-  if(tokenConfig.strategy === "mb"){
-    await bridgeInstance.adminSetBurnable(newHandlerInstance.address, tokenContractAddress);
+    if(tokenConfig.strategy === "mb"){
+      const erc20Instance = await ERC20PresetMinterPauser.at(tokenContractAddress);
+
+    await erc20Instance.grantRole(
+      await erc20Instance.MINTER_ROLE(),
+      newHandlerInstance.address
+    );
+
+    await bridgeInstance.adminSetBurnable(
+      newHandlerInstance.address,
+      tokenContractAddress
+    );
   }
 
   console.log("Associated resourceID:", "\t", tokenConfig.resourceID);
