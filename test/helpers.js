@@ -150,8 +150,8 @@ const createPermissionlessGenericDepositData = (
     executeFunctionSignature.substr(2) + // bytes
     toHex(executeContractAddress.substr(2).length / 2, 1).substr(2) + // uint8
     executeContractAddress.substr(2) + // bytes
-    toHex(32, 1).substr(2) + // uint8
-    toHex(depositor, 32).substr(2) + // bytes32
+    toHex(depositor.substr(2).length / 2, 1).substr(2) + // uint8
+    depositor.substr(2) + // bytes
     executionData.substr(2)
   ) // bytes
     .toLowerCase();

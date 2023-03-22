@@ -57,7 +57,7 @@ contract PermissionlessGenericHandler is IHandler {
           executionData:                bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)  -  END
      */
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view returns (bytes memory) {
-        require(data.length > 81, "Incorrect data length");
+        require(data.length >= 76, "Incorrect data length"); // 32 + 2 + 1 + 1 + 20 + 20
 
         uint16         lenExecuteFuncSignature;
         uint8          lenExecuteContractAddress;
@@ -67,7 +67,7 @@ contract PermissionlessGenericHandler is IHandler {
         lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
         lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
         lenExecutionDataDepositor         = uint8(bytes1(data[35 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress]));
-        executionDataDepositor            = abi.decode(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor], (address));
+        executionDataDepositor            = address(uint160(bytes20(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor])));
 
         require(depositor == executionDataDepositor, 'incorrect depositor in deposit data');
     }
@@ -82,22 +82,27 @@ contract PermissionlessGenericHandler is IHandler {
           len(executeContractAddress):        uint8    bytes  34 + len(executeFuncSignature)                                -  35 + len(executeFuncSignature)
           executeContractAddress              bytes    bytes  35 + len(executeFuncSignature)                                -  35 + len(executeFuncSignature) + len(executeContractAddress)
           len(executionDataDepositor):        uint8    bytes  35 + len(executeFuncSignature) + len(executeContractAddress)  -  36 + len(executeFuncSignature) + len(executeContractAddress)
-          executionDataDepositorWithData:     bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)  -  END
+          executionDataDepositor:       bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress)                                -  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)
+          executionData:                bytes    bytes  36 + len(executeFuncSignature) + len(executeContractAddress) + len(executionDataDepositor)  -  END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
         uint16         lenExecuteFuncSignature;
         bytes4         executeFuncSignature;
         uint8          lenExecuteContractAddress;
         address        executeContractAddress;
-        bytes   memory executionDataDepositorWithData;
+        uint8          lenExecutionDataDepositor;
+        address        executionDataDepositor;
+        bytes   memory executionData;
 
         lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
         executeFuncSignature              = bytes4(data[34:34 + lenExecuteFuncSignature]);
         lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
         executeContractAddress            = address(uint160(bytes20(data[35 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature + lenExecuteContractAddress])));
-        executionDataDepositorWithData    = bytes(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:]);
+        lenExecutionDataDepositor         = uint8(bytes1(data[35 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress]));
+        executionDataDepositor            = address(uint160(bytes20(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor])));
+        executionData                     = bytes(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor:]);
 
-        bytes memory callData = abi.encodePacked(executeFuncSignature, executionDataDepositorWithData);
+        bytes memory callData = abi.encodePacked(executeFuncSignature, abi.encode(executionDataDepositor), executionData);
         executeContractAddress.call(callData);
     }
 }

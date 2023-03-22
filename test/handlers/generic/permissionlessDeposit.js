@@ -117,7 +117,7 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
   });
 
   it("deposit data should be of required length", async () => {
-    const invalidDepositData = "0x" + "02a3d".repeat(31);
+    const invalidDepositData = "0x" + "aa".repeat(75);
 
     await TruffleAssert.reverts(
       BridgeInstance.deposit(
