@@ -347,7 +347,7 @@ const createDepositProposalDataFromHandlerResponse = (
 // The execution data will be packed together with depositorAddress before execution.
 // If the target function parameters include reference types then the offsets should be kept consistent.
 // This function packs the parameters together with a fake address and removes the address.
-// After repacking in the handler together with depositorAddress, the offsets will be correct.
+// After repacking the data in the handler together with depositorAddress, the offsets will be correct.
 const createPermissionlessGenericExecutionData = (
   types,
   values

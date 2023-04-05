@@ -294,7 +294,9 @@ contract(
       const addresses = [BridgeInstance.address, TestStoreInstance.address];
       const message = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes("message"));
 
-      const executionData = Helpers.createPermissionlessGenericExecutionData(["uint", "address[]", "bytes"], [num, addresses, message]);
+      const executionData = Helpers.createPermissionlessGenericExecutionData(
+        ["uint", "address[]", "bytes"], [num, addresses, message]
+      );
 
       const depositFunctionSignature = Helpers.getFunctionSignature(
         TestDepositInstance,

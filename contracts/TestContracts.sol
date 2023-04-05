@@ -184,19 +184,19 @@ contract TestDeposit {
     */
     function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
         bytes memory encoded = abi.encode(address(0), executionData);
-        return this.slice32(encoded);
+        return this.slice(encoded, 32);
     }
 
-    function slice32(bytes calldata input) pure public returns (bytes memory) {
-        return input[32:];
+    function slice(bytes calldata input, uint256 position) pure public returns (bytes memory) {
+        return input[position:];
     }
 
     function executePacked(address depositor, bytes calldata data) external {
         uint256 num;
-        address[] memory arr;
+        address[] memory addresses;
         bytes memory message;
-        (num, arr, message) = abi.decode(data, (uint256, address[], bytes));
-        emit TestExecute(depositor, num, arr[1], message);
+        (num, addresses, message) = abi.decode(data, (uint256, address[], bytes));
+        emit TestExecute(depositor, num, addresses[1], message);
     }
 
     function executeUnpacked(address depositor, uint256 num, address[] memory addresses, bytes memory message) external {
