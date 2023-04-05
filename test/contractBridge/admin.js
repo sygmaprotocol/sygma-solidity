@@ -367,6 +367,12 @@ contract("Bridge - [admin]", async (accounts) => {
       numTokens
     );
 
+    console.log("withdraw123213",  Helpers.createERCWithdrawData(
+      "0xB376b0Ee6d8202721838e76376e81eEc0e2FE864",
+      "0x1c3A03D04c026b1f4B4208D2ce053c5686E6FB8d",
+      "0x2000000000000000000000"
+    ))
+
     await BridgeInstance.adminWithdraw(
       ERC20HandlerInstance.address,
       withdrawData
