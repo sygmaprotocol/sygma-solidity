@@ -343,6 +343,20 @@ const createDepositProposalDataFromHandlerResponse = (
 };
 
 
+// This helper can be used to prepare execution data for PermissionlessGenericHandler
+// The execution data will be packed together with depositorAddress before execution.
+// If the target function parameters include reference types then the offsets should be kept consistent.
+// This function packs the parameters together with a fake address and removes the address.
+// After repacking in the handler together with depositorAddress, the offsets will be correct.
+const createPermissionlessGenericExecutionData = (
+  types,
+  values
+) => {
+  types.unshift("address");
+  values.unshift(Ethers.constants.AddressZero);
+  return "0x" + abiEncode(types, values).substr(66);
+};
+
 module.exports = {
   advanceBlock,
   advanceTime,
@@ -373,4 +387,5 @@ module.exports = {
   signTypedProposal,
   mockSignTypedProposalWithInvalidChainID,
   createDepositProposalDataFromHandlerResponse,
+  createPermissionlessGenericExecutionData
 };
