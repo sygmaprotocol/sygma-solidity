@@ -157,7 +157,7 @@ contract("XC20Handler - [Burn XC20]", async (accounts) => {
     assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
   });
 
-    it(`XC20MintableInstances should not be marked as
+  it(`XC20MintableInstances should not be marked as
       burnable after setResource is called on already burnable tokens`, async () => {
     const XC20HandlerInstance = await XC20HandlerContract.new(
       BridgeInstance.address
@@ -186,12 +186,12 @@ contract("XC20Handler - [Burn XC20]", async (accounts) => {
     // tokens should be marked as burnable
     for (i = 0; i < initialResourceIDs.length; i++) {
       const isBurnableBeforeReRegisteringResource = (
-       await XC20HandlerInstance._tokenContractAddressToTokenProperties.call(
-         initialContractAddresses[i]
-       )
-     ).isBurnable;
+        await XC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+          initialContractAddresses[i]
+        )
+      ).isBurnable;
 
-     assert.isTrue(isBurnableBeforeReRegisteringResource, "Contract wasn't successfully marked burnable");
+      assert.isTrue(isBurnableBeforeReRegisteringResource, "Contract wasn't successfully marked burnable");
     }
 
     // re-register resource - sets isBurnable to false for tokens

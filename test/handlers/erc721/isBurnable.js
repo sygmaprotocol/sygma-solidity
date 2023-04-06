@@ -187,12 +187,12 @@ contract("ERC721Handler - [Burn ERC721]", async (accounts) => {
     // tokens should be marked as burnable
     for (i = 0; i < initialResourceIDs.length; i++) {
       const isBurnableBeforeReRegisteringResource = (
-       await ERC721HandlerInstance._tokenContractAddressToTokenProperties.call(
-         initialContractAddresses[i]
-       )
-     ).isBurnable;
+        await ERC721HandlerInstance._tokenContractAddressToTokenProperties.call(
+          initialContractAddresses[i]
+        )
+      ).isBurnable;
 
-     assert.isTrue(isBurnableBeforeReRegisteringResource, "Contract wasn't successfully marked burnable");
+      assert.isTrue(isBurnableBeforeReRegisteringResource, "Contract wasn't successfully marked burnable");
     }
 
     // re-register resource - sets isBurnable to false for tokens

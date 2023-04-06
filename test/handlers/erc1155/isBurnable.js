@@ -161,7 +161,7 @@ contract("ERC1155Handler - [Burn ERC1155]", async (accounts) => {
     assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
   });
 
-    it(`ERC1155MintableInstances should not be marked as
+  it(`ERC1155MintableInstances should not be marked as
       burnable after setResource is called on already burnable tokens`, async () => {
     const ERC1155HandlerInstance = await ERC1155HandlerContract.new(
       BridgeInstance.address
@@ -190,12 +190,12 @@ contract("ERC1155Handler - [Burn ERC1155]", async (accounts) => {
     // tokens should be marked as burnable
     for (i = 0; i < initialResourceIDs.length; i++) {
       const isBurnableBeforeReRegisteringResource = (
-       await ERC1155HandlerInstance._tokenContractAddressToTokenProperties.call(
-         initialContractAddresses[i]
-       )
-     ).isBurnable;
+        await ERC1155HandlerInstance._tokenContractAddressToTokenProperties.call(
+          initialContractAddresses[i]
+        )
+      ).isBurnable;
 
-     assert.isTrue(isBurnableBeforeReRegisteringResource, "Contract wasn't successfully marked burnable");
+      assert.isTrue(isBurnableBeforeReRegisteringResource, "Contract wasn't successfully marked burnable");
     }
 
     // re-register resource - sets isBurnable to false for tokens
