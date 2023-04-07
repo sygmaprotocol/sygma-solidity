@@ -70,6 +70,8 @@ contract PermissionlessGenericHandler is IHandler {
             function slice(bytes calldata input, uint256 position) pure public returns (bytes memory) {
                 return input[position:];
             }
+          After this, the target contract will get the following:
+          executeFuncSignature(address executionDataDepositor, bytes executionData)
 
           Another example: if the target function accepts (address depositor, uint[], address)
           then a function like the following one can be used:
@@ -80,7 +82,7 @@ contract PermissionlessGenericHandler is IHandler {
             }
 
           After this, the target contract will get the following:
-          executeFuncSignature(executionDataDepositor, executionData)
+          executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
      */
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view returns (bytes memory) {
         require(data.length >= 76, "Incorrect data length"); // 32 + 2 + 1 + 1 + 20 + 20
@@ -126,6 +128,9 @@ contract PermissionlessGenericHandler is IHandler {
                 return input[position:];
             }
 
+          After this, the target contract will get the following:
+          executeFuncSignature(address executionDataDepositor, bytes executionData)
+
           Another example: if the target function accepts (address depositor, uint[], address)
           then a function like the following one can be used:
             
@@ -135,7 +140,7 @@ contract PermissionlessGenericHandler is IHandler {
             }
 
           After this, the target contract will get the following:
-          executeFuncSignature(executionDataDepositor, executionData)
+          executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
         uint16         lenExecuteFuncSignature;
