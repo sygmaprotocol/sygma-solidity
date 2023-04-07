@@ -171,3 +171,39 @@ contract ERC20PresetMinterPauserDecimals is ERC20PresetMinterPauser {
         return customDecimals;
     }
 }
+
+contract TestDeposit {
+    event TestExecute(address depositor, uint256 num, address addr, bytes message);
+
+    /**
+        This helper can be used to prepare execution data for Bridge.deposit() on the source chain
+        if PermissionlessGenericHandler is used 
+        and if the target function accepts (address depositor, bytes executionData).
+        The execution data (packed as bytes) will be packed together with depositorAddress 
+        in PermissionlessGenericHandler before execution on the target chain.
+        This function packs the bytes parameter together with a fake address and removes the address.
+        After repacking in the handler together with depositorAddress, the offsets will be correct.
+        Usage: pack all parameters as bytes, then use this function, then pack the result of this function
+        together with maxFee, executeFuncSignature etc and pass it to Bridge.deposit().
+    */
+    function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
+        bytes memory encoded = abi.encode(address(0), executionData);
+        return this.slice(encoded, 32);
+    }
+
+    function slice(bytes calldata input, uint256 position) pure public returns (bytes memory) {
+        return input[position:];
+    }
+
+    function executePacked(address depositor, bytes calldata data) external {
+        uint256 num;
+        address[] memory addresses;
+        bytes memory message;
+        (num, addresses, message) = abi.decode(data, (uint256, address[], bytes));
+        emit TestExecute(depositor, num, addresses[1], message);
+    }
+
+    function executeUnpacked(address depositor, uint256 num, address[] memory addresses, bytes memory message) external {
+        emit TestExecute(depositor, num, addresses[1], message);
+    }
+}

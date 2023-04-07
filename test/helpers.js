@@ -150,8 +150,8 @@ const createPermissionlessGenericDepositData = (
     executeFunctionSignature.substr(2) + // bytes
     toHex(executeContractAddress.substr(2).length / 2, 1).substr(2) + // uint8
     executeContractAddress.substr(2) + // bytes
-    toHex(32, 1).substr(2) + // uint8
-    toHex(depositor, 32).substr(2) + // bytes32
+    toHex(depositor.substr(2).length / 2, 1).substr(2) + // uint8
+    depositor.substr(2) + // bytes
     executionData.substr(2)
   ) // bytes
     .toLowerCase();
@@ -343,6 +343,24 @@ const createDepositProposalDataFromHandlerResponse = (
 };
 
 
+// This helper can be used to prepare execution data for PermissionlessGenericHandler
+// The execution data will be packed together with depositorAddress before execution.
+// If the target function parameters include reference types then the offsets should be kept consistent.
+// This function packs the parameters together with a fake address and removes the address.
+// After repacking the data in the handler together with depositorAddress, the offsets will be correct.
+// Usage: use this function to prepare execution data,
+// then pack the result together with executeFunctionSignature, maxFee etc 
+// (using the createPermissionlessGenericDepositData() helper)
+// and then pass the data to Bridge.deposit().
+const createPermissionlessGenericExecutionData = (
+  types,
+  values
+) => {
+  types.unshift("address");
+  values.unshift(Ethers.constants.AddressZero);
+  return "0x" + abiEncode(types, values).substr(66);
+};
+
 module.exports = {
   advanceBlock,
   advanceTime,
@@ -373,4 +391,5 @@ module.exports = {
   signTypedProposal,
   mockSignTypedProposalWithInvalidChainID,
   createDepositProposalDataFromHandlerResponse,
+  createPermissionlessGenericExecutionData
 };

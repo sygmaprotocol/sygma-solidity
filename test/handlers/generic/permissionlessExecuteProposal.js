@@ -8,6 +8,7 @@ const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
+const TestDepositContract = artifacts.require("TestDeposit");
 const PermissionlessGenericHandlerContract = artifacts.require(
   "PermissionlessGenericHandler"
 );
@@ -30,6 +31,7 @@ contract(
 
     let BridgeInstance;
     let TestStoreInstance;
+    let TestDepositInstance;
 
     let resourceID;
     let depositFunctionSignature;
@@ -45,6 +47,9 @@ contract(
         )),
         TestStoreContract.new().then(
           (instance) => (TestStoreInstance = instance)
+        ),
+        TestDepositContract.new().then(
+          (instance) => (TestDepositInstance = instance)
         ),
       ]);
 
@@ -214,6 +219,144 @@ contract(
       assert.isTrue(
         await TestStoreInstance._assetsStored.call(hashOfTestStore)
       );
+    });
+
+    it("call with packed depositData should be successful", async () => {
+      const num = 5;
+      const addresses = [BridgeInstance.address, TestStoreInstance.address];
+      const message = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes("message"));
+      const executionData = Helpers.abiEncode(["uint", "address[]", "bytes"], [num, addresses, message]);
+        
+      // If the target function accepts (address depositor, bytes executionData)
+      // then this helper can be used
+      const preparedExecutionData = await TestDepositInstance.prepareDepositData(executionData);
+      const depositFunctionSignature = Helpers.getFunctionSignature(
+        TestDepositInstance,
+        "executePacked"
+      );
+      const depositData = Helpers.createPermissionlessGenericDepositData(
+        depositFunctionSignature,
+        TestDepositInstance.address,
+        destinationMaxFee,
+        depositorAddress,
+        preparedExecutionData
+      );
+
+      const proposal = {
+        originDomainID: originDomainID,
+        depositNonce: expectedDepositNonce,
+        data: depositData,
+        resourceID: resourceID,
+      };
+      const proposalSignedData = await Helpers.signTypedProposal(
+        BridgeInstance.address,
+        [proposal]
+      );
+      await TruffleAssert.passes(
+        BridgeInstance.deposit(
+          originDomainID,
+          resourceID,
+          depositData,
+          feeData,
+          {from: depositorAddress}
+        )
+      );
+
+      // relayer1 executes the proposal
+      const executeTx = await BridgeInstance.executeProposal(proposal, proposalSignedData, {
+        from: relayer1Address,
+      });
+
+      const internalTx = await TruffleAssert.createTransactionResult(
+        TestDepositInstance,
+        executeTx.tx
+      );
+
+      // check that ProposalExecution event is emitted
+      TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
+        return (
+          event.originDomainID.toNumber() === originDomainID &&
+          event.depositNonce.toNumber() === expectedDepositNonce
+        );
+      });
+
+      TruffleAssert.eventEmitted(internalTx, "TestExecute", (event) => {
+        return (
+          event.depositor === depositorAddress &&
+          event.num.toNumber() === num &&
+          event.addr === TestStoreInstance.address &&
+          event.message === message
+        );
+      });
+    });
+
+    it("call with unpacked depositData should be successful", async () => {
+      const num = 5;
+      const addresses = [BridgeInstance.address, TestStoreInstance.address];
+      const message = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes("message"));
+
+      const executionData = Helpers.createPermissionlessGenericExecutionData(
+        ["uint", "address[]", "bytes"], [num, addresses, message]
+      );
+
+      const depositFunctionSignature = Helpers.getFunctionSignature(
+        TestDepositInstance,
+        "executeUnpacked"
+      );
+      const depositData = Helpers.createPermissionlessGenericDepositData(
+        depositFunctionSignature,
+        TestDepositInstance.address,
+        destinationMaxFee,
+        depositorAddress,
+        executionData
+      );
+
+      const proposal = {
+        originDomainID: originDomainID,
+        depositNonce: expectedDepositNonce,
+        data: depositData,
+        resourceID: resourceID,
+      };
+      const proposalSignedData = await Helpers.signTypedProposal(
+        BridgeInstance.address,
+        [proposal]
+      );
+      await TruffleAssert.passes(
+        BridgeInstance.deposit(
+          originDomainID,
+          resourceID,
+          depositData,
+          feeData,
+          {from: depositorAddress}
+        )
+      );
+
+      // relayer1 executes the proposal
+      const executeTx = await BridgeInstance.executeProposal(proposal, proposalSignedData, {
+        from: relayer1Address,
+      });
+
+      const internalTx = await TruffleAssert.createTransactionResult(
+        TestDepositInstance,
+        executeTx.tx
+      );
+
+      // check that ProposalExecution event is emitted
+      TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
+        return (
+          event.originDomainID.toNumber() === originDomainID &&
+          event.depositNonce.toNumber() === expectedDepositNonce
+        );
+      });
+
+      TruffleAssert.eventEmitted(internalTx, "TestExecute", (event) => {
+        return (
+          event.depositor === depositorAddress &&
+          event.num.toNumber() === num &&
+          event.addr === TestStoreInstance.address &&
+          event.message === message
+        );
+      });
     });
   }
 );
