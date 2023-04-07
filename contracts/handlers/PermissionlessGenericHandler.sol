@@ -59,16 +59,18 @@ contract PermissionlessGenericHandler is IHandler {
           executionData is repacked together with executionDataDepositor address for using it in the target contract.
           If executionData contains dynamic types then it is necessary to keep the offsets correct.
           executionData should be encoded together with a 32-byte address and then passed as a parameter without that address.
-          A function like the following one can be used:
+          A helper function like the following one can be used:
 
             function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
                 bytes memory encoded = abi.encode(address(0), executionData);
-                return this.slice32(encoded);
+                return this.slice(encoded, 32);
             }
 
-            function slice32(bytes calldata input) pure public returns (bytes memory) {
-                return input[32:];
+            function slice(bytes calldata input, uint256 position) pure public returns (bytes memory) {
+                return input[position:];
             }
+
+          Or, if 
      */
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view returns (bytes memory) {
         require(data.length >= 76, "Incorrect data length"); // 32 + 2 + 1 + 1 + 20 + 20
@@ -102,11 +104,25 @@ contract PermissionlessGenericHandler is IHandler {
           executionData is repacked together with executionDataDepositor address for using it in the target contract.
           If executionData contains dynamic types then it is necessary to keep the offsets correct.
           executionData should be encoded together with a 32-byte address and then passed as a parameter without that address.
-          A function like the following one can be used:
+          If the target function accepts (address depositor, bytes executionData) 
+          then a function like the following one can be used:
 
-          function prepareDepositData(bytes memory executionData) {
-            return abi.encode(address(0), executiondata)[32:];
-          }
+            function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
+                bytes memory encoded = abi.encode(address(0), executionData);
+                return this.slice(encoded, 32);
+            }
+
+            function slice(bytes calldata input, uint256 position) pure public returns (bytes memory) {
+                return input[position:];
+            }
+
+          Another example: if the target function accepts (address depositor, uint[], address)
+          then a function like the following one can be used:
+            
+            function prepareDepositData(uint[] calldata uintArray, address addr) view external returns (bytes memory) {
+                bytes memory encoded = abi.encode(address(0), uintArray, addr);
+                return this.slice(encoded, 32);
+            }
 
           After this, the target contract will get the following:
           executeFuncSignature(executionDataDepositor, executionData)

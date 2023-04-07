@@ -348,6 +348,10 @@ const createDepositProposalDataFromHandlerResponse = (
 // If the target function parameters include reference types then the offsets should be kept consistent.
 // This function packs the parameters together with a fake address and removes the address.
 // After repacking the data in the handler together with depositorAddress, the offsets will be correct.
+// Usage: use this function to prepare execution data,
+// then pack the result together with executeFunctionSignature, maxFee etc 
+// (using the createPermissionlessGenericDepositData() helper)
+// and then pass the data to Bridge.deposit().
 const createPermissionlessGenericExecutionData = (
   types,
   values

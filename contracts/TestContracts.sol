@@ -176,11 +176,15 @@ contract TestDeposit {
     event TestExecute(address depositor, uint256 num, address addr, bytes message);
 
     /**
-        This helper can be used to prepare execution data for PermissionlessGenericHandler.
-        The execution data will be packed together with depositorAddress before execution.
-        If the target function parameters include reference types then the offsets should be kept consistent.
-        This function packs the parameters together with a fake address and removes the address.
+        This helper can be used to prepare execution data for Bridge.deposit() on the source chain
+        if PermissionlessGenericHandler is used 
+        and if the target function accepts (address depositor, bytes executionData).
+        The execution data (packed as bytes) will be packed together with depositorAddress 
+        in PermissionlessGenericHandler before execution on the target chain.
+        This function packs the bytes parameter together with a fake address and removes the address.
         After repacking in the handler together with depositorAddress, the offsets will be correct.
+        Usage: pack all parameters as bytes, then use this function, then pack the result of this function
+        together with maxFee, executeFuncSignature etc and pass it to Bridge.deposit().
     */
     function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
         bytes memory encoded = abi.encode(address(0), executionData);

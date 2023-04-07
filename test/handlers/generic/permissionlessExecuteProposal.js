@@ -227,7 +227,8 @@ contract(
       const message = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes("message"));
       const executionData = Helpers.abiEncode(["uint", "address[]", "bytes"], [num, addresses, message]);
         
-
+      // If the target function accepts (address depositor, bytes executionData)
+      // then this helper can be used
       const preparedExecutionData = await TestDepositInstance.prepareDepositData(executionData);
       const depositFunctionSignature = Helpers.getFunctionSignature(
         TestDepositInstance,
