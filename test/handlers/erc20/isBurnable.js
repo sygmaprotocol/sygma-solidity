@@ -158,4 +158,65 @@ contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
 
     assert.isTrue(isBurnable, "Contract wasn't successfully marked burnable");
   });
+
+  it(`ERC20MintableInstances should not be marked as
+      burnable after setResource is called on already burnable tokens`, async () => {
+    const ERC20HandlerInstance = await ERC20HandlerContract.new(
+      BridgeInstance.address
+    );
+
+    for (i = 0; i < initialResourceIDs.length; i++) {
+      await TruffleAssert.passes(
+        BridgeInstance.adminSetResource(
+          ERC20HandlerInstance.address,
+          initialResourceIDs[i],
+          initialContractAddresses[i],
+          emptySetResourceData
+        )
+      );
+    }
+
+    for (i = 0; i < initialResourceIDs.length; i++) {
+      await TruffleAssert.passes(
+        BridgeInstance.adminSetBurnable(
+          ERC20HandlerInstance.address,
+          initialContractAddresses[i]
+        )
+      );
+    }
+
+    // tokens should be marked as burnable
+    for (i = 0; i < initialResourceIDs.length; i++) {
+      const isBurnableBeforeReRegisteringResource = (
+        await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+          initialContractAddresses[i]
+        )
+      ).isBurnable;
+
+      assert.isTrue(isBurnableBeforeReRegisteringResource, "Contract wasn't successfully marked burnable");
+    }
+
+    // re-register resource - sets isBurnable to false for tokens
+    for (i = 0; i < initialResourceIDs.length; i++) {
+      await TruffleAssert.passes(
+        BridgeInstance.adminSetResource(
+          ERC20HandlerInstance.address,
+          initialResourceIDs[i],
+          initialContractAddresses[i],
+          emptySetResourceData
+        )
+      );
+    }
+
+    // tokens should not be marked as burnable if resource is re-registered
+    for (i = 0; i < initialResourceIDs.length; i++) {
+      const isBurnableAfterReRegisteringResource = (
+        await ERC20HandlerInstance._tokenContractAddressToTokenProperties.call(
+          initialContractAddresses[i]
+        )
+      ).isBurnable;
+
+      assert.isFalse(isBurnableAfterReRegisteringResource, "Contract shouldn't be marked burnable");
+    }
+  });
 });

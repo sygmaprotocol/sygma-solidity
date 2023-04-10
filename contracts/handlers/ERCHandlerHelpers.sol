@@ -67,6 +67,7 @@ contract ERCHandlerHelpers is IERCHandler {
         _resourceIDToTokenContractAddress[resourceID] = contractAddress;
         _tokenContractAddressToTokenProperties[contractAddress].resourceID = resourceID;
         _tokenContractAddressToTokenProperties[contractAddress].isWhitelisted = true;
+        _tokenContractAddressToTokenProperties[contractAddress].isBurnable = false;
     }
 
     function _setBurnable(address contractAddress) internal {
