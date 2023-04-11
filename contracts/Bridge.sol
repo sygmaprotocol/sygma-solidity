@@ -249,10 +249,10 @@ contract Bridge is Pausable, Context, EIP712 {
         address handler = _resourceIDToHandlerAddress[resourceID];
         require(handler != address(0), "resourceID not mapped to handler");
 
-        uint64 depositNonce = ++_depositCounts[destinationDomainID];
+        depositNonce = ++_depositCounts[destinationDomainID];
 
         IHandler depositHandler = IHandler(handler);
-        bytes memory handlerResponse = depositHandler.deposit(resourceID, sender, depositData);
+        handlerResponse = depositHandler.deposit(resourceID, sender, depositData);
 
         emit Deposit(destinationDomainID, resourceID, depositNonce, sender, depositData, handlerResponse);
         return (depositNonce, handlerResponse);
