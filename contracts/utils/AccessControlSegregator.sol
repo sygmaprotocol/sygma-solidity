@@ -19,7 +19,7 @@ contract AccessControlSegregator {
         @param functions List of functions to be granted access to.
         @param accounts List of accounts.
     */
-    constructor(bytes4[] memory functions, address[] memory accounts) public {
+    constructor(bytes4[] memory functions, address[] memory accounts) {
         require(accounts.length == functions.length, "array length should be equal");
 
         _grantAccess(GRANT_ACCESS_SIG, msg.sender);

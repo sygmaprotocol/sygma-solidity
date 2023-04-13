@@ -104,7 +104,7 @@ contract Bridge is Pausable, Context, EIP712 {
         @param domainID ID of chain the Bridge contract exists on.
         @param accessControl Address of access control contract.
      */
-    constructor (uint8 domainID, address accessControl) EIP712("Bridge", "3.1.0") public {
+    constructor (uint8 domainID, address accessControl) EIP712("Bridge", "3.1.0") {
         _domainID = domainID;
         _accessControl = IAccessControlSegregator(accessControl);
 

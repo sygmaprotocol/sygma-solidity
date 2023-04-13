@@ -25,7 +25,7 @@ contract Forwarder is EIP712 {
 
     mapping(address => uint256) private _nonces;
 
-    constructor() EIP712("Forwarder", "0.0.1") public {}
+    constructor() EIP712("Forwarder", "0.0.1") {}
 
     function getNonce(address from) public view returns (uint256) {
         return _nonces[from];
@@ -49,7 +49,7 @@ contract Forwarder is EIP712 {
         (bool success, bytes memory returndata) = req.to.call{gas: req.gas, value: req.value}(
             abi.encodePacked(req.data, req.from)
         );
-        
+
         assert(gasleft() > req.gas / 63);
 
         return (success, returndata);
