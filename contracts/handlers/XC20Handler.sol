@@ -64,7 +64,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         destinationRecipientAddress length     uint256     bytes  32 - 64
         destinationRecipientAddress            bytes       bytes  64 - END
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
         uint256       amount;
         uint256       lenDestinationRecipientAddress;
         bytes  memory destinationRecipientAddress;
@@ -86,6 +86,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         } else {
             releaseERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
         }
+        return abi.encodePacked(recipientAddress, amount);
     }
 
     /**

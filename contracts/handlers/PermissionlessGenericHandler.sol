@@ -59,7 +59,7 @@ contract PermissionlessGenericHandler is IHandler {
           executionData is repacked together with executionDataDepositor address for using it in the target contract.
           If executionData contains dynamic types then it is necessary to keep the offsets correct.
           executionData should be encoded together with a 32-byte address and then passed as a parameter without that address.
-          If the target function accepts (address depositor, bytes executionData) 
+          If the target function accepts (address depositor, bytes executionData)
           then a function like the following one can be used:
 
             function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
@@ -75,7 +75,7 @@ contract PermissionlessGenericHandler is IHandler {
 
           Another example: if the target function accepts (address depositor, uint[], address)
           then a function like the following one can be used:
-            
+
             function prepareDepositData(uint[] calldata uintArray, address addr) view external returns (bytes memory) {
                 bytes memory encoded = abi.encode(address(0), uintArray, addr);
                 return this.slice(encoded, 32);
@@ -116,7 +116,7 @@ contract PermissionlessGenericHandler is IHandler {
           executionData is repacked together with executionDataDepositor address for using it in the target contract.
           If executionData contains dynamic types then it is necessary to keep the offsets correct.
           executionData should be encoded together with a 32-byte address and then passed as a parameter without that address.
-          If the target function accepts (address depositor, bytes executionData) 
+          If the target function accepts (address depositor, bytes executionData)
           then a function like the following one can be used:
 
             function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
@@ -133,7 +133,7 @@ contract PermissionlessGenericHandler is IHandler {
 
           Another example: if the target function accepts (address depositor, uint[], address)
           then a function like the following one can be used:
-            
+
             function prepareDepositData(uint[] calldata uintArray, address addr) view external returns (bytes memory) {
                 bytes memory encoded = abi.encode(address(0), uintArray, addr);
                 return this.slice(encoded, 32);
@@ -142,7 +142,7 @@ contract PermissionlessGenericHandler is IHandler {
           After this, the target contract will get the following:
           executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge returns (bytes memory) {
         uint16         lenExecuteFuncSignature;
         bytes4         executeFuncSignature;
         uint8          lenExecuteContractAddress;

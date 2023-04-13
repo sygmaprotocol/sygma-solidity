@@ -128,7 +128,7 @@ contract PermissionedGenericHandler is IHandler {
         @notice If {_tokenContractAddressToTokenProperties[contractAddress].executeFunctionSignature} is set,
         {metaData} is expected to consist of needed function arguments.
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge returns (bytes memory) {
         uint256      lenMetadata;
         bytes memory metaData;
 

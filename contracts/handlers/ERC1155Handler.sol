@@ -61,7 +61,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         destinationRecipientAddress                   bytes    bytes
         transferData                                  bytes    bytes
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
         uint[] memory tokenIDs;
         uint[] memory amounts;
         bytes memory recipient;
@@ -83,6 +83,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         } else {
             releaseBatchERC1155(tokenAddress, address(this), address(recipientAddress), tokenIDs, amounts, transferData);
         }
+        return abi.encodePacked(recipientAddress, tokenIDs);
     }
 
     /**

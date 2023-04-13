@@ -62,7 +62,8 @@ contract Bridge is Pausable, Context, EIP712 {
     event ProposalExecution(
         uint8   originDomainID,
         uint64  depositNonce,
-        bytes32 dataHash
+        bytes32 dataHash,
+        bytes handlerResponse
     );
 
     event FailedHandlerExecution(
@@ -309,14 +310,13 @@ contract Bridge is Pausable, Context, EIP712 {
 
             usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] |= 1 << (proposals[i].depositNonce % 256);
 
-            try depositHandler.executeProposal(proposals[i].resourceID, proposals[i].data) {
+            try depositHandler.executeProposal(proposals[i].resourceID, proposals[i].data) returns (bytes memory handlerResponse) {
+                emit ProposalExecution(proposals[i].originDomainID, proposals[i].depositNonce, dataHash, handlerResponse);
             } catch (bytes memory lowLevelData) {
                 emit FailedHandlerExecution(lowLevelData, proposals[i].originDomainID, proposals[i].depositNonce);
                 usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] &= ~(1 << (proposals[i].depositNonce % 256));
                 continue;
             }
-
-            emit ProposalExecution(proposals[i].originDomainID, proposals[i].depositNonce, dataHash);
         }
     }
 

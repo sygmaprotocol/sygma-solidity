@@ -20,7 +20,7 @@ interface IHandler {
         @param resourceID ResourceID to be used when making deposits.
         @param data Consists of additional data needed for a specific deposit execution.
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external;
+    function executeProposal(bytes32 resourceID, bytes calldata data) external returns (bytes memory);
 
     /**
         @notice Correlates {_resourceIDToContractAddress} with {contractAddress}, {_tokenContractAddressToTokenProperties[tokenAddress].resourceID} with {resourceID} and marks
