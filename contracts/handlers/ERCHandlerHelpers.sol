@@ -96,7 +96,7 @@ contract ERCHandlerHelpers is IERCHandler {
         @param tokenAddress Address of contract to be used when executing proposals.
         @param amount Decimals value to be set for {contractAddress}.
     */
-    function convertToExternalBalance(address tokenAddress, uint256 amount) internal returns(uint256) {
+    function convertToExternalBalance(address tokenAddress, uint256 amount) internal view returns(uint256) {
         Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
         if (!decimals.isSet) {
             return amount;
@@ -113,7 +113,7 @@ contract ERCHandlerHelpers is IERCHandler {
         @param tokenAddress Address of contract to be used when executing proposals.
         @param amount Decimals value to be set for {contractAddress}.
     */
-    function convertToInternalBalance(address tokenAddress, uint256 amount) internal returns(bytes memory) {
+    function convertToInternalBalance(address tokenAddress, uint256 amount) internal view returns(bytes memory) {
         Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
         uint256 convertedBalance;
         if (!decimals.isSet) {
