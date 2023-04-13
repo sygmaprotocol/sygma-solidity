@@ -43,6 +43,10 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
         uint256 amount; // not used
     }
 
+    event FeeOracleAddressSet(address feeOracleAddress);
+
+    event FeeOraclePropertiesSet(uint32 gasUsed, uint16 feePercent);
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
         _;
@@ -90,6 +94,7 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
      */
     function setFeeOracle(address oracleAddress) external onlyAdmin {
         _oracleAddress = oracleAddress;
+        emit FeeOracleAddressSet(oracleAddress);
     }
 
     /**
@@ -101,6 +106,7 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
     function setFeeProperties(uint32 gasUsed, uint16 feePercent) external onlyAdmin {
         _gasUsed = gasUsed;
         _feePercent = feePercent;
+        emit FeeOraclePropertiesSet(gasUsed, feePercent);
     }
 
     /**
