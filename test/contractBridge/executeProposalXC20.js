@@ -9,6 +9,7 @@ const Ethers = require("ethers");
 const Helpers = require("../helpers");
 
 const XC20TestContract = artifacts.require("XC20Test");
+const XC20TestContractMock = artifacts.require("XC20TestMock");
 const XC20HandlerContract = artifacts.require("XC20Handler");
 
 contract("Bridge - [execute proposal - XC20]", async (accounts) => {
@@ -28,9 +29,11 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
 
   let BridgeInstance;
   let XC20TestInstance;
+  let XC20TestMockInstance;
   let XC20HandlerInstance;
 
-  let resourceID;
+  let resourceID1;
+  let resourceID2;
   let depositData;
   let depositProposalData;
 
@@ -45,19 +48,25 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
         adminAddress
       )),
       XC20TestContract.new().then(
-        (instance) => (OriginXC20TestInstance = instance)
+        (instance) => (XC20TestInstance = instance)
       ),
+      XC20TestContractMock.new().then(
+        (instance) => (XC20TestMockInstance = instance)
+      )
     ]);
 
-    await XC20TestContract.new().then(
-      (instance) => (XC20TestInstance = instance)
-    ),
-      (resourceID = Helpers.createResourceID(
+    await Promise.all([
+      resourceID1 = Helpers.createResourceID(
         XC20TestInstance.address,
         destinationDomainID
-      ));
+      ),
+      resourceID2 = Helpers.createResourceID(
+        XC20TestMockInstance.address,
+        destinationDomainID
+      )
+    ]);
 
-    initialResourceIDs = [resourceID];
+    initialResourceIDs = [resourceID1, resourceID2];
     initialContractAddresses = [XC20TestInstance.address];
     burnableContractAddresses = [];
 
@@ -66,11 +75,21 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
     await Promise.all([
       BridgeInstance.adminSetResource(
         XC20HandlerInstance.address,
-        resourceID,
+        initialResourceIDs[0],
         XC20TestInstance.address,
         emptySetResourceData
       ),
       XC20TestInstance.mint(
+        depositorAddress,
+        initialTokenAmount
+      ),
+      BridgeInstance.adminSetResource(
+        XC20HandlerInstance.address,
+        initialResourceIDs[1],
+        XC20TestMockInstance.address,
+        emptySetResourceData
+      ),
+      XC20TestMockInstance.mint(
         depositorAddress,
         initialTokenAmount
       ),
@@ -79,6 +98,11 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
     await BridgeInstance.adminSetBurnable(
       XC20HandlerInstance.address,
       XC20TestInstance.address
+    );
+
+    await BridgeInstance.adminSetBurnable(
+      XC20HandlerInstance.address,
+      XC20TestMockInstance.address
     );
 
     data = Helpers.createERCDepositData(depositAmount, 20, recipientAddress);
@@ -107,7 +131,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
     proposal = {
       originDomainID: originDomainID,
       depositNonce: expectedDepositNonce,
-      resourceID: resourceID,
+      resourceID: initialResourceIDs[0],
       data: depositProposalData,
     };
 
@@ -139,7 +163,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -178,7 +202,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -212,7 +236,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -261,7 +285,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -307,7 +331,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -346,7 +370,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -380,7 +404,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -429,7 +453,7 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           originDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -443,74 +467,145 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
         "Invalid proposal signer"
       );
     });
-  });
 
-  it(`transfer event should be emitted with expected values when executing proposal -
-      mint to handler and then transfer to recipient`, async () => {
-    const proposalSignedData = await Helpers.signTypedProposal(
-      BridgeInstance.address,
-      [proposal]
-    );
+    it(`transfer event should be emitted with expected values when executing proposal -
+        mint to handler and then transfer to recipient`, async () => {
+      const proposalSignedData = await Helpers.signTypedProposal(
+        BridgeInstance.address,
+        [proposal]
+      );
 
-    // depositorAddress makes initial deposit of depositAmount
-    assert.isFalse(await BridgeInstance.paused());
-    await TruffleAssert.passes(
-      BridgeInstance.deposit(
+      // depositorAddress makes initial deposit of depositAmount
+      assert.isFalse(await BridgeInstance.paused());
+      await TruffleAssert.passes(
+        BridgeInstance.deposit(
+          originDomainID,
+          initialResourceIDs[0],
+          depositData,
+          feeData,
+          {from: depositorAddress}
+        )
+      );
+
+      const proposalTx = await BridgeInstance.executeProposal(
+        proposal,
+        proposalSignedData,
+        {from: relayer1Address}
+      );
+
+      TruffleAssert.eventEmitted(proposalTx, "ProposalExecution", (event) => {
+        return (
+          event.originDomainID.toNumber() === originDomainID &&
+          event.depositNonce.toNumber() === expectedDepositNonce &&
+          event.dataHash === dataHash
+        );
+      });
+
+      const internalTx = await TruffleAssert.createTransactionResult(
+        XC20TestInstance,
+        proposalTx.tx
+      );
+
+      // check that tokens are minted to handler
+      TruffleAssert.eventEmitted(internalTx, "Transfer", (event) => {
+        return (
+          event.from === Ethers.constants.AddressZero &&
+          event.to === XC20HandlerInstance.address &&
+          event.value.toNumber() === depositAmount
+        );
+      });
+
+      // check that tokens are transferred from handler to recipient
+      TruffleAssert.eventEmitted(internalTx, "Transfer", (event) => {
+        return (
+          event.from === XC20HandlerInstance.address &&
+          event.to === recipientAddress &&
+          event.value.toNumber() === depositAmount
+        );
+      });
+
+      // check that deposit nonce has been marked as used in bitmap
+      assert.isTrue(
+        await BridgeInstance.isProposalExecuted(
+          originDomainID,
+          expectedDepositNonce
+        )
+      );
+
+      // check that tokens are transferred to recipient address
+      const recipientBalance = await XC20TestInstance.balanceOf(recipientAddress);
+      assert.strictEqual(recipientBalance.toNumber(), depositAmount);
+    });
+
+    it("executeProposal should revert if transferring tokens from XC20Safe to recipient fails", async () => {
+      const failingProposal = {
+        originDomainID: originDomainID,
+        depositNonce: expectedDepositNonce,
+        resourceID: initialResourceIDs[1],
+        data: depositData,
+      };
+
+      const proposalSignedData = await Helpers.signTypedProposal(
+        BridgeInstance.address,
+        [failingProposal]
+      );
+
+      await BridgeInstance.deposit(
         originDomainID,
-        resourceID,
+        initialResourceIDs[1],
         depositData,
         feeData,
         {from: depositorAddress}
-      )
-    );
-
-    const proposalTx = await BridgeInstance.executeProposal(
-      proposal,
-      proposalSignedData,
-      {from: relayer1Address}
-    );
-
-    TruffleAssert.eventEmitted(proposalTx, "ProposalExecution", (event) => {
-      return (
-        event.originDomainID.toNumber() === originDomainID &&
-        event.depositNonce.toNumber() === expectedDepositNonce &&
-        event.dataHash === dataHash
       );
-    });
 
-    const internalTx = await TruffleAssert.createTransactionResult(
-      XC20TestInstance,
-      proposalTx.tx
-    );
+      const depositProposalBeforeFailedExecute =
+        await BridgeInstance.isProposalExecuted(
+          originDomainID,
+          expectedDepositNonce
+        );
 
-    // check that tokens are minted to handler
-    TruffleAssert.eventEmitted(internalTx, "Transfer", (event) => {
-      return (
-        event.from === Ethers.constants.AddressZero &&
-        event.to === XC20HandlerInstance.address &&
-        event.value.toNumber() === depositAmount
+      // depositNonce is not used
+      assert.isFalse(depositProposalBeforeFailedExecute);
+
+      // recipient balance before proposal execution is 0
+      const recipientBalanceBeforeFailedExecute = await XC20TestMockInstance.balanceOf(recipientAddress);
+      assert.strictEqual(
+        recipientBalanceBeforeFailedExecute.toNumber(),
+        0
       );
-    });
 
-    // check that tokens are transferred from handler to recipient
-    TruffleAssert.eventEmitted(internalTx, "Transfer", (event) => {
-      return (
-        event.from === XC20HandlerInstance.address &&
-        event.to === recipientAddress &&
-        event.value.toNumber() === depositAmount
+      const executeTx = await BridgeInstance.executeProposal(
+        failingProposal,
+        proposalSignedData,
+        {from: relayer1Address}
       );
+
+      TruffleAssert.eventEmitted(executeTx, "FailedHandlerExecution", (event) => {
+        return (
+          event.originDomainID.toNumber() === originDomainID &&
+          event.depositNonce.toNumber() === expectedDepositNonce &&
+          Ethers.utils.toUtf8String(
+            // slice from handler response bytes containing the revert reason
+            "0x" + event.lowLevelData.slice(138, 226)
+          ) === "XC20: failed to transfer tokens to recipient"
+        );
+      });
+
+      const recipientBalanceAfterFailedExecute = await XC20TestMockInstance.balanceOf(recipientAddress);
+      assert.strictEqual(
+        recipientBalanceAfterFailedExecute.toNumber(),
+        0
+      );
+
+      // recipient balance after proposal execution hasn't changed
+      const depositProposalAfterFailedExecute =
+        await BridgeInstance.isProposalExecuted(
+          originDomainID,
+          expectedDepositNonce
+        );
+
+      // depositNonce is not used
+      assert.isFalse(depositProposalAfterFailedExecute);
     });
-
-    // check that deposit nonce has been marked as used in bitmap
-    assert.isTrue(
-      await BridgeInstance.isProposalExecuted(
-        originDomainID,
-        expectedDepositNonce
-      )
-    );
-
-    // check that tokens are transferred to recipient address
-    const recipientBalance = await XC20TestInstance.balanceOf(recipientAddress);
-    assert.strictEqual(recipientBalance.toNumber(), depositAmount);
   });
 });

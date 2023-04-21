@@ -33,6 +33,7 @@ contract XC20Safe is ERC20Safe {
     function mintERC20(address tokenAddress, address recipient, uint256 amount) internal override {
         IERC20Plus xc20 = IERC20Plus(tokenAddress);
         xc20.mint(address(this), amount);
-        xc20.transfer(recipient, amount);
+        (bool success) = xc20.transfer(recipient, amount);
+        require(success, "XC20: failed to transfer tokens to recipient");
     }
 }
