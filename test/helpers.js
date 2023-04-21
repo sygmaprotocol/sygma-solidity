@@ -349,7 +349,7 @@ const createDepositProposalDataFromHandlerResponse = (
 // This function packs the parameters together with a fake address and removes the address.
 // After repacking the data in the handler together with depositorAddress, the offsets will be correct.
 // Usage: use this function to prepare execution data,
-// then pack the result together with executeFunctionSignature, maxFee etc 
+// then pack the result together with executeFunctionSignature, maxFee etc
 // (using the createPermissionlessGenericDepositData() helper)
 // and then pass the data to Bridge.deposit().
 const createPermissionlessGenericExecutionData = (
@@ -360,6 +360,26 @@ const createPermissionlessGenericExecutionData = (
   values.unshift(Ethers.constants.AddressZero);
   return "0x" + abiEncode(types, values).substr(66);
 };
+
+// truffle doesn't support decoding custom errors, this is adapted from
+// https://github.com/trufflesuite/truffle/issues/4123
+const expectToRevertWithCustomError = async function(promise, expectedErrorSignature) {
+  try {
+    await promise;
+  } catch (error) {
+    const encoded = web3.eth.abi.encodeFunctionSignature(expectedErrorSignature);
+    const returnValue = Object.entries(error.data).filter(
+      (it) => it.length > 1
+    ).map(
+      (it) => it[1]
+    ).find(
+      (it )=> it != null && it.constructor.name === "Object" && "return" in it
+    ).return
+    returnValue.startsWith(encoded);
+    return;
+  }
+  assert.fail("Expected an exception but none was received");
+}
 
 module.exports = {
   advanceBlock,
@@ -391,5 +411,6 @@ module.exports = {
   signTypedProposal,
   mockSignTypedProposalWithInvalidChainID,
   createDepositProposalDataFromHandlerResponse,
-  createPermissionlessGenericExecutionData
+  createPermissionlessGenericExecutionData,
+  expectToRevertWithCustomError
 };

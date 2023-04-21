@@ -79,13 +79,15 @@ contract Bridge is Pausable, Context, EIP712 {
 
     event Retry(string txHash);
 
+    error AccessNotAllowed(address sender, bytes4 funcSig);
+
     modifier onlyAllowed() {
         _onlyAllowed(msg.sig, _msgSender());
         _;
     }
 
     function _onlyAllowed(bytes4 sig, address sender) private view {
-        require(_accessControl.hasAccess(sig, sender), "sender doesn't have access to function");
+        if (!_accessControl.hasAccess(sig, sender)) revert AccessNotAllowed(sender, sig);
     }
 
     function _msgSender() internal override view returns (address) {

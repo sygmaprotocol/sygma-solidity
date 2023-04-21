@@ -197,6 +197,25 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
         "Can't deposit to current domain"
       );
     });
+
+    it("should revert with \"FailedERC20Call\" custom error if XC20Safe contract call fails", async () => {
+      const failingDepositData = Helpers.createERCDepositData(
+        depositAmount * 5, // deposit amount greater than allowance
+        20,
+        recipientAddress
+      );
+
+      await Helpers.expectToRevertWithCustomError(
+        BridgeInstance.deposit(
+          destinationDomainID,
+          resourceID,
+          failingDepositData,
+          feeData,
+          {from: depositorAddress}
+        ),
+        "FailedERC20Call"
+      );
+    });
   });
 
   describe("mint/burn strategy", async () => {
