@@ -65,7 +65,7 @@ contract ERC20Safe {
         @param to Address to transfer token to
         @param value Amount of token to transfer
      */
-    function _safeTransfer(IERC20 token, address to, uint256 value) private {
+    function _safeTransfer(IERC20 token, address to, uint256 value) internal {
         _safeCall(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
 
@@ -90,7 +90,7 @@ contract ERC20Safe {
         uint256 tokenSize;
         assembly {
             tokenSize := extcodesize(token)
-        }         
+        }
         require(tokenSize > 0, "ERC20: not a contract");
 
         (bool success, bytes memory returndata) = address(token).call(data);

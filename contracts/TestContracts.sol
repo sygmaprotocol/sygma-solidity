@@ -160,17 +160,6 @@ contract XC20Test is ERC20 {
     }
 }
 
-/**
-  @dev This contract mocks XC20Test where "transfer()" always fails
- */
-contract XC20TestMock is XC20Test {
-    function transfer(address to, uint256 amount) public virtual override returns (bool) {
-        address owner = _msgSender();
-        _transfer(owner, to, amount);
-        return false;
-  }
-}
-
 contract ERC20PresetMinterPauserDecimals is ERC20PresetMinterPauser {
 
     uint8 private immutable customDecimals;
