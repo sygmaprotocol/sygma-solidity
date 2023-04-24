@@ -13,7 +13,6 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
     using ERC165Checker for address;
 
     bytes private constant EMPTY_BYTES = "";
-    bytes4 private constant _INTERFACE_ID_ERC1155 = 0xd9b67a26;
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
@@ -21,6 +20,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
     constructor(
         address bridgeAddress
     ) ERCHandlerHelpers(bridgeAddress) {
+        require(type(IERC1155).interfaceId == 0xd9b67a26, 'invalid ERC1155 interface');
     }
 
     /**
@@ -107,13 +107,13 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_tokenContractAddressToTokenProperties[tokenAddress].resourceID} with {resourceID} and
         {_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted} to true for {contractAddress} in ERCHandlerHelpers contract.
-        Reverts if {contractAddress} doesn't suppor {_INTERFACE_ID_ERC1155}.
+        Reverts if {contractAddress} doesn't support {IERC1155}.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
-        require(contractAddress.supportsInterface(_INTERFACE_ID_ERC1155), "token does not support IERC1155");
+        require(contractAddress.supportsInterface(type(IERC1155).interfaceId), "token does not support IERC1155");
         _setResource(resourceID, contractAddress);
     }
 }
