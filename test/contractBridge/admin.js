@@ -12,6 +12,9 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const PermissionedGenericHandlerContract = artifacts.require(
   "PermissionedGenericHandler"
 );
+const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
+const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
+const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const TestStoreContract = artifacts.require("TestStore");
 
 // This test does NOT include all getter methods, just
@@ -28,8 +31,12 @@ contract("Bridge - [admin]", async (accounts) => {
     "0x59d881e01ca682130e550e3576b6de760951fb45b1d5dd81342132f57920bbfa";
 
   const bytes32 = "0x0";
+  const emptySetResourceData = "0x";
 
   let BridgeInstance;
+  let ERC1155HandlerInstance;
+  let ERC1155MintableInstance;
+  let ERC721MintableInstance;
   let TestStoreInstance;
   let genericHandlerSetResourceData;
 
@@ -51,7 +58,17 @@ contract("Bridge - [admin]", async (accounts) => {
       TestStoreContract.new().then(
         (instance) => (TestStoreInstance = instance)
       ),
+      ERC721MintableContract.new("token", "TOK", "").then(
+        (instance) => (ERC721MintableInstance = instance)
+      ),
+      ERC1155MintableContract.new("TOK").then(
+        (instance) => (ERC1155MintableInstance = instance),
+      ),
     ]);
+
+    ERC1155HandlerInstance = await ERC1155HandlerContract.new(
+      BridgeInstance.address
+    );
 
     genericHandlerSetResourceData =
       Helpers.constructGenericHandlerSetResourceData(
@@ -229,6 +246,39 @@ contract("Bridge - [admin]", async (accounts) => {
       someAddress,
       genericHandlerSetResourceData
     );
+  });
+
+  it("should revert when setting resourceID if token doesn't support IERC1155", async () => {
+    const invalidResourceID = Helpers.createResourceID(
+      ERC1155MintableInstance.address,
+      domainID
+    );
+
+    await TruffleAssert.reverts(
+      BridgeInstance.adminSetResource(
+        ERC1155HandlerInstance.address,
+        invalidResourceID,
+        ERC721MintableInstance.address,
+        emptySetResourceData
+      ),
+      "token does not support IERC1155"
+    );
+  });
+
+  it("should successfully set resourceID if token supports IERC1155", async () => {
+    const resourceID = Helpers.createResourceID(
+      ERC1155MintableInstance.address,
+      domainID
+    );
+
+    await TruffleAssert.passes(
+      BridgeInstance.adminSetResource(
+        ERC1155HandlerInstance.address,
+        resourceID,
+        ERC1155MintableInstance.address,
+        emptySetResourceData
+      )
+    )
   });
 
   // Set Generic Resource
