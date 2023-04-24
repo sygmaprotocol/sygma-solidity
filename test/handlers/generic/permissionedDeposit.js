@@ -458,4 +458,21 @@ contract("PermissionedGenericHandler - [deposit]", async (accounts) => {
       );
     });
   });
+
+  it("Bridge should return correct data from deposit tx", async () => {
+    const argument = "soylentGreenIsPeople";
+    const encodedMetaData = Helpers.abiEncode(["string"], [argument]);
+
+    const callResult = await BridgeInstance.deposit.call(
+      destinationDomainID,
+      initialResourceIDs[6],
+      Helpers.createPermissionedGenericDepositData(encodedMetaData),
+      feeData,
+      {from: depositorAddress}
+    );
+
+    const expectedMetaData = Ethers.utils.formatBytes32String(argument);
+    assert.equal(callResult.depositNonce.toNumber(), 1);
+    assert.equal(callResult.handlerResponse, expectedMetaData);
+  });
 });
