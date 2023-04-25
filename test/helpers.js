@@ -375,7 +375,8 @@ const expectToRevertWithCustomError = async function(promise, expectedErrorSigna
     ).find(
       (it )=> it != null && it.constructor.name === "Object" && "return" in it
     ).return
-    returnValue.startsWith(encoded);
+    // expect event error and provided error signatures to match
+    assert.equal(returnValue.slice(0, 10), encoded);
     return;
   }
   assert.fail("Expected an exception but none was received");
