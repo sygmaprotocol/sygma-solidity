@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
  */
 contract ERC20Safe {
 
-    error FailedERC20Call(IERC20 token, bytes data);
+    error FailedERC20Operation();
 
     /**
         @notice Used to gain custody of deposited token.
@@ -95,7 +95,12 @@ contract ERC20Safe {
         }
         require(tokenSize > 0, "ERC20: not a contract");
 
-        (bool success, ) = address(token).call(data);
-        if (!success) revert FailedERC20Call(token, data);
+        (bool success, bytes memory returndata) = address(token).call(data);
+        require(success, "ERC20: call failed");
+
+        if (returndata.length > 0) {
+            (success) = abi.decode(returndata, (bool));
+                if(!success) revert FailedERC20Operation();
+        }
     }
 }
