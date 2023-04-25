@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Wrapper.sol";
 import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 import "./handlers/ERCHandlerHelpers.sol";
 import "./interfaces/IERC20Plus.sol";
@@ -157,6 +156,37 @@ contract XC20Test is ERC20 {
 
     function burn(address from, uint256 amount) public {
         _burn(from, amount);
+    }
+}
+
+/**
+  @dev This contract mocks XC20Test where "transferFrom()" always fails
+ */
+contract XC20TestMock is XC20Test {
+
+    function transferFrom(address from, address to, uint256 amount) public virtual override(ERC20) returns (bool) {
+        address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount);
+        return false;
+    }
+}
+
+/**
+  @dev This contract mocks ERC20PresetMinterPauser where and "transferFrom()" always fails
+ */
+contract ERC20PresetMinterPauserMock is ERC20PresetMinterPauser {
+
+    constructor(
+        string memory name,
+        string memory symbol
+    ) ERC20PresetMinterPauser(name, symbol) {}
+
+    function transferFrom(address from, address to, uint256 amount) public virtual override(ERC20) returns (bool) {
+        address spender = _msgSender();
+        _spendAllowance(from, spender, amount);
+        _transfer(from, to, amount);
+        return false;
     }
 }
 
