@@ -107,7 +107,7 @@ contract("Bridge - [admin]", async (accounts) => {
   it("Should fail if \"StartKeygen\" is called by non admin", async () => {
     await Helpers.expectToRevertWithCustomError(
       BridgeInstance.startKeygen({from: nonAdminAddress}),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     );
   });
 
@@ -134,7 +134,7 @@ contract("Bridge - [admin]", async (accounts) => {
         someAddress,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     )
   });
 
@@ -168,7 +168,7 @@ contract("Bridge - [admin]", async (accounts) => {
         topologyHash,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     )
   });
 
@@ -255,7 +255,7 @@ contract("Bridge - [admin]", async (accounts) => {
         genericHandlerSetResourceData,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     );
   });
 
@@ -332,7 +332,7 @@ contract("Bridge - [admin]", async (accounts) => {
         genericHandlerSetResourceData,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     );
   });
 
@@ -379,7 +379,7 @@ contract("Bridge - [admin]", async (accounts) => {
         someAddress,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     );
   });
 
@@ -449,7 +449,7 @@ contract("Bridge - [admin]", async (accounts) => {
         "0x0",
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     )
   });
 
@@ -469,7 +469,7 @@ contract("Bridge - [admin]", async (accounts) => {
         3,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     )
   });
 
@@ -491,7 +491,7 @@ contract("Bridge - [admin]", async (accounts) => {
         someAddress,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     )
   });
 
@@ -503,7 +503,7 @@ contract("Bridge - [admin]", async (accounts) => {
         txHash,
         {from: nonAdminAddress}
       ),
-      "AccessNotAllowed"
+      "AccessNotAllowed(address,bytes4)"
     )
   });
 
