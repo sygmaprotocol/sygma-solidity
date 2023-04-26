@@ -373,8 +373,8 @@ const expectToRevertWithCustomError = async function(promise, expectedErrorSigna
     ).map(
       (it) => it[1]
     ).find(
-      (it )=> it != null && it.constructor.name === "Object" && "return" in it
-    ).return
+      (it) => it != null && it.constructor.name === "Object" && "return" in it
+    ).return;
     // expect event error and provided error signatures to match
     assert.equal(returnValue.slice(0, 10), encoded);
     return;
