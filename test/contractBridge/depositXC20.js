@@ -9,6 +9,7 @@ const Helpers = require("../helpers");
 
 const XC20HandlerContract = artifacts.require("XC20Handler");
 const XC20TestContract = artifacts.require("XC20Test");
+const XC20TestContractMock = artifacts.require("XC20TestMock");
 
 contract("Bridge - [deposit - XRC20]", async (accounts) => {
   const originDomainID = 1;
@@ -25,8 +26,10 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
 
   let BridgeInstance;
   let OriginXC20TestInstance;
+  let OriginXC20TestInstanceMock;
   let OriginXC20HandlerInstance;
   let depositData;
+  let initialResourceIDs;
 
   beforeEach(async () => {
     await Promise.all([
@@ -37,12 +40,21 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       XC20TestContract.new().then(
         (instance) => (OriginXC20TestInstance = instance)
       ),
+      XC20TestContractMock.new().then(
+        (instance) => (OriginXC20TestInstanceMock = instance)
+      ),
     ]);
 
-    resourceID = Helpers.createResourceID(
+    const resourceID1 = Helpers.createResourceID(
       OriginXC20TestInstance.address,
       originDomainID
     );
+    const resourceID2 = Helpers.createResourceID(
+      OriginXC20TestInstanceMock.address,
+      originDomainID
+    );
+
+    initialResourceIDs = [resourceID1, resourceID2];
 
     OriginXC20HandlerInstance = await XC20HandlerContract.new(
       BridgeInstance.address
@@ -51,16 +63,31 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     await Promise.all([
       BridgeInstance.adminSetResource(
         OriginXC20HandlerInstance.address,
-        resourceID,
+        initialResourceIDs[0],
         OriginXC20TestInstance.address,
+        emptySetResourceData
+      ),
+      BridgeInstance.adminSetResource(
+        OriginXC20HandlerInstance.address,
+        initialResourceIDs[1],
+        OriginXC20TestInstanceMock.address,
         emptySetResourceData
       ),
       OriginXC20TestInstance.mint(
         depositorAddress,
         originChainInitialTokenAmount
       ),
+      OriginXC20TestInstanceMock.mint(
+        depositorAddress,
+        originChainInitialTokenAmount
+      ),
     ]);
     await OriginXC20TestInstance.approve(
+      OriginXC20HandlerInstance.address,
+      depositAmount,
+      {from: depositorAddress}
+    );
+    await OriginXC20TestInstanceMock.approve(
       OriginXC20HandlerInstance.address,
       depositAmount,
       {from: depositorAddress}
@@ -90,7 +117,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           destinationDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -101,7 +128,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     it("_depositCounts should be increments from 0 to 1", async () => {
       await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -116,7 +143,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     it("XC20 can be deposited with correct balances", async () => {
       await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -145,7 +172,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
 
       let depositTx = await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -154,14 +181,14 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
         return (
           event.destinationDomainID.toNumber() === destinationDomainID &&
-          event.resourceID === resourceID.toLowerCase() &&
+          event.resourceID === initialResourceIDs[0].toLowerCase() &&
           event.depositNonce.toNumber() === expectedDepositNonce
         );
       });
 
       depositTx = await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -170,7 +197,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
         return (
           event.destinationDomainID.toNumber() === destinationDomainID &&
-          event.resourceID === resourceID.toLowerCase() &&
+          event.resourceID === initialResourceIDs[0].toLowerCase() &&
           event.depositNonce.toNumber() === expectedDepositNonce + 1
         );
       });
@@ -198,22 +225,16 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       );
     });
 
-    it("should revert with \"FailedERC20Call\" custom error if XC20Safe contract call fails", async () => {
-      const failingDepositData = Helpers.createERCDepositData(
-        depositAmount * 5, // deposit amount greater than allowance
-        20,
-        recipientAddress
-      );
-
+    it("should revert with \"FailedERC20Operation\" custom error if XC20Safe contract call fails", async () => {
       await Helpers.expectToRevertWithCustomError(
         BridgeInstance.deposit(
           destinationDomainID,
-          resourceID,
-          failingDepositData,
+          initialResourceIDs[1],
+          depositData,
           feeData,
           {from: depositorAddress}
         ),
-        "FailedERC20Call"
+        "FailedERC20Operation()"
       );
     });
   });
@@ -239,7 +260,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       await TruffleAssert.passes(
         BridgeInstance.deposit(
           destinationDomainID,
-          resourceID,
+          initialResourceIDs[0],
           depositData,
           feeData,
           {from: depositorAddress}
@@ -250,7 +271,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     it("_depositCounts should be increments from 0 to 1", async () => {
       await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -265,7 +286,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     it("XC20 can be deposited with correct balances", async () => {
       await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -288,7 +309,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     it("Deposit event is fired with expected value", async () => {
       let depositTx = await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -297,14 +318,14 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
         return (
           event.destinationDomainID.toNumber() === destinationDomainID &&
-          event.resourceID === resourceID.toLowerCase() &&
+          event.resourceID === initialResourceIDs[0].toLowerCase() &&
           event.depositNonce.toNumber() === expectedDepositNonce
         );
       });
 
       depositTx = await BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -313,13 +334,13 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
       TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
         return (
           event.destinationDomainID.toNumber() === destinationDomainID &&
-          event.resourceID === resourceID.toLowerCase() &&
+          event.resourceID === initialResourceIDs[0].toLowerCase() &&
           event.depositNonce.toNumber() === expectedDepositNonce + 1
         );
       });
     });
 
-    it("deposit requires resourceID that is mapped to a handler", async () => {
+    it("deposit requires initialResourceIDs[0] that is mapped to a handler", async () => {
       await TruffleAssert.reverts(
         BridgeInstance.deposit(
           destinationDomainID,
