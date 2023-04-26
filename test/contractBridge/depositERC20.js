@@ -226,8 +226,8 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
     );
   });
 
-  it("should revert with \"FailedERC20Operation\" custom error if ERC20Safe contract call fails", async () => {
-    await Helpers.expectToRevertWithCustomError(
+  it("should revert if ERC20Safe contract call fails", async () => {
+    await TruffleAssert.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         initialResourceIDs[1],
@@ -235,7 +235,7 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
         feeData,
         {from: depositorAddress}
       ),
-      "FailedERC20Operation()"
+      "ERC20: operation did not succeed"
     );
   });
 });

@@ -13,8 +13,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
  */
 contract ERC20Safe {
 
-    error FailedERC20Operation();
-
     /**
         @notice Used to gain custody of deposited token.
         @param tokenAddress Address of ERC20 to transfer.
@@ -99,8 +97,8 @@ contract ERC20Safe {
         require(success, "ERC20: call failed");
 
         if (returndata.length > 0) {
-            (success) = abi.decode(returndata, (bool));
-                if(!success) revert FailedERC20Operation();
+
+            require(abi.decode(returndata, (bool)), "ERC20: operation did not succeed");
         }
     }
 }
