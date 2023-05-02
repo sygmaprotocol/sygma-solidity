@@ -41,7 +41,7 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
-    constructor(address bridgeAddress) public {
+    constructor(address bridgeAddress) {
         _bridgeAddress = bridgeAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }

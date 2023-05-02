@@ -42,7 +42,7 @@ contract PermissionedGenericHandler is IHandler {
      */
     constructor(
         address          bridgeAddress
-    ) public {
+    ) {
         _bridgeAddress = bridgeAddress;
     }
 

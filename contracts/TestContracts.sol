@@ -61,7 +61,7 @@ contract HandlerRevert is ERCHandlerHelpers {
 
     constructor(
         address          bridgeAddress
-    ) public ERCHandlerHelpers(bridgeAddress) {
+    ) ERCHandlerHelpers(bridgeAddress) {
     }
 
     function executeProposal(bytes32, bytes calldata) external view {
@@ -163,7 +163,7 @@ contract XC20Test is ERC20 {
 contract ERC20PresetMinterPauserDecimals is ERC20PresetMinterPauser {
 
     uint8 private immutable customDecimals;
-    constructor(string memory name, string memory symbol, uint8 decimals) public ERC20PresetMinterPauser(name, symbol){
+    constructor(string memory name, string memory symbol, uint8 decimals) ERC20PresetMinterPauser(name, symbol){
         customDecimals = decimals;
     }
 
@@ -177,9 +177,9 @@ contract TestDeposit {
 
     /**
         This helper can be used to prepare execution data for Bridge.deposit() on the source chain
-        if PermissionlessGenericHandler is used 
+        if PermissionlessGenericHandler is used
         and if the target function accepts (address depositor, bytes executionData).
-        The execution data (packed as bytes) will be packed together with depositorAddress 
+        The execution data (packed as bytes) will be packed together with depositorAddress
         in PermissionlessGenericHandler before execution on the target chain.
         This function packs the bytes parameter together with a fake address and removes the address.
         After repacking in the handler together with depositorAddress, the offsets will be correct.
