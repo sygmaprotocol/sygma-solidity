@@ -15,7 +15,7 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 
-contract("Bridge - [execute proposal]", async (accounts) => {
+contract("Bridge - [execute proposals]", async (accounts) => {
   const destinationDomainID = 1;
   const originDomainID = 2;
 
@@ -216,7 +216,7 @@ contract("Bridge - [execute proposal]", async (accounts) => {
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
-});
+  });
 
   it("should create and execute executeProposal successfully", async () => {
     const proposalSignedData = await Helpers.signTypedProposal(
@@ -437,7 +437,11 @@ contract("Bridge - [execute proposal]", async (accounts) => {
       return (
         event.originDomainID.toNumber() === originDomainID &&
         event.depositNonce.toNumber() === expectedDepositNonces[0] &&
-        event.dataHash === erc20DataHash
+        event.dataHash === erc20DataHash &&
+        event.handlerResponse === Ethers.utils.solidityPack(
+          ["address", "uint256"],
+          [recipientAddress, depositAmount]
+        )
       );
     });
 
@@ -445,11 +449,25 @@ contract("Bridge - [execute proposal]", async (accounts) => {
     assert.equal(executeTx.logs[1].args.originDomainID, originDomainID);
     assert.equal(executeTx.logs[1].args.depositNonce, expectedDepositNonces[1]);
     assert.equal(executeTx.logs[1].args.dataHash, erc721DataHash);
+    assert.equal(
+      executeTx.logs[1].args.handlerResponse,
+      Ethers.utils.solidityPack(
+        ["address", "uint256"],
+        [recipientAddress, tokenID]
+      )
+    );
 
     // check that ProposalExecution has been emitted with expected values for ERC1155
     assert.equal(executeTx.logs[2].args.originDomainID, originDomainID);
     assert.equal(executeTx.logs[2].args.depositNonce, expectedDepositNonces[2]);
     assert.equal(executeTx.logs[2].args.dataHash, erc1155DataHash);
+    assert.equal(
+      executeTx.logs[2].args.handlerResponse,
+      Ethers.utils.solidityPack(
+        ["address", "uint256"],
+        [recipientAddress, tokenID]
+      )
+    );
 
     // check that deposit nonces had been marked as used in bitmap
     expectedDepositNonces.forEach(async (_, index) => {
