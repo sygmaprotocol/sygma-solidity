@@ -39,15 +39,21 @@ contract("DynamicFeeHandler - [admin]", async (accounts) => {
     ADMIN_ROLE = await DynamicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
   });
 
-  it("should set fee oracle", async () => {
+  it("should set fee oracle and emit 'FeeOracleAddressSet' event", async () => {
     const oracleAddress = accounts[1];
     assert.equal(
       await DynamicFeeHandlerInstance._oracleAddress.call(),
       "0x0000000000000000000000000000000000000000"
     );
-    await DynamicFeeHandlerInstance.setFeeOracle(oracleAddress);
+    const setFeeOracleAddressTx = await DynamicFeeHandlerInstance.setFeeOracle(oracleAddress);
     const newOracle = await DynamicFeeHandlerInstance._oracleAddress.call();
     assert.equal(newOracle, oracleAddress);
+
+    TruffleAssert.eventEmitted(setFeeOracleAddressTx, "FeeOracleAddressSet", (event) => {
+      return (
+        event.feeOracleAddress === newOracle
+      );
+    });
   });
 
   it("should require admin role to change fee oracle", async () => {
@@ -58,17 +64,24 @@ contract("DynamicFeeHandler - [admin]", async (accounts) => {
     );
   });
 
-  it("should set fee properties", async () => {
+  it("should set fee properties and emit 'FeeOraclePropertiesSet' event", async () => {
     const gasUsed = 100000;
     const feePercent = 5;
     assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), "0");
     assert.equal(await DynamicFeeHandlerInstance._feePercent.call(), "0");
-    await DynamicFeeHandlerInstance.setFeeProperties(gasUsed, feePercent);
+    const setFeeOraclePropertiesTx = await DynamicFeeHandlerInstance.setFeeProperties(gasUsed, feePercent);
     assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), gasUsed);
     assert.equal(
       await DynamicFeeHandlerInstance._feePercent.call(),
       feePercent
     );
+
+    TruffleAssert.eventEmitted(setFeeOraclePropertiesTx, "FeeOraclePropertiesSet", (event) => {
+      return (
+        event.gasUsed.toNumber() === gasUsed &&
+        event.feePercent.toNumber() === feePercent
+      );
+    });
   });
 
   it("should require admin role to change fee properties", async () => {
