@@ -13,6 +13,8 @@ const ERC721RevertMintableContract = artifacts.require(
 const ERC721RevertHandlerContract = artifacts.require("HandlerRevert");
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC1155HandlerContract = artifacts.require("HandlerRevert");
+const XC20TestContract = artifacts.require("XC20Test");
+const XC20HandlerContract = artifacts.require("XC20Handler");
 const TestStoreContract = artifacts.require("TestStore");
 const PermissionedGenericHandlerContract = artifacts.require(
   "PermissionedGenericHandler"
@@ -30,7 +32,7 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
   const erc721DepositMetadata = "0xf00d";
   const initialTokenAmount = 100;
   const depositAmount = 10;
-  const expectedDepositNonces = [1, 2, 3, 4, 5];
+  const expectedDepositNonces = [1, 2, 3, 4, 5, 6];
   const feeData = "0x";
   const emptySetResourceData = "0x";
 
@@ -44,6 +46,8 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
   let ERC1155MintableInstance;
   let ERC1155HandlerInstance;
   let PermissionedGenericHandlerInstance;
+  let XC20TestInstance;
+  let XC20HandlerInstance;
 
   let initialGenericContractAddress;
   let initialGenericDepositFunctionSignature;
@@ -61,6 +65,8 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
   let erc721DepositProposalData;
   let erc721RevertDepositProposalData;
   let erc1155DepositProposalData;
+  let xc20ResourceID;
+  let xc20DepositProposalData;
   let genericProposalData;
   let genericDepositProposalDataHash;
 
@@ -87,6 +93,9 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
       TestStoreContract.new().then(
         (instance) => (TestStoreInstance = instance)
       ),
+      XC20TestContract.new().then(
+        (instance) => (XC20TestInstance = instance)
+      )
     ]);
 
     ERC20HandlerInstance = await ERC20HandlerContract.new(
@@ -99,6 +108,9 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
       BridgeInstance.address
     );
     ERC1155HandlerInstance = await ERC1155HandlerContract.new(
+      BridgeInstance.address
+    );
+    XC20HandlerInstance = await XC20HandlerContract.new(
       BridgeInstance.address
     );
     PermissionedGenericHandlerInstance =
@@ -119,6 +131,10 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
     erc1155ResourceID = Helpers.createResourceID(
       ERC1155MintableInstance.address,
       originDomainID
+    );
+    xc20ResourceID = Helpers.createResourceID(
+      XC20TestInstance.address,
+      destinationDomainID
     );
     genericResourceID = Helpers.createResourceID(
       PermissionedGenericHandlerInstance.address,
@@ -167,6 +183,10 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
         tokenID,
         erc721DepositMetadata
       ),
+      XC20TestInstance.mint(
+        depositorAddress,
+        initialTokenAmount
+      ),
       BridgeInstance.adminSetResource(
         ERC721HandlerInstance.address,
         erc721ResourceID,
@@ -189,6 +209,12 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
         ERC1155HandlerInstance.address,
         erc1155ResourceID,
         ERC1155MintableInstance.address,
+        emptySetResourceData
+      ),
+      BridgeInstance.adminSetResource(
+        XC20HandlerInstance.address,
+        xc20ResourceID,
+        XC20TestInstance.address,
         emptySetResourceData
       ),
       BridgeInstance.adminSetResource(
@@ -215,6 +241,9 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
         ERC1155HandlerInstance.address,
         true,
         {from: depositorAddress}
+      ),
+      XC20TestInstance.approve(XC20HandlerInstance.address, depositAmount,
+      {from: depositorAddress}
       ),
     ]);
 
@@ -246,6 +275,11 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
     );
     erc721DepositProposalDataHash = Ethers.utils.keccak256(
       ERC721HandlerInstance.address + erc721DepositProposalData.substr(2)
+    );
+    xc20DepositProposalData = Helpers.createERCDepositData(
+      depositAmount * 5, // amount greater than allowance
+      20,
+      recipientAddress
     );
 
     erc721RevertDepositData = Helpers.createERCDepositData(
@@ -311,6 +345,12 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
         depositNonce: expectedDepositNonces[4],
         resourceID: genericResourceID,
         data: genericProposalData,
+      },
+      {
+        originDomainID: originDomainID,
+        depositNonce: expectedDepositNonces[5],
+        resourceID: xc20ResourceID,
+        data: xc20DepositProposalData,
       },
     ];
 
@@ -490,6 +530,48 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
     // depositNonce is used
     assert.isTrue(depositProposalAfterFailedExecute);
   });
+
+  it(`[executeProposal - XC20] - Should not revert if transferring tokens from XC20Safe to recipient failed.
+      FailedHandlerExecution event should be emitted`, async () => {
+    const depositProposalBeforeFailedExecute =
+      await BridgeInstance.isProposalExecuted(
+        originDomainID,
+        expectedDepositNonces[0]
+      );
+
+    // depositNonce is not used
+    assert.isFalse(depositProposalBeforeFailedExecute);
+
+    const proposalSignedData = await Helpers.signTypedProposal(
+      BridgeInstance.address,
+      [proposalsForExecution[5]]
+    );
+
+    const executeTx = await BridgeInstance.executeProposal(
+      proposalsForExecution[5],
+      proposalSignedData,
+      {from: relayer1Address}
+    );
+
+    TruffleAssert.eventEmitted(executeTx, "FailedHandlerExecution", (event) => {
+      return (
+        event.originDomainID.toNumber() === originDomainID &&
+        event.depositNonce.toNumber() === expectedDepositNonces[5] &&
+        Ethers.utils.parseBytes32String(
+          "0x" + event.lowLevelData.slice(-64)
+        ) === "ERC20: call failed"
+      );
+    });
+
+    const depositProposalAfterFailedExecute =
+      await BridgeInstance.isProposalExecuted(
+        originDomainID,
+        expectedDepositNonces[0]
+      );
+
+    // depositNonce is not used
+    assert.isFalse(depositProposalAfterFailedExecute);
+    });
 
   it(`[executeProposals] - Should not revert if handler execute is reverted and continue to process next execution.
       FailedHandlerExecution event should be emitted with expected values.`, async () => {
