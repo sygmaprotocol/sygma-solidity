@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-3.0-only
  */
 
-const TruffleAssert = require("truffle-assertions");
 const Ethers = require("ethers");
 
 const Helpers = require("../../../helpers");
@@ -235,7 +234,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
         oracle.privateKey,
         feeDataAmount
       ) + "11";
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -244,7 +243,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
         depositData,
         feeData
       ),
-      "Incorrect feeData length"
+      "IncorrectFeeDataLength(uint256)"
     );
   });
 
@@ -274,7 +273,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
       oracle.privateKey,
       feeDataAmount
     );
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -283,7 +282,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
         depositData,
         feeData
       ),
-      "Incorrect deposit params"
+      "IncorrectDepositParams(uint8,uint8,bytes32)"
     );
   });
 
@@ -314,7 +313,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
       oracle2.privateKey,
       feeDataAmount
     );
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -323,7 +322,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
         depositData,
         feeData
       ),
-      "Invalid signature"
+      "InvalidSignature()"
     );
   });
 
@@ -354,7 +353,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
       oracle.privateKey,
       feeDataAmount
     );
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -363,7 +362,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
         depositData,
         feeData
       ),
-      "Obsolete oracle data"
+      "ObsoleteOracleData()"
     );
   });
 });

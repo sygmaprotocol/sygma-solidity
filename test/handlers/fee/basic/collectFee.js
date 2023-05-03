@@ -150,7 +150,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     // current fee is set to 0
     assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(
         destinationDomainID,
         erc20ResourceID,
@@ -161,7 +161,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
           value: Ethers.utils.parseEther("1.0"),
         }
       ),
-      "Incorrect fee supplied"
+      "IncorrectFeeSupplied(uint256)"
     );
   });
 

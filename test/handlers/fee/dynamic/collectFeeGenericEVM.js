@@ -182,7 +182,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   });
 
   it("deposit should revert if invalid fee (msg.value) amount supplied", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
@@ -193,7 +193,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
           value: Ethers.utils.parseEther("1.0"),
         }
       ),
-      "Incorrect fee supplied"
+      "IncorrectFeeSupplied(uint256)"
     );
   });
 

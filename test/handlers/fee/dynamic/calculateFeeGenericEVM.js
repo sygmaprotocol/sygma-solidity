@@ -192,7 +192,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       feeDataAmount
     ) + "11";
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -201,7 +201,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
         depositData,
         feeData
       ),
-      "Incorrect feeData length"
+      "IncorrectFeeDataLength(uint256)"
     );
   });
 
@@ -224,7 +224,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       oracle.privateKey,
       feeDataAmount
     );
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -233,7 +233,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
         depositData,
         feeData
       ),
-      "Incorrect deposit params"
+      "IncorrectDepositParams(uint8,uint8,bytes32)"
     );
   });
 
@@ -256,7 +256,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       oracle2.privateKey,
       feeDataAmount
     );
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -265,7 +265,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
         depositData,
         feeData
       ),
-      "Invalid signature"
+      "InvalidSignature()"
     );
   });
 
@@ -285,7 +285,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
       oracle.privateKey,
       feeDataAmount
     );
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -294,7 +294,7 @@ contract("DynamicGenericFeeHandlerEVM - [calculateFee]", async (accounts) => {
         depositData,
         feeData
       ),
-      "Obsolete oracle data"
+      "ObsoleteOracleData()"
     );
   });
 

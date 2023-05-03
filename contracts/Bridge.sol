@@ -81,6 +81,24 @@ contract Bridge is Pausable, Context, EIP712 {
 
     error AccessNotAllowed(address sender, bytes4 funcSig);
 
+    error ResourceIDNotMappedToHandler();
+
+    error DepositToCurrentDomain();
+
+    error InvalidProposalSigner();
+
+    error EmptyProposalsArray();
+
+    error NonceDecrementsNotAllowed();
+
+    error MPCAddressAlreadySet();
+
+    error MPCAddressNotSet();
+
+    error MPCAddressIsNotUpdatable();
+
+    error MPCAddressZeroAddress();
+
     modifier onlyAllowed() {
         _onlyAllowed(msg.sig, _msgSender());
         _;
@@ -129,7 +147,7 @@ contract Bridge is Pausable, Context, EIP712 {
         @notice MPC address has to be set before Bridge can be unpaused
      */
     function adminUnpauseTransfers() external onlyAllowed {
-        require(_MPCAddress != address(0), "MPC address not set");
+        if (_MPCAddress == address(0)) revert MPCAddressNotSet();
         _unpause(_msgSender());
     }
 
@@ -230,16 +248,16 @@ contract Bridge is Pausable, Context, EIP712 {
         @param feeData Additional data to be passed to the fee handler.
         @notice Emits {Deposit} event with all necessary parameters and a handler response.
         @return depositNonce deposit nonce for the destination domain.
-        @return handlerResponse a handler response: 
+        @return handlerResponse a handler response:
         - ERC20Handler: responds with an empty data.
         - ERC721Handler: responds with the deposited token metadata acquired by calling a tokenURI method in the token contract.
         - PermissionedGenericHandler: responds with the raw bytes returned from the call to the target contract.
         - PermissionlessGenericHandler: responds with an empty data.
      */
-    function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) 
-        external payable whenNotPaused 
+    function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData)
+        external payable whenNotPaused
         returns (uint64 depositNonce, bytes memory handlerResponse) {
-        require(destinationDomainID != _domainID, "Can't deposit to current domain");
+        if (destinationDomainID == _domainID) revert DepositToCurrentDomain();
 
         address sender = _msgSender();
         if (address(_feeHandler) == address(0)) {
@@ -249,7 +267,7 @@ contract Bridge is Pausable, Context, EIP712 {
             _feeHandler.collectFee{value: msg.value}(sender, _domainID, destinationDomainID, resourceID, depositData, feeData);
         }
         address handler = _resourceIDToHandlerAddress[resourceID];
-        require(handler != address(0), "resourceID not mapped to handler");
+        if (handler == address(0)) revert ResourceIDNotMappedToHandler();
 
         depositNonce = ++_depositCounts[destinationDomainID];
 
@@ -296,8 +314,8 @@ contract Bridge is Pausable, Context, EIP712 {
         In the case of {PermissionedGenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
      */
     function executeProposals(Proposal[] memory proposals, bytes calldata signature) public whenNotPaused {
-        require(proposals.length > 0, "Proposals can't be an empty array");
-        require(verify(proposals, signature), "Invalid proposal signer");
+        if (proposals.length == 0) revert EmptyProposalsArray();
+        if (!verify(proposals, signature)) revert InvalidProposalSigner();
 
         for (uint256 i = 0; i < proposals.length; i++) {
             if(isProposalExecuted(proposals[i].originDomainID, proposals[i].depositNonce)) {
@@ -329,7 +347,7 @@ contract Bridge is Pausable, Context, EIP712 {
         which is mapped in {functionAccess} in AccessControlSegregator contract.
      */
     function startKeygen() external onlyAllowed {
-        require(_MPCAddress == address(0), "MPC address is already set");
+        if (_MPCAddress != address(0)) revert MPCAddressAlreadySet();
         emit StartKeygen();
     }
 
@@ -341,8 +359,8 @@ contract Bridge is Pausable, Context, EIP712 {
         @param MPCAddress Address that will be set as MPC address.
      */
     function endKeygen(address MPCAddress) external onlyAllowed {
-        require(MPCAddress != address(0), "MPC address can't be null-address");
-        require(_MPCAddress == address(0), "MPC address can't be updated");
+        if( MPCAddress == address(0)) revert MPCAddressZeroAddress();
+        if (_MPCAddress != address(0)) revert MPCAddressIsNotUpdatable();
         _MPCAddress = MPCAddress;
         _unpause(_msgSender());
         emit EndKeygen();

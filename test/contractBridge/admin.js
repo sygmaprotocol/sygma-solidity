@@ -114,9 +114,9 @@ contract("Bridge - [admin]", async (accounts) => {
   it("Should fail if \"StartKeygen\" is called after MPC address is set", async () => {
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.startKeygen(),
-      "MPC address is already set"
+      "MPCAddressAlreadySet()"
     );
   });
 
@@ -139,18 +139,18 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should fail if null address is passed as MPC address", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.endKeygen(nullAddress),
-      "MPC address can't be null-address"
+      "MPCAddressZeroAddress()"
     );
   });
 
   it("Should fail if admin tries to update MPC address", async () => {
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.endKeygen(someAddress),
-      "MPC address can't be updated"
+      "MPCAddressIsNotUpdatable()"
     );
   });
 

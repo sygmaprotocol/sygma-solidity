@@ -204,7 +204,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     });
 
     it("deposit requires resourceID that is mapped to a handler", async () => {
-      await TruffleAssert.reverts(
+      await Helpers.expectToRevertWithCustomError(
         BridgeInstance.deposit(
           destinationDomainID,
           "0x0",
@@ -212,16 +212,16 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
           feeData,
           {from: depositorAddress}
         ),
-        "resourceID not mapped to handler"
+        "ResourceIDNotMappedToHandler()"
       );
     });
 
     it("Deposit destination domain can not be current bridge domain ", async () => {
-      await TruffleAssert.reverts(
+      await Helpers.expectToRevertWithCustomError(
         BridgeInstance.deposit(originDomainID, "0x0", depositData, feeData, {
           from: depositorAddress,
         }),
-        "Can't deposit to current domain"
+        "DepositToCurrentDomain()"
       );
     });
 
@@ -341,7 +341,7 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
     });
 
     it("deposit requires initialResourceIDs[0] that is mapped to a handler", async () => {
-      await TruffleAssert.reverts(
+      await Helpers.expectToRevertWithCustomError(
         BridgeInstance.deposit(
           destinationDomainID,
           "0x0",
@@ -349,16 +349,16 @@ contract("Bridge - [deposit - XRC20]", async (accounts) => {
           feeData,
           {from: depositorAddress}
         ),
-        "resourceID not mapped to handler"
+        "ResourceIDNotMappedToHandler()"
       );
     });
 
     it("Deposit destination domain can not be current bridge domain ", async () => {
-      await TruffleAssert.reverts(
+      await Helpers.expectToRevertWithCustomError(
         BridgeInstance.deposit(originDomainID, "0x0", depositData, feeData, {
           from: depositorAddress,
         }),
-        "Can't deposit to current domain"
+        "DepositToCurrentDomain()"
       );
     });
   });

@@ -26,6 +26,8 @@ contract ERCHandlerHelpers is IERCHandler {
       Decimals decimals;
     }
 
+    error ContractAddressNotWhitelisted(address contractAddress);
+
     // resourceID => token contract address
     mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
 
@@ -71,7 +73,7 @@ contract ERCHandlerHelpers is IERCHandler {
     }
 
     function _setBurnable(address contractAddress) internal {
-        require(_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted, "provided contract is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted) revert ContractAddressNotWhitelisted(contractAddress);
         _tokenContractAddressToTokenProperties[contractAddress].isBurnable = true;
     }
 
@@ -83,7 +85,7 @@ contract ERCHandlerHelpers is IERCHandler {
         @param externalDecimals Decimal places of token that is transferred.
      */
     function _setDecimals(address contractAddress, uint8 externalDecimals) internal {
-        require(_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted, "provided contract is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted) revert ContractAddressNotWhitelisted(contractAddress);
         _tokenContractAddressToTokenProperties[contractAddress].decimals = Decimals({
             isSet: true,
             externalDecimals: externalDecimals
