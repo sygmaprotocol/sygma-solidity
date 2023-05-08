@@ -42,6 +42,13 @@ contract("Bridge - [admin]", async (accounts) => {
 
   let withdrawData = "";
 
+  const assertOnlyAdmin = (method) => {
+    return Helpers.expectToRevertWithCustomError(
+      method(),
+      "AccessNotAllowed(address,bytes4)"
+    );
+  };
+
   beforeEach(async () => {
     await Promise.all([
       (BridgeInstance = await Helpers.deployBridge(
@@ -105,9 +112,8 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should fail if \"StartKeygen\" is called by non admin", async () => {
-    await Helpers.expectToRevertWithCustomError(
-      BridgeInstance.startKeygen({from: nonAdminAddress}),
-      "AccessNotAllowed(address,bytes4)"
+    await assertOnlyAdmin(() =>
+      BridgeInstance.startKeygen({from: nonAdminAddress})
     );
   });
 
@@ -129,12 +135,11 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should fail if \"endKeygen\" is called by non admin", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.endKeygen(
         someAddress,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     )
   });
 
@@ -163,12 +168,11 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should fail if \"refreshKey\" is called by non admin", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.refreshKey(
         topologyHash,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     )
   });
 
@@ -247,15 +251,14 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set a ERC20 Resource ID and contract address", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.adminSetResource(
         someAddress,
         bytes32,
         someAddress,
         genericHandlerSetResourceData,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     );
   });
 
@@ -324,15 +327,14 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set a Generic Resource ID and contract address", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
         BridgeInstance.adminSetResource(
         someAddress,
         bytes32,
         someAddress,
         genericHandlerSetResourceData,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     );
   });
 
@@ -373,13 +375,12 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set ERC20MintableInstance.address as burnable", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.adminSetBurnable(
         someAddress,
         someAddress,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     );
   });
 
@@ -443,13 +444,12 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to withdraw funds", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.adminWithdraw(
         someAddress,
         "0x0",
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     )
   });
 
@@ -463,13 +463,12 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set nonce", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.adminSetDepositNonce(
         1,
         3,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     )
   });
 
@@ -486,24 +485,22 @@ contract("Bridge - [admin]", async (accounts) => {
   // Change access control contract
 
   it("Should require admin role to change access control contract", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.adminChangeAccessControl(
         someAddress,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     )
   });
 
   // Retry
 
   it("Should require admin role to retry deposit", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    await assertOnlyAdmin(() =>
       BridgeInstance.retry(
         txHash,
         {from: nonAdminAddress}
-      ),
-      "AccessNotAllowed(address,bytes4)"
+      )
     )
   });
 
