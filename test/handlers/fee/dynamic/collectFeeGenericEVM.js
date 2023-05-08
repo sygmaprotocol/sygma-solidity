@@ -182,7 +182,9 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   });
 
   it("deposit should revert if invalid fee (msg.value) amount supplied", async () => {
-    await Helpers.expectToRevertWithCustomError(
+    const incorrectFee = Ethers.utils.parseEther("1.0");
+
+    const errorValues = await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
@@ -190,11 +192,13 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
         feeData,
         {
           from: depositorAddress,
-          value: Ethers.utils.parseEther("1.0"),
+          value: incorrectFee,
         }
       ),
       "IncorrectFeeSupplied(uint256)"
     );
+
+    assert.equal(errorValues[0].toString(), incorrectFee.toString());
   });
 
   it("deposit should revert if not called by router on DynamicFeeHandler contract", async () => {

@@ -234,7 +234,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
         oracle.privateKey,
         feeDataAmount
       ) + "11";
-    await Helpers.expectToRevertWithCustomError(
+    const errorValues = await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -245,6 +245,8 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
       ),
       "IncorrectFeeDataLength(uint256)"
     );
+
+    assert.equal(errorValues[0].toNumber(), feeData.substring(2).length / 2);
   });
 
   it("should not calculate fee if deposit data differ from fee data", async () => {
@@ -273,7 +275,7 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
       oracle.privateKey,
       feeDataAmount
     );
-    await Helpers.expectToRevertWithCustomError(
+    const errorValues = await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.calculateFee(
         sender,
         originDomainID,
@@ -284,6 +286,10 @@ contract("DynamicERC20FeeHandlerSubstrate - [calculateFee]", async (accounts) =>
       ),
       "IncorrectDepositParams(uint8,uint8,bytes32)"
     );
+
+    assert.equal(errorValues[0], originDomainID);
+    assert.equal(errorValues[1], otherDestinationDomainID);
+    assert.equal(errorValues[2], resourceID);
   });
 
   it("should not calculate fee if oracle signature is incorrect", async () => {
