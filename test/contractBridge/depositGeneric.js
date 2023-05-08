@@ -120,11 +120,11 @@ contract("Bridge - [deposit - Generic]", async (accounts) => {
   });
 
   it("Deposit destination domain can not be current bridge domain ", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(originDomainID, "0x0", depositData, feeData, {
         from: depositorAddress,
       }),
-      "Can't deposit to current domain"
+      "DepositToCurrentDomain()"
     );
   });
 });

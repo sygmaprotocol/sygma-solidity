@@ -20,6 +20,8 @@ contract PermissionedGenericHandler is IHandler {
       bool isWhitelisted;
     }
 
+    error ContractAddressNotWhitelisted(address contractAddress);
+
     // token contract address => TokenContractProperties
     mapping (address => TokenContractProperties) public _tokenContractAddressToTokenProperties;
 
@@ -106,7 +108,7 @@ contract PermissionedGenericHandler is IHandler {
             require(depositor == address(uint160(metadataDepositor >> 96)), 'incorrect depositor in the data');
         }
 
-        require(_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted, "provided contractAddress is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted) revert ContractAddressNotWhitelisted(contractAddress);
 
         bytes4 sig = _tokenContractAddressToTokenProperties[contractAddress].depositFunctionSignature;
         if (sig != bytes4(0)) {
@@ -136,7 +138,7 @@ contract PermissionedGenericHandler is IHandler {
         metaData = bytes(data[32:32 + lenMetadata]);
 
         address contractAddress = _resourceIDToContractAddress[resourceID];
-        require(_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted, "provided contractAddress is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted) revert ContractAddressNotWhitelisted(contractAddress);
 
         bytes4 sig = _tokenContractAddressToTokenProperties[contractAddress].executeFunctionSignature;
         if (sig != bytes4(0)) {

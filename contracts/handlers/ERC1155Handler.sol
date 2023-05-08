@@ -77,7 +77,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         }
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_tokenContractAddressToTokenProperties[address(tokenAddress)].isWhitelisted, "provided tokenAddress is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             mintBatchERC1155(tokenAddress, address(recipientAddress), tokenIDs, amounts, transferData);

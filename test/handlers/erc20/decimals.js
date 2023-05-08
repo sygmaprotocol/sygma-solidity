@@ -74,8 +74,6 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
         await ERC20MintableInstance.address
       )).decimals;
 
-      console.log("ERC20MintableInstanceDecimals",ERC20MintableInstanceDecimals["externalDecimals"])
-
       assert.strictEqual(ERC20MintableInstanceDecimals.isSet, false)
       assert.strictEqual(ERC20MintableInstanceDecimals["externalDecimals"], "0")
   });

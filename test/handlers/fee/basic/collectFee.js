@@ -149,8 +149,9 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
   it("deposit should revert if invalid fee amount supplied", async () => {
     // current fee is set to 0
     assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+    const incorrectFee = Ethers.utils.parseEther("1.0");
 
-    await TruffleAssert.reverts(
+    const errorValues = await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(
         destinationDomainID,
         erc20ResourceID,
@@ -158,11 +159,13 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
         feeData,
         {
           from: depositorAddress,
-          value: Ethers.utils.parseEther("1.0"),
+          value: incorrectFee,
         }
       ),
-      "Incorrect fee supplied"
+      "IncorrectFeeSupplied(uint256)"
     );
+
+    assert.equal(errorValues[0].toString(), incorrectFee.toString());
   });
 
   it("deposit should pass if valid fee amount supplied for ERC20 deposit", async () => {

@@ -47,6 +47,16 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
 
     event FeeOraclePropertiesSet(uint32 gasUsed, uint16 feePercent);
 
+    error InvalidSignature();
+
+    error IncorrectFeeDataLength(uint256);
+
+    error IncorrectFeeSupplied(uint256);
+
+    error ObsoleteOracleData();
+
+    error IncorrectDepositParams(uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID);
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
         _;
@@ -121,7 +131,7 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
         (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
         if(tokenAddress == address(0)){
-            require(msg.value == fee, "Incorrect fee supplied");
+            if (msg.value != fee) revert IncorrectFeeSupplied(msg.value);
         } else {
             require(msg.value == 0, "collectFee: msg.value != 0");
             lockERC20(tokenAddress, sender, address(this), fee);
@@ -166,6 +176,6 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
 
     function verifySig(bytes32 message, bytes memory signature, address signerAddress) internal pure {
         address signerAddressRecovered = ECDSA.recover(message, signature);
-        require(signerAddressRecovered == signerAddress, 'Invalid signature');
+        if (signerAddressRecovered != signerAddress) revert InvalidSignature();
     }
 }

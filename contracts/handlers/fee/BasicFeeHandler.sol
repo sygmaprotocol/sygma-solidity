@@ -20,6 +20,8 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         uint256 newFee
     );
 
+    error IncorrectFeeSupplied(uint256);
+
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
         _;
@@ -69,7 +71,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param feeData Additional data to be passed to the fee handler.
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
-        require(msg.value == _fee, "Incorrect fee supplied");
+        if (msg.value != _fee) revert IncorrectFeeSupplied(msg.value);
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
     }
 

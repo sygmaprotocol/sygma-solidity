@@ -244,11 +244,11 @@ contract("Bridge - [execute proposal - ERC20]", async (accounts) => {
       })
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.executeProposal(proposal, proposalSignedData, {
         from: relayer1Address,
       }),
-      "Invalid proposal signer"
+      "InvalidProposalSigner()"
     );
   });
 });

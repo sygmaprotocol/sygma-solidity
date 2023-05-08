@@ -101,5 +101,4 @@ contract ERC20Safe {
             require(abi.decode(returndata, (bool)), "ERC20: operation did not succeed");
         }
     }
-
 }

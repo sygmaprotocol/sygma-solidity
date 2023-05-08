@@ -54,7 +54,7 @@ contract DynamicGenericFeeHandlerEVM is DynamicFeeHandler {
             total: 353
         */
 
-        require(feeData.length == 353, "Incorrect feeData length");
+        if (feeData.length != 353) revert IncorrectFeeDataLength(feeData.length);
 
         FeeDataType memory feeDataDecoded;
         uint256 txCost;
@@ -63,12 +63,17 @@ contract DynamicGenericFeeHandlerEVM is DynamicFeeHandler {
         feeDataDecoded.sig = bytes(feeData[256: 321]);
 
         OracleMessageType memory oracleMessage = abi.decode(feeDataDecoded.message, (OracleMessageType));
-        require(block.timestamp <= oracleMessage.expiresAt, "Obsolete oracle data");
-        require((oracleMessage.fromDomainID == fromDomainID)
-            && (oracleMessage.toDomainID == destinationDomainID)
-            && (oracleMessage.resourceID == resourceID),
-            "Incorrect deposit params"
-        );
+        if (block.timestamp > oracleMessage.expiresAt) revert ObsoleteOracleData();
+        if ((oracleMessage.fromDomainID != fromDomainID) ||
+            (oracleMessage.toDomainID != destinationDomainID) ||
+            (oracleMessage.resourceID != resourceID)
+        ) {
+            revert IncorrectDepositParams(
+                oracleMessage.fromDomainID,
+                oracleMessage.toDomainID,
+                oracleMessage.resourceID
+            );
+        }
         require(oracleMessage.msgGasLimit > 0, "msgGasLimit == 0");
 
         bytes32 messageHash = keccak256(feeDataDecoded.message);

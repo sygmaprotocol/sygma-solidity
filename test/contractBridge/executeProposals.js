@@ -381,11 +381,11 @@ contract("Bridge - [execute proposal]", async (accounts) => {
       proposalsForExecution
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.executeProposals([], proposalSignedData, {
         from: relayer1Address,
       }),
-      "Proposals can't be an empty array"
+      "EmptyProposalsArray()"
     );
   });
 
@@ -519,13 +519,13 @@ contract("Bridge - [execute proposal]", async (accounts) => {
       )
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.executeProposals(
         proposalsForExecution,
         proposalSignedData,
         {from: relayer1Address}
       ),
-      "Invalid proposal signer"
+      "InvalidProposalSigner()"
     );
   });
 });

@@ -8,6 +8,7 @@ const TruffleAssert = require("truffle-assertions");
 const Helpers = require("../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const ERC20MintableContractMock = artifacts.require("ERC20PresetMinterPauserMock");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("Bridge - [deposit - ERC20]", async (accounts) => {
@@ -25,13 +26,18 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
 
   let BridgeInstance;
   let OriginERC20MintableInstance;
+  let OriginERC20MintableInstanceMock;
   let OriginERC20HandlerInstance;
   let depositData;
+  let initialResourceIDs;
 
   beforeEach(async () => {
     await Promise.all([
       ERC20MintableContract.new("token", "TOK").then(
         (instance) => (OriginERC20MintableInstance = instance)
+      ),
+      ERC20MintableContractMock.new("token", "TOK").then(
+        (instance) => (OriginERC20MintableInstanceMock = instance)
       ),
       (BridgeInstance = await Helpers.deployBridge(
         originDomainID,
@@ -39,10 +45,16 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
       )),
     ]);
 
-    resourceID = Helpers.createResourceID(
+    const resourceID1 = Helpers.createResourceID(
       OriginERC20MintableInstance.address,
       originDomainID
     );
+    const resourceID2 = Helpers.createResourceID(
+      OriginERC20MintableInstanceMock.address,
+      originDomainID
+    );
+
+    initialResourceIDs = [resourceID1, resourceID2];
 
     OriginERC20HandlerInstance = await ERC20HandlerContract.new(
       BridgeInstance.address
@@ -51,11 +63,21 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
     await Promise.all([
       BridgeInstance.adminSetResource(
         OriginERC20HandlerInstance.address,
-        resourceID,
+        initialResourceIDs[0],
         OriginERC20MintableInstance.address,
         emptySetResourceData
       ),
+      BridgeInstance.adminSetResource(
+        OriginERC20HandlerInstance.address,
+        initialResourceIDs[1],
+        OriginERC20MintableInstanceMock.address,
+        emptySetResourceData
+      ),
       OriginERC20MintableInstance.mint(
+        depositorAddress,
+        originChainInitialTokenAmount
+      ),
+      OriginERC20MintableInstanceMock.mint(
         depositorAddress,
         originChainInitialTokenAmount
       ),
@@ -63,6 +85,11 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
     await OriginERC20MintableInstance.approve(
       OriginERC20HandlerInstance.address,
       depositAmount * 2,
+      {from: depositorAddress}
+    );
+    await OriginERC20MintableInstanceMock.approve(
+      OriginERC20HandlerInstance.address,
+      depositAmount,
       {from: depositorAddress}
     );
 
@@ -101,7 +128,7 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
     await TruffleAssert.passes(
       BridgeInstance.deposit(
         destinationDomainID,
-        resourceID,
+        initialResourceIDs[0],
         depositData,
         feeData,
         {from: depositorAddress}
@@ -112,7 +139,7 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
   it("_depositCounts should be increments from 0 to 1", async () => {
     await BridgeInstance.deposit(
       destinationDomainID,
-      resourceID,
+      initialResourceIDs[0],
       depositData,
       feeData,
       {from: depositorAddress}
@@ -127,7 +154,7 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
   it("ERC20 can be deposited with correct balances", async () => {
     await BridgeInstance.deposit(
       destinationDomainID,
-      resourceID,
+      initialResourceIDs[0],
       depositData,
       feeData,
       {from: depositorAddress}
@@ -150,7 +177,7 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
   it("Deposit event is fired with expected value", async () => {
     let depositTx = await BridgeInstance.deposit(
       destinationDomainID,
-      resourceID,
+      initialResourceIDs[0],
       depositData,
       feeData,
       {from: depositorAddress}
@@ -159,14 +186,14 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
     TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
       return (
         event.destinationDomainID.toNumber() === destinationDomainID &&
-        event.resourceID === resourceID.toLowerCase() &&
+        event.resourceID === initialResourceIDs[0].toLowerCase() &&
         event.depositNonce.toNumber() === expectedDepositNonce
       );
     });
 
     depositTx = await BridgeInstance.deposit(
       destinationDomainID,
-      resourceID,
+      initialResourceIDs[0],
       depositData,
       feeData,
       {from: depositorAddress}
@@ -175,27 +202,40 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
     TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
       return (
         event.destinationDomainID.toNumber() === destinationDomainID &&
-        event.resourceID === resourceID.toLowerCase() &&
+        event.resourceID === initialResourceIDs[0].toLowerCase() &&
         event.depositNonce.toNumber() === expectedDepositNonce + 1
       );
     });
   });
 
   it("deposit requires resourceID that is mapped to a handler", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(destinationDomainID, "0x0", depositData, feeData, {
         from: depositorAddress,
       }),
-      "resourceID not mapped to handler"
+      "ResourceIDNotMappedToHandler()"
     );
   });
 
   it("Deposit destination domain can not be current bridge domain ", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(originDomainID, "0x0", depositData, feeData, {
         from: depositorAddress,
       }),
-      "Can't deposit to current domain"
+      "DepositToCurrentDomain()"
+    );
+  });
+
+  it("should revert if ERC20Safe contract call fails", async () => {
+    await TruffleAssert.reverts(
+      BridgeInstance.deposit(
+        destinationDomainID,
+        initialResourceIDs[1],
+        depositData,
+        feeData,
+        {from: depositorAddress}
+      ),
+      "ERC20: operation did not succeed"
     );
   });
 });

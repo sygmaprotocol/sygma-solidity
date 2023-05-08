@@ -54,7 +54,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         (tokenID) = abi.decode(data, (uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted, "provided tokenAddress is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
         // Check if the contract supports metadata, fetch it if it does
         if (tokenAddress.supportsInterface(_INTERFACE_ERC721_METADATA)) {
@@ -103,7 +103,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         }
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_tokenContractAddressToTokenProperties[address(tokenAddress)].isWhitelisted, "provided tokenAddress is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             mintERC721(tokenAddress, address(recipientAddress), tokenID, metaData);

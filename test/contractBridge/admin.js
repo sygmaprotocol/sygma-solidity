@@ -42,10 +42,10 @@ contract("Bridge - [admin]", async (accounts) => {
 
   let withdrawData = "";
 
-  const assertOnlyAdmin = (method, ...params) => {
-    return TruffleAssert.reverts(
-      method(...params, {from: nonAdminAddress}),
-      "sender doesn't have access to function"
+  const assertOnlyAdmin = (method) => {
+    return Helpers.expectToRevertWithCustomError(
+      method(),
+      "AccessNotAllowed(address,bytes4)"
     );
   };
 
@@ -112,15 +112,17 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should fail if \"StartKeygen\" is called by non admin", async () => {
-    await assertOnlyAdmin(BridgeInstance.startKeygen);
+    await assertOnlyAdmin(() =>
+      BridgeInstance.startKeygen({from: nonAdminAddress})
+    );
   });
 
   it("Should fail if \"StartKeygen\" is called after MPC address is set", async () => {
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.startKeygen(),
-      "MPC address is already set"
+      "MPCAddressAlreadySet()"
     );
   });
 
@@ -133,22 +135,27 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should fail if \"endKeygen\" is called by non admin", async () => {
-    await assertOnlyAdmin(BridgeInstance.endKeygen, someAddress);
+    await assertOnlyAdmin(() =>
+      BridgeInstance.endKeygen(
+        someAddress,
+        {from: nonAdminAddress}
+      )
+    )
   });
 
   it("Should fail if null address is passed as MPC address", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.endKeygen(nullAddress),
-      "MPC address can't be null-address"
+      "MPCAddressZeroAddress()"
     );
   });
 
   it("Should fail if admin tries to update MPC address", async () => {
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
-    await TruffleAssert.reverts(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.endKeygen(someAddress),
-      "MPC address can't be updated"
+      "MPCAddressIsNotUpdatable()"
     );
   });
 
@@ -161,7 +168,12 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should fail if \"refreshKey\" is called by non admin", async () => {
-    await assertOnlyAdmin(BridgeInstance.refreshKey, topologyHash);
+    await assertOnlyAdmin(() =>
+      BridgeInstance.refreshKey(
+        topologyHash,
+        {from: nonAdminAddress}
+      )
+    )
   });
 
   // Set Handler Address
@@ -239,12 +251,14 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set a ERC20 Resource ID and contract address", async () => {
-    await assertOnlyAdmin(
-      BridgeInstance.adminSetResource,
-      someAddress,
-      bytes32,
-      someAddress,
-      genericHandlerSetResourceData
+    await assertOnlyAdmin(() =>
+      BridgeInstance.adminSetResource(
+        someAddress,
+        bytes32,
+        someAddress,
+        genericHandlerSetResourceData,
+        {from: nonAdminAddress}
+      )
     );
   });
 
@@ -313,12 +327,14 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set a Generic Resource ID and contract address", async () => {
-    await assertOnlyAdmin(
-      BridgeInstance.adminSetResource,
-      someAddress,
-      bytes32,
-      someAddress,
-      genericHandlerSetResourceData
+    await assertOnlyAdmin(() =>
+        BridgeInstance.adminSetResource(
+        someAddress,
+        bytes32,
+        someAddress,
+        genericHandlerSetResourceData,
+        {from: nonAdminAddress}
+      )
     );
   });
 
@@ -359,10 +375,12 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set ERC20MintableInstance.address as burnable", async () => {
-    await assertOnlyAdmin(
-      BridgeInstance.adminSetBurnable,
-      someAddress,
-      someAddress
+    await assertOnlyAdmin(() =>
+      BridgeInstance.adminSetBurnable(
+        someAddress,
+        someAddress,
+        {from: nonAdminAddress}
+      )
     );
   });
 
@@ -426,7 +444,13 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to withdraw funds", async () => {
-    await assertOnlyAdmin(BridgeInstance.adminWithdraw, someAddress, "0x0");
+    await assertOnlyAdmin(() =>
+      BridgeInstance.adminWithdraw(
+        someAddress,
+        "0x0",
+        {from: nonAdminAddress}
+      )
+    )
   });
 
   // Set nonce
@@ -439,7 +463,13 @@ contract("Bridge - [admin]", async (accounts) => {
   });
 
   it("Should require admin role to set nonce", async () => {
-    await assertOnlyAdmin(BridgeInstance.adminSetDepositNonce, 1, 3);
+    await assertOnlyAdmin(() =>
+      BridgeInstance.adminSetDepositNonce(
+        1,
+        3,
+        {from: nonAdminAddress}
+      )
+    )
   });
 
   it("Should not allow for decrements of the nonce", async () => {
@@ -455,13 +485,23 @@ contract("Bridge - [admin]", async (accounts) => {
   // Change access control contract
 
   it("Should require admin role to change access control contract", async () => {
-    await assertOnlyAdmin(BridgeInstance.adminChangeAccessControl, someAddress);
+    await assertOnlyAdmin(() =>
+      BridgeInstance.adminChangeAccessControl(
+        someAddress,
+        {from: nonAdminAddress}
+      )
+    )
   });
 
   // Retry
 
   it("Should require admin role to retry deposit", async () => {
-    await assertOnlyAdmin(BridgeInstance.retry, txHash);
+    await assertOnlyAdmin(() =>
+      BridgeInstance.retry(
+        txHash,
+        {from: nonAdminAddress}
+      )
+    )
   });
 
   it("Should successfully emit Retry event", async () => {

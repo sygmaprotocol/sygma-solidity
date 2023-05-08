@@ -42,7 +42,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         (amount) = abi.decode(data, (uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        require(_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted, "provided tokenAddress is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             burnERC20(tokenAddress, depositor, amount);
@@ -79,7 +79,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
         }
 
-        require(_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted, "provided tokenAddress is not whitelisted");
+        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             mintERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
