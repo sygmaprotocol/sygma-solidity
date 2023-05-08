@@ -377,7 +377,18 @@ const expectToRevertWithCustomError = async function(promise, expectedErrorSigna
     ).return;
     // expect event error and provided error signatures to match
     assert.equal(returnValue.slice(0, 10), encoded);
-    return;
+
+    let inputParams;
+    // match everything between () in function signature
+    const regex = RegExp(/\(([^)]+)\)/);
+    if(regex.exec(expectedErrorSignature)) {
+      const types = regex.exec(expectedErrorSignature)[1].split(",");
+      inputParams = Ethers.utils.defaultAbiCoder.decode(
+        types,
+        Ethers.utils.hexDataSlice(returnValue, 4)
+      );
+    }
+    return inputParams;
   }
   assert.fail("Expected an exception but none was received");
 }
