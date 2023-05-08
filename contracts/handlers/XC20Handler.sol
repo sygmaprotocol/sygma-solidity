@@ -86,7 +86,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         } else {
             releaseERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
         }
-        return abi.encodePacked(recipientAddress, amount);
+        return abi.encode(tokenAddress, recipientAddress, amount);
     }
 
     /**

@@ -83,7 +83,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         } else {
             releaseBatchERC1155(tokenAddress, address(this), address(recipientAddress), tokenIDs, amounts, transferData);
         }
-        return abi.encodePacked(recipientAddress, tokenIDs);
+        return abi.encode(recipientAddress, tokenIDs, amounts);
     }
 
     /**
