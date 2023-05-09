@@ -160,6 +160,7 @@ contract PermissionlessGenericHandler is IHandler {
         executionData                     = bytes(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor:]);
 
         bytes memory callData = abi.encodePacked(executeFuncSignature, abi.encode(executionDataDepositor), executionData);
-        executeContractAddress.call(callData);
+        (bool success, bytes memory returndata) = executeContractAddress.call(callData);
+        return abi.encode(success, returndata);
     }
 }

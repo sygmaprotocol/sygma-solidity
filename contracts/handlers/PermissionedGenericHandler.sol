@@ -141,11 +141,12 @@ contract PermissionedGenericHandler is IHandler {
         bytes4 sig = _tokenContractAddressToTokenProperties[contractAddress].executeFunctionSignature;
         if (sig != bytes4(0)) {
             bytes memory callData = abi.encodePacked(sig, metaData);
-            (bool success, ) = contractAddress.call(callData);
+            (bool success, bytes memory returndata) = contractAddress.call(callData);
 
             if (!success) {
                 emit FailedHandlerExecution();
             }
+            return abi.encode(success, returndata);
         }
     }
 
