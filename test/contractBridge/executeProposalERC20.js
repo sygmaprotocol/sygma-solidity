@@ -210,9 +210,9 @@ contract("Bridge - [execute proposal - ERC20]", async (accounts) => {
         event.originDomainID.toNumber() === originDomainID &&
         event.depositNonce.toNumber() === expectedDepositNonce &&
         event.dataHash === dataHash &&
-        event.handlerResponse === Ethers.utils.solidityPack(
-          ["address", "uint256"],
-          [recipientAddress, depositAmount]
+        event.handlerResponse === Ethers.utils.defaultAbiCoder.encode(
+          ["address", "address", "uint256"],
+          [ERC20MintableInstance.address, recipientAddress, depositAmount]
         )
       );
     });

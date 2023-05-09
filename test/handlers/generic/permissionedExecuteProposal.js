@@ -27,6 +27,8 @@ contract(
     const TestStoreMinCount = 10;
     const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
     const feeData = "0x";
+    const handlerResponseLength = 64;
+    const contractCallReturndata = Ethers.constants.HashZero;
 
     let BridgeInstance;
     let TestStoreInstance;
@@ -152,6 +154,19 @@ contract(
         proposalSignedData,
         {from: relayer2Address}
       );
+
+      TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
+        return (
+          event.originDomainID.toNumber() === originDomainID &&
+          event.depositNonce.toNumber() === expectedDepositNonce &&
+          event.dataHash === depositProposalDataHash &&
+          event.handlerResponse === Ethers.utils.defaultAbiCoder.encode(
+            ["bool", "uint256", "bytes32"],
+            [true, handlerResponseLength, contractCallReturndata]
+          )
+        );
+      });
+
       const internalTx = await TruffleAssert.createTransactionResult(
         TestStoreInstance,
         executeTx.tx

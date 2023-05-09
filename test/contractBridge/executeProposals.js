@@ -438,9 +438,9 @@ contract("Bridge - [execute proposals]", async (accounts) => {
         event.originDomainID.toNumber() === originDomainID &&
         event.depositNonce.toNumber() === expectedDepositNonces[0] &&
         event.dataHash === erc20DataHash &&
-        event.handlerResponse === Ethers.utils.solidityPack(
-          ["address", "uint256"],
-          [recipientAddress, depositAmount]
+        event.handlerResponse === Ethers.utils.defaultAbiCoder.encode(
+          ["address", "address", "uint256"],
+          [ERC20MintableInstance.address, recipientAddress, depositAmount]
         )
       );
     });
@@ -451,9 +451,9 @@ contract("Bridge - [execute proposals]", async (accounts) => {
     assert.equal(executeTx.logs[1].args.dataHash, erc721DataHash);
     assert.equal(
       executeTx.logs[1].args.handlerResponse,
-      Ethers.utils.solidityPack(
-        ["address", "uint256"],
-        [recipientAddress, tokenID]
+      Ethers.utils.defaultAbiCoder.encode(
+        ["address", "address", "uint256"],
+        [ERC721MintableInstance.address ,recipientAddress, tokenID]
       )
     );
 
@@ -463,9 +463,9 @@ contract("Bridge - [execute proposals]", async (accounts) => {
     assert.equal(executeTx.logs[2].args.dataHash, erc1155DataHash);
     assert.equal(
       executeTx.logs[2].args.handlerResponse,
-      Ethers.utils.solidityPack(
-        ["address", "uint256"],
-        [recipientAddress, tokenID]
+      Ethers.utils.defaultAbiCoder.encode(
+        ["address", "uint256[]", "uint256[]"],
+        [recipientAddress, [tokenID], [depositAmount]]
       )
     );
 
