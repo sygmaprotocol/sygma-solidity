@@ -110,7 +110,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         } else {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }
-        return abi.encode(tokenAddress, recipientAddress, tokenID);
+        return abi.encode(tokenAddress, address(recipientAddress), tokenID);
     }
 
     /**
