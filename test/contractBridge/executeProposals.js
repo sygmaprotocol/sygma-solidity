@@ -464,8 +464,8 @@ contract("Bridge - [execute proposals]", async (accounts) => {
     assert.equal(
       executeTx.logs[2].args.handlerResponse,
       Ethers.utils.defaultAbiCoder.encode(
-        ["address", "uint256[]", "uint256[]"],
-        [recipientAddress, [tokenID], [depositAmount]]
+        ["address", "address", "uint256[]", "uint256[]"],
+        [ERC1155MintableInstance.address, recipientAddress, [tokenID], [depositAmount]]
       )
     );
 
