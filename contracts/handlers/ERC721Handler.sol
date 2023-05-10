@@ -82,7 +82,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         metadata                        length      uint256    bytes    (64 + len(destinationRecipientAddress)) - (64 + len(destinationRecipientAddress) + 32)
         metadata                                      bytes    bytes    (64 + len(destinationRecipientAddress) + 32) - END
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
         uint         tokenID;
         uint         lenDestinationRecipientAddress;
         bytes memory destinationRecipientAddress;
@@ -110,6 +110,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         } else {
             releaseERC721(tokenAddress, address(this), address(recipientAddress), tokenID);
         }
+        return abi.encode(tokenAddress, address(recipientAddress), tokenID);
     }
 
     /**

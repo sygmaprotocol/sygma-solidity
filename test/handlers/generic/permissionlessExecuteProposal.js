@@ -28,6 +28,9 @@ contract(
     const feeData = "0x";
     const destinationMaxFee = 2000000;
     const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
+    const handlerResponseLength = 64;
+    const contractCallReturndata = Ethers.constants.HashZero;
+
 
     let BridgeInstance;
     let TestStoreInstance;
@@ -203,7 +206,11 @@ contract(
         return (
           event.originDomainID.toNumber() === originDomainID &&
           event.depositNonce.toNumber() === expectedDepositNonce &&
-          event.dataHash === depositDataHash
+          event.dataHash === depositDataHash &&
+          event.handlerResponse === Ethers.utils.defaultAbiCoder.encode(
+            ["bool", "uint256", "bytes32"],
+            [true, handlerResponseLength, contractCallReturndata]
+          )
         );
       });
 
@@ -226,7 +233,7 @@ contract(
       const addresses = [BridgeInstance.address, TestStoreInstance.address];
       const message = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes("message"));
       const executionData = Helpers.abiEncode(["uint", "address[]", "bytes"], [num, addresses, message]);
-        
+
       // If the target function accepts (address depositor, bytes executionData)
       // then this helper can be used
       const preparedExecutionData = await TestDepositInstance.prepareDepositData(executionData);

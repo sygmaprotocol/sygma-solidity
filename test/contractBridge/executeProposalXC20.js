@@ -474,7 +474,11 @@ contract("Bridge - [execute proposal - XC20]", async (accounts) => {
       return (
         event.originDomainID.toNumber() === originDomainID &&
         event.depositNonce.toNumber() === expectedDepositNonce &&
-        event.dataHash === dataHash
+        event.dataHash === dataHash &&
+        event.handlerResponse === Ethers.utils.defaultAbiCoder.encode(
+          ["address", "address", "uint256"],
+          [XC20TestInstance.address, recipientAddress, depositAmount]
+        )
       );
     });
 
