@@ -13,258 +13,47 @@
       }
     },
     "access": {
-      "accessControl": {}
-    },
-    "erc721": [
-      {
-        "name": "ERC721Test",
-        "symbol": "ERC721TST",
-        "uri": "metadata.test",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000200",
-        "feeType": "basic"
+      "feeRouterAdmin": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+      "feeHandlerAdmin": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+      "accessControl": {
+        "0x80ae1c28": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0xffaac0eb": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0x9d33b6d4": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0x8b63aebf": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0x8c0c2631": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0xedc20c3c": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0xd15ef64e": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0x8a3234c7": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0xbd2a1820": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0xd2e5fae9": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0xd8236744": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0x366b4885": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+        "0x6ba6db6b": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816"
       }
-    ],
+    },
+    "erc721": [],
     "erc20": [
       {
         "name": "ERC20LRTest",
-        "symbol": "ERC20LRTST",
+        "symbol": "ERC20TST",
         "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
         "feeType": "basic",
         "strategy": "lr",
         "decimals": "18"
       },
       {
-        "name": "ERC20Test",
-        "symbol": "ERC20TST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "feeType": "oracle",
-        "strategy": "mb",
+        "name": "GoerliPHAToken",
+        "symbol": "GHPA",
+        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000001000",
+        "feeType": "basic",
+        "strategy": "lr",
         "decimals": "18"
-      },
-      {
-        "name": "ERC20LRTest_14Dec",
-        "symbol": "ERC20LRTST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000600",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20Test_14Dec",
-        "symbol": "ERC20TST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000700",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20LRTest_20Dec",
-        "symbol": "ERC20LRTST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000800",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 20
-      },
-      {
-        "name": "ERC20Test_20Dec",
-        "symbol": "ERC20TST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000900",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 20
       }
     ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
+    "permissionedGeneric": [],
     "permissionlessGeneric": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
-      "feeType": "basic"
-    }
-  },
-  "mumbai": {
-    "domainID": "2",
-    "MPCAddress": "0x316dc2f7f6a558c733c2719ba69340e671f48815",
-    "fee": {
-      "oracle": {
-        "gasUsed": "100000",
-        "feePercentage": 300,
-        "address": "0x0c3d905C909eB5e3243b65b905c96B309266d7BB"
-      },
-      "basic": {
-        "fee": "0.001"
-      }
-    },
-    "access": {
-      "accessControl": {}
-    },
-    "erc721": [
-      {
-        "name": "ERC721Test",
-        "symbol": "ERC721TST",
-        "uri": "metadata.test",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000200",
-        "feeType": "basic"
-      }
-    ],
-    "erc20": [
-      {
-        "name": "ERC20LRTest",
-        "symbol": "ERC20LRTST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20Test",
-        "symbol": "ERC20TST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20LRTest_14Dec",
-        "symbol": "ERC20LRTST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000600",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20Test_14Dec",
-        "symbol": "ERC20TST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000700",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20LRTest_20Dec",
-        "symbol": "ERC20LRTST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000800",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 20
-      },
-      {
-        "name": "ERC20Test_20Dec",
-        "symbol": "ERC20TST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000900",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 20
-      }
-    ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
-    "permissionlessGeneric": {
-      "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
-      "feeType": "basic"
-    }
-  },
-  "moonbase": {
-    "domainID": "3",
-    "MPCAddress": "0x316dc2f7f6a558c733c2719ba69340e671f48815",
-    "fee": {
-      "oracle": {
-        "gasUsed": "100000",
-        "feePercentage": 300,
-        "address": "0x0c3d905C909eB5e3243b65b905c96B309266d7BB"
-      },
-      "basic": {
-        "fee": "0.001"
-      }
-    },
-    "access": {
-      "feeHandlerAdmin": "0x23FEe27832B9C2bF490666d420745406CB23F2e8",
-      "accessControl": {}
-    },
-    "erc721": [
-      {
-        "name": "ERC721Test",
-        "symbol": "ERC721TST",
-        "uri": "metadata.test",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000200",
-        "feeType": "basic"
-      }
-    ],
-    "erc20": [
-      {
-        "name": "ERC20LRTest",
-        "symbol": "ERC20LRTST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20Test",
-        "symbol": "ERC20TST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20LRTest_14Dec",
-        "symbol": "ERC20LRTST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000600",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20Test_14Dec",
-        "symbol": "ERC20TST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000700",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20LRTest_20Dec",
-        "symbol": "ERC20LRTST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000800",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 20
-      },
-      {
-        "name": "ERC20Test_20Dec",
-        "symbol": "ERC20TST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000900",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 20
-      }
-    ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
-    "permissionlessGeneric": {
-      "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
-      "feeType": "basic"
+      "feeType": "oracle"
     }
   },
   "sepolia": {
@@ -286,92 +75,25 @@
       "accessControl": {
         "0x80ae1c28": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0xffaac0eb": "0xe9f23A8289764280697a03aC06795eA92a170e42",
-        "0xcb10f215": "0xe9f23A8289764280697a03aC06795eA92a170e42",
-        "0x5a1ad87c": "0xe9f23A8289764280697a03aC06795eA92a170e42",
+        "0x9d33b6d4": "0xe9f23A8289764280697a03aC06795eA92a170e42",
+        "0x8b63aebf": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0x8c0c2631": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0xedc20c3c": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0xd15ef64e": "0xe9f23A8289764280697a03aC06795eA92a170e42",
-        "0x9d33b6d4": "0xe9f23A8289764280697a03aC06795eA92a170e42",
-        "0x8b63aebf": "0xe9f23A8289764280697a03aC06795eA92a170e42",
+        "0x8a3234c7": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0xbd2a1820": "0xe9f23A8289764280697a03aC06795eA92a170e42",
-        "0x6ba6db6b": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0xd2e5fae9": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0xd8236744": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0x366b4885": "0xe9f23A8289764280697a03aC06795eA92a170e42",
-        "0xa973ec93": "0xe9f23A8289764280697a03aC06795eA92a170e42"
+        "0x6ba6db6b": "0xe9f23A8289764280697a03aC06795eA92a170e42"
       }
     },
-    "erc721": [
-      {
-        "name": "ERC721Test",
-        "symbol": "ERC721TST",
-        "uri": "metadata.test",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000200",
-        "feeType": "basic"
-      }
-    ],
-    "erc20": [
-      {
-        "name": "ERC20LRTest",
-        "symbol": "ERC20LRTST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20Test",
-        "symbol": "ERC20TST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20LRTest_14Dec",
-        "symbol": "ERC20LRTST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000600",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20Test_14Dec",
-        "symbol": "ERC20TST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000700",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20LRTest_20Dec",
-        "symbol": "ERC20LRTST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000800",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 20
-      },
-      {
-        "name": "ERC20Test_20Dec",
-        "symbol": "ERC20TST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000900",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 20
-      }
-    ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
+    "erc721": [],
+    "erc20": [],
+    "permissionedGeneric": [],
     "permissionlessGeneric": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
-      "feeType": "basic"
+      "feeType": "oracle"
     }
   }
 }
