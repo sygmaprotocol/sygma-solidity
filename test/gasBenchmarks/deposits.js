@@ -1,7 +1,5 @@
-/**
- * Copyright 2020 ChainSafe Systems
- * SPDX-License-Identifier: LGPL-3.0-only
- */
+// The Licensed Work is (c) 2022 Sygma
+// SPDX-License-Identifier: LGPL-3.0-only
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
