@@ -1,3 +1,6 @@
+// The Licensed Work is (c) 2022 Sygma
+// SPDX-License-Identifier: LGPL-3.0-only
+
 const Ethers = require("ethers");
 const TruffleAssert = require("truffle-assertions");
 
