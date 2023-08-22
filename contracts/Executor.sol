@@ -2,41 +2,29 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
-import "./utils/Pausable.sol";
-
-
-import "./interfaces/IERCHandler.sol";
-import "./interfaces/IHandler.sol";
-import "./interfaces/IFeeHandler.sol";
-import "./interfaces/IAccessControlSegregator.sol";
 
 /**
     @title Facilitates deposits and creation of deposit proposals, and deposit executions.
     @author ChainSafe Systems.
  */
 contract Executor is Ownable, Context, EIP712 {
-    using ECDSA for bytes32;
-
     uint8   public immutable _domainID;
+    uint256 public _messageIndex;
+    address public _router;
+
     struct Proposal {
         uint8   originDomainID;
         uint8   securityModel;
         uint64  depositNonce;
         bytes32 resourceID;
         bytes   data;
+        uint blockNumber;
     }
 
-
-    // securityModel => block header storage addresses
-    mapping(uint8 => address[]) public _securityModels:
-    // destinationDomainID => number of deposits
-    mapping(uint8 => uint64) public _depositCounts;
-    // forwarder address => is Valid
-    mapping(address => bool) public isValidForwarder;
+    // securityModel => block header storage addresse
+    mapping(uint8 => address) public _securityModels:
     // origin domainID => nonces set => used deposit nonces
     mapping(uint8 => mapping(uint256 => uint256)) public usedNonces;
 
@@ -44,20 +32,13 @@ contract Executor is Ownable, Context, EIP712 {
         uint8   originDomainID,
         uint64  depositNonce,
     );
-    error AccessNotAllowed(address sender, bytes4 funcSig);
-    error ResourceIDNotMappedToHandler();
+
     error DepositToCurrentDomain();
     error EmptyProposalsArray();
-    error NonceDecrementsNotAllowed();
 
 
     function _msgSender() internal override view returns (address) {
         address signer = msg.sender;
-        if (msg.data.length >= 20 && isValidForwarder[signer]) {
-            assembly {
-                signer := shr(96, calldataload(sub(calldatasize(), 20)))
-            }
-        }
         return signer;
     }
 
@@ -66,9 +47,11 @@ contract Executor is Ownable, Context, EIP712 {
         contract for bridge and sets the inital state of the Bridge to paused.
         @param domainID ID of chain the Bridge contract exists on.
      */
-    constructor (uint8 domainID, []address securityModel) EIP712("Bridge", "3.1.0") {
+    constructor (uint8 domainID, address securityModel, address router, uint256 messageIndex) {
         _domainID = domainID;
         _securityModels[1] = securityModel;
+        _messageIndex = messageIndex;
+        _router = router;
     }
 
     /**
@@ -114,6 +97,8 @@ contract Executor is Ownable, Context, EIP712 {
                 continue;
             }
 
+            require(verify(proposals[i]))
+
             usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] |= 1 << (proposals[i].depositNonce % 256);
             emit ProposalExecution(proposals[i].originDomainID, proposals[i].depositNonce, dataHash, handlerResponse);
         }
@@ -127,5 +112,42 @@ contract Executor is Ownable, Context, EIP712 {
      */
     function isProposalExecuted(uint8 domainID, uint256 depositNonce) public view returns (bool) {
         return usedNonces[domainID][depositNonce / 256] & (1 << (depositNonce % 256)) != 0;
+    }
+
+    function verify(Proposal proposal)
+        external
+        override
+        returns (bool)
+    {
+        bytes32 stateRoot;
+        bytes32 storageRoot;
+        bytes32 transferHash;
+
+        IBlockStorage blockStorage = IBlockStorage(_securityModels(proposal.securityModel))
+        stateRoot = blockStorage.getStateRoot(blockNumber)
+
+        (uint64 slot, bytes[] memory accountProof, bytes[] memory storageProof) = abi.decode(_proofData, (uint64, bytes[], bytes[]));
+
+        storageRoot = StorageProof.getStorageRoot(accountProof, _router, stateRoot);
+        transferHash = keccak256(
+            abi.encode(
+                proposal.originDomainID,
+                _domainID,
+                proposal.blockNumber
+                proposal.securityModel,
+                proposal.depositNonce,
+                proposal.resourceID,
+                keccak256(proposal.data)
+            )
+        );
+        bytes32 slotKey = keccak256(
+            abi.encode(keccak256(abi.encode(_message.nonce(), _messageIndex)))
+        );
+        uint256 slotValue = StorageProof.getStorageValue(slotKey, storageRoot, storageProof);
+        if (bytes32(slotValue) != transferHash) {
+            revert InvalidStorageProof();
+        }
+
+        return true;
     }
 }

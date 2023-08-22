@@ -2,17 +2,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
-import "./utils/Pausable.sol";
-
-
-import "./interfaces/IERCHandler.sol";
-import "./interfaces/IHandler.sol";
-import "./interfaces/IFeeHandler.sol";
-import "./interfaces/IAccessControlSegregator.sol";
 
 /**
     @title Facilitates deposits and creation of deposit proposals, and deposit executions.
@@ -24,13 +15,9 @@ contract Router is Context, Ownable {
 
     // destinationDomainID => number of deposits
     mapping(uint8 => uint64) public _depositCounts;
-    // forwarder address => is Valid
-    mapping(address => bool) public isValidForwarder;
     // destination domainID => nonce => transferHash
     mapping(uint8 => mapping(uint256 => bytes32)) public transferHashes;
 
-    event FeeHandlerChanged(address newFeeHandler);
-    event AccessControlChanged(address newAccessControl);
     event Deposit(
         uint8   destinationDomainID,
         uint8   securityModel, 
@@ -39,7 +26,6 @@ contract Router is Context, Ownable {
         address indexed user,
         bytes   data,
     );
-    event Retry(string txHash);
 
     error AccessNotAllowed(address sender, bytes4 funcSig);
     error ResourceIDNotMappedToHandler();
@@ -59,11 +45,6 @@ contract Router is Context, Ownable {
 
     function _msgSender() internal override view returns (address) {
         address signer = msg.sender;
-        if (msg.data.length >= 20 && isValidForwarder[signer]) {
-            assembly {
-                signer := shr(96, calldataload(sub(calldatasize(), 20)))
-            }
-        }
         return signer;
     }
 
@@ -72,7 +53,7 @@ contract Router is Context, Ownable {
         contract for bridge and sets the inital state of the Bridge to paused.
         @param domainID ID of chain the Bridge contract exists on.
      */
-    constructor (uint8 domainID) EIP712("Bridge", "3.1.0") {
+    constructor (uint8 domainID) {
         _domainID = domainID;
     }
 
@@ -95,7 +76,9 @@ contract Router is Context, Ownable {
         depositNonce = ++_depositCounts[destinationDomainID];
         transferHashes[destinationDomainID][depositNonce] = keccak256(
             abi.encode(
+                _domainID,
                 destinationDomainID,
+                block.number,
                 securityModel,
                 depositNonce,
                 resourceID,
@@ -104,16 +87,5 @@ contract Router is Context, Ownable {
         );
         emit Deposit(destinationDomainID, securityModel, resourceID, depositNonce, sender, depositData);
         return depositNonce;
-    }
-
-    /**
-        @notice This method is used to trigger the process for retrying failed deposits on the MPC side.
-        @notice Only callable by address that has the right to call the specific function,
-        which is mapped in {functionAccess} in AccessControlSegregator contract.
-        @param txHash Transaction hash which contains deposit that should be retried
-        @notice This is not applicable for failed executions on {PermissionedGenericHandler}
-     */
-    function retry(string memory txHash) external onlyAllowed {
-        emit Retry(txHash);
     }
 }
