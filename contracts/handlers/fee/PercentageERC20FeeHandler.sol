@@ -18,8 +18,13 @@ contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
         @notice _fee inherited from BasicFeeHandler in this implementation is
         in BPS and should be multiplied by 10000 to avoid precision loss
      */
-    uint256 public _lowerBound; // min fee in token amount
-    uint256 public _upperBound; // max fee in token amount
+
+    struct Bounds {
+        uint256 lowerBound; // min fee in token amount
+        uint256 upperBound; // max fee in token amount
+    }
+
+    mapping(bytes32 => Bounds) public _resourceIDToFeeBounds;
 
     event FeeBoundsChanged(uint256 newLowerBound, uint256 newUpperBound);
 
@@ -52,18 +57,19 @@ contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
     function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view returns(uint256 fee, address tokenAddress) {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
+        Bounds memory bounds = _resourceIDToFeeBounds[resourceID];
 
         (uint256 depositAmount) = abi.decode(depositData, (uint256));
 
         fee = depositAmount * _fee / 1e8; // 10000 for BPS and 10000 to avoid precision loss
 
-        if (fee < _lowerBound) {
-            fee = _lowerBound;
+        if (fee < bounds.lowerBound) {
+            fee = bounds.lowerBound;
         }
 
         // if upper bound is not set, fee is % of token amount
-        else if (fee > _upperBound && _upperBound > 0) {
-            fee = _upperBound;
+        else if (fee > bounds.upperBound && bounds.upperBound > 0) {
+            fee = bounds.upperBound;
         }
 
         return (fee, tokenAddress);
@@ -90,17 +96,20 @@ contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
     /**
         @notice Sets new value for lower and upper fee bounds, both are in token amount.
         @notice Only callable by admin.
+        @param resourceID ResourceID for which new fee bounds will be set.
         @param newLowerBound Value {_newLowerBound} will be updated to.
         @param newUpperBound Value {_newUpperBound} will be updated to.
      */
-    function changeFeeBounds(uint256 newLowerBound, uint256 newUpperBound) external onlyAdmin {
+    function changeFeeBounds(bytes32 resourceID, uint256 newLowerBound, uint256 newUpperBound) external onlyAdmin {
         require(newUpperBound > newLowerBound, "Upper bound must be larger than lower bound");
-        require(_lowerBound != newLowerBound &&
-            _upperBound != newUpperBound,
+        Bounds memory existingBounds = _resourceIDToFeeBounds[resourceID];
+        require(existingBounds.lowerBound != newLowerBound &&
+            existingBounds.upperBound != newUpperBound,
             "Current bounds are equal to new bounds"
         );
-        _lowerBound = newLowerBound;
-        _upperBound = newUpperBound;
+
+        Bounds memory newBounds = Bounds(newLowerBound, newUpperBound);
+        _resourceIDToFeeBounds[resourceID] = newBounds;
 
         emit FeeBoundsChanged(newLowerBound, newUpperBound);
     }
