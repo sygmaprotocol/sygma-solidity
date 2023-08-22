@@ -59,13 +59,13 @@ contract("PercentageFeeHandler - [collectFee]", async (accounts) => {
       FeeHandlerRouterInstance.address
     );
 
-    await PercentageFeeHandlerInstance.changeFee(feeBps);
-    await PercentageFeeHandlerInstance.changeFeeBounds(lowerBound, upperBound);
-
     resourceID = Helpers.createResourceID(
       ERC20MintableInstance.address,
       originDomainID
     );
+
+    await PercentageFeeHandlerInstance.changeFee(feeBps);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, lowerBound, upperBound);
 
     await Promise.all([
       BridgeInstance.adminSetResource(

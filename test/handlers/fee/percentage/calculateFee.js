@@ -85,7 +85,7 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
     assert.equal(res[0].toString(),"0");
     // Change fee to 1 BPS ()
     await PercentageFeeHandlerInstance.changeFee(10000);
-    await PercentageFeeHandlerInstance.changeFeeBounds(100, 300000);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300000);
     res = await FeeHandlerRouterInstance.calculateFee.call(
       relayer,
       originDomainID,
@@ -126,7 +126,7 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
 
   it("should return lower bound token amount for fee", async () => {
     const depositData = Helpers.createERCDepositData(10000, 20, recipientAddress);
-    await PercentageFeeHandlerInstance.changeFeeBounds(100, 300);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300);
     await PercentageFeeHandlerInstance.changeFee(10000);
 
     res = await FeeHandlerRouterInstance.calculateFee.call(
@@ -142,7 +142,7 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
 
   it("should return upper bound token amount for fee", async () => {
     const depositData = Helpers.createERCDepositData(100000000, 20, recipientAddress);
-    await PercentageFeeHandlerInstance.changeFeeBounds(100, 300);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300);
     await PercentageFeeHandlerInstance.changeFee(10000);
 
     res = await FeeHandlerRouterInstance.calculateFee.call(

@@ -8,10 +8,14 @@ const Helpers = require("../../../helpers");
 
 const PercentageFeeHandlerContract = artifacts.require("PercentageFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+
 
 contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
   const domainID = 1;
   const nonAdmin = accounts[1];
+
+  let resourceID;
 
   const assertOnlyAdmin = (method, ...params) => {
     return TruffleAssert.reverts(
@@ -23,9 +27,23 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
   let BridgeInstance;
 
   beforeEach(async () => {
-    BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
+    await Promise.all([
+      (BridgeInstance = await Helpers.deployBridge(
+        domainID,
+        accounts[0]
+      )),
+      ERC20MintableContract.new("token", "TOK").then(
+        (instance) => (ERC20MintableInstance = instance)
+      ),
+    ]);
+
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
+    );
+
+    resourceID = Helpers.createResourceID(
+      ERC20MintableInstance.address,
+      domainID
     );
   });
 
@@ -80,7 +98,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    const tx = await PercentageFeeHandlerInstance.changeFeeBounds(50, 100);
+    const tx = await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 50, 100);
     TruffleAssert.eventEmitted(
       tx,
       "FeeBoundsChanged",
@@ -89,8 +107,8 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
         event.newUpperBound.toString() === "100"
       }
     );
-    const newLowerBound = await PercentageFeeHandlerInstance._lowerBound.call();
-    const newUpperBound = await PercentageFeeHandlerInstance._upperBound.call();
+    const newLowerBound = (await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).lowerBound
+    const newUpperBound = (await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).upperBound
     assert.equal(newLowerBound.toString(), "50");
     assert.equal(newUpperBound.toString(), "100");
   });
@@ -100,9 +118,9 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await PercentageFeeHandlerInstance.changeFeeBounds(25, 50)
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 50)
     await TruffleAssert.reverts(
-      PercentageFeeHandlerInstance.changeFeeBounds(25, 65),
+      PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 65),
       "Current bounds are equal to new bounds"
     );
   });
@@ -112,6 +130,6 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFeeBounds, 50, 100);
+    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFeeBounds, resourceID, 50, 100);
   });
 });

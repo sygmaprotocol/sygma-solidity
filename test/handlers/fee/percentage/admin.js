@@ -7,6 +7,8 @@ const Helpers = require("../../../helpers");
 
 const PercentageFeeHandlerContract = artifacts.require("PercentageFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+
 
 contract("PercentageFeeHandler - [admin]", async (accounts) => {
   const domainID = 1;
@@ -22,13 +24,21 @@ contract("PercentageFeeHandler - [admin]", async (accounts) => {
 
   let BridgeInstance;
   let PercentageFeeHandlerInstance;
+  let ERC20MintableInstance;
   let ADMIN_ROLE;
+  let resourceID;
 
   beforeEach(async () => {
-    BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(
-      domainID,
-      accounts[0]
-    );
+    await Promise.all([
+      (BridgeInstance = await Helpers.deployBridge(
+        domainID,
+        accounts[0]
+      )),
+      ERC20MintableContract.new("token", "TOK").then(
+        (instance) => (ERC20MintableInstance = instance)
+      ),
+    ]);
+
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
@@ -38,6 +48,8 @@ contract("PercentageFeeHandler - [admin]", async (accounts) => {
     );
 
     ADMIN_ROLE = await PercentageFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
+
+    resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
   });
 
   it("should set fee property", async () => {
@@ -53,19 +65,25 @@ contract("PercentageFeeHandler - [admin]", async (accounts) => {
   });
 
   it("should set fee bounds", async () => {
-    const lowerBound = 100;
-    const upperBound = 300;
-    assert.equal(await PercentageFeeHandlerInstance._lowerBound.call(), "0");
-    assert.equal(await PercentageFeeHandlerInstance._upperBound.call(), "0");
-    await PercentageFeeHandlerInstance.changeFeeBounds(lowerBound, upperBound);
-    assert.equal(await PercentageFeeHandlerInstance._lowerBound.call(), lowerBound);
-    assert.equal(await PercentageFeeHandlerInstance._upperBound.call(), upperBound);
+    const newLowerBound = "100";
+    const newUpperBound = "300";
+    assert.equal((await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).lowerBound, "0");
+    assert.equal((await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).upperBound, "0");
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, newLowerBound, newUpperBound);
+    assert.equal(
+      (await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).lowerBound.toString(),
+      newLowerBound
+    );
+    assert.equal(
+      (await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).upperBound.toString(),
+      newUpperBound
+    );
   });
 
   it("should require admin role to change fee bounds", async () => {
     const lowerBound = 100;
     const upperBound = 300;
-    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFeeBounds, lowerBound, upperBound);
+    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFeeBounds, resourceID, lowerBound, upperBound);
   });
 
   it("PercentageFeeHandler admin should be changed to expectedPercentageFeeHandlerAdmin", async () => {
