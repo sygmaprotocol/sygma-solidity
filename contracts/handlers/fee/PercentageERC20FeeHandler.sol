@@ -51,7 +51,7 @@ contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
 
     function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view returns(uint256 fee, address tokenAddress) {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
-        address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
+        tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
 
         (uint256 depositAmount) = abi.decode(depositData, (uint256));
 
