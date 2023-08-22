@@ -8,7 +8,7 @@ import "../../ERC20Safe.sol";
 import { BasicFeeHandler } from "./BasicFeeHandler.sol";
 
 /**
-    @title Handles deposit fees on Substrate based on Effective rates provided by Fee oracle.
+    @title Handles deposit fees.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
