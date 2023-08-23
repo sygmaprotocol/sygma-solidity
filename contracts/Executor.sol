@@ -112,7 +112,7 @@ contract Executor is Ownable {
         return usedNonces[domainID][depositNonce / 256] & (1 << (depositNonce % 256)) != 0;
     }
 
-        function verify(Proposal memory proposal)
+    function verify(Proposal memory proposal)
         internal
         view
         returns (bool)
