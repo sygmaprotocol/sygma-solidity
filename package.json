@@ -76,7 +76,9 @@
     "ethers": ">= 5.0.0"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^4.5.0",
     "@truffle/hdwallet-provider": "^2.0.14",
-    "@openzeppelin/contracts": "^4.5.0"
+    "solidity-bytes-utils": "^0.8.0",
+    "solidity-rlp": "^2.0.8"
   }
 }

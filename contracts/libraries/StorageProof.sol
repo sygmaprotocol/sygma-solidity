@@ -1,8 +1,8 @@
 pragma solidity 0.8.11;
 
-import {RLPReader} from "@optimism-bedrock/rlp/RLPReader.sol";
-import {RLPWriter} from "@optimism-bedrock/rlp/RLPWriter.sol";
-import {MerkleTrie} from "@optimism-bedrock/trie/MerkleTrie.sol";
+import { RLPReader } from "./RLPReader.sol";
+import { RLPWriter } from "./RLPWriter.sol";
+import { MerkleTrie } from "./MerkleTrie.sol";
 
 library StorageProof {
     using RLPReader for RLPReader.RLPItem;
@@ -11,12 +11,12 @@ library StorageProof {
     function getStorageValue(bytes32 slotHash, bytes32 storageRoot, bytes[] memory _stateProof)
         internal
         pure
-        returns (uint256)
+        returns (bytes32)
     {
         bytes memory valueRlpBytes =
             MerkleTrie.get(abi.encodePacked(slotHash), _stateProof, storageRoot);
         require(valueRlpBytes.length > 0, "Storage value does not exist");
-        return valueRlpBytes.toRLPItem().readUint256();
+        return valueRlpBytes.toRLPItem().readBytes32();
     }
 
     function getStorageRoot(bytes[] memory proof, address contractAddress, bytes32 stateRoot)

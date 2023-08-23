@@ -7,5 +7,5 @@ pragma solidity 0.8.11;
     @author ChainSafe Systems.
  */
 interface IBlockStorage {
-    function getStateRoot(uint blockNumber) public view returns (bytes32);
+    function getStateRoot(uint8 domainID, uint blockNumber) external view returns (bytes32);
 }
