@@ -15,6 +15,12 @@ Handles all incoming deposits, raises a deposit event for indexers and stores th
 
 Handles proposal executions on the destination chain. Accepts proposal data with the state inclusion proofs and executes application logic based on the type of proposal. Proposal cannot be executed if the block header is not already on-chain.
 
+The naming is a bit sketchy and I simplified it a bit, but the idea is that the block header contract addresses are stored in a map of security models are are configurable based on the security we want and each block header oracle has its own block header storage contract.
+
+Example:
+ - model 1 - [ZiplineStorageAddress, MpcStorageAddress]
+ - model 2 - [ZiplineStorageAddress]
+
 #### Block header storage
 
 Stores finalized block headers (or more correctly their state roots) and makes them available to the executor.
