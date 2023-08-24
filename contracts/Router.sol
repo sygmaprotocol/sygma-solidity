@@ -72,7 +72,6 @@ contract Router is Context, Ownable {
             abi.encode(
                 _domainID,
                 destinationDomainID,
-                block.number,
                 securityModel,
                 depositNonce,
                 resourceID,

@@ -131,7 +131,6 @@ contract Executor is Ownable {
             abi.encode(
                 proposal.originDomainID,
                 _domainID,
-                blockNumber,
                 proposal.securityModel,
                 proposal.depositNonce,
                 proposal.resourceID,
