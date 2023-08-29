@@ -120,9 +120,44 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
     );
     await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 50)
     await TruffleAssert.reverts(
-      PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 65),
+      PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 50),
       "Current bounds are equal to new bounds"
     );
+  });
+
+  it("should fail to set lower bound larger than upper bound ", async () => {
+    const PercentageFeeHandlerInstance = await PercentageFeeHandlerContract.new(
+      BridgeInstance.address,
+      FeeHandlerRouterInstance.address
+    );
+    await TruffleAssert.reverts(
+      PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 50, 25),
+      "Upper bound must be larger than lower bound"
+    );
+  });
+
+  it("should set only lower bound", async () => {
+    const newLowerBound = 30;
+    const PercentageFeeHandlerInstance = await PercentageFeeHandlerContract.new(
+      BridgeInstance.address,
+      FeeHandlerRouterInstance.address
+    );
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 50);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, newLowerBound, 50);
+    const currentLowerBound = (await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).lowerBound;
+    assert.equal(currentLowerBound, newLowerBound);
+  });
+
+  it("should set only upper bound", async () => {
+    const newUpperBound = 100;
+    const PercentageFeeHandlerInstance = await PercentageFeeHandlerContract.new(
+      BridgeInstance.address,
+      FeeHandlerRouterInstance.address
+    );
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 50);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, newUpperBound);
+    const currentUpperBound = (await PercentageFeeHandlerInstance._resourceIDToFeeBounds.call(resourceID)).upperBound;
+    assert.equal(newUpperBound, currentUpperBound);
   });
 
   it("should require admin role to change fee bunds", async () => {

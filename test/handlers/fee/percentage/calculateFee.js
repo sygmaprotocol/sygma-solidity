@@ -69,7 +69,8 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
     ]);
   });
 
-  it("should return percentage of token amount for fee if bounds are set", async () => {
+  it(`should return percentage of token amount for fee if bounds
+      are set [lowerBound > 0, upperBound > 0]`, async () => {
     const depositData = Helpers.createERCDepositData(100000000, 20, recipientAddress);
 
     // current fee is set to 0
@@ -82,7 +83,7 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
       feeData
     );
 
-    assert.equal(res[0].toString(),"0");
+    assert.equal(res[0].toString(), "0");
     // Change fee to 1 BPS ()
     await PercentageFeeHandlerInstance.changeFee(10000);
     await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300000);
@@ -94,10 +95,11 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
       depositData,
       feeData
     );
-    assert.equal(res[0].toString(),"10000");
+    assert.equal(res[0].toString(), "10000");
   });
 
-  it("should return percentage of token amount for fee if bounds are not set", async () => {
+  it(`should return percentage of token amount for fee if bounds
+      are not set [lowerBound = 0, upperBound = 0]`, async () => {
     const depositData = Helpers.createERCDepositData(100000000, 20, recipientAddress);
 
     // current fee is set to 0
@@ -110,7 +112,7 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
       feeData
     );
 
-    assert.equal(res[0].toString(),"0");
+    assert.equal(res[0].toString(), "0");
     // Change fee to 1 BPS ()
     await PercentageFeeHandlerInstance.changeFee(10000);
     res = await FeeHandlerRouterInstance.calculateFee.call(
@@ -121,10 +123,10 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
       depositData,
       feeData
     );
-    assert.equal(res[0].toString(),"10000");
+    assert.equal(res[0].toString(), "10000");
   });
 
-  it("should return lower bound token amount for fee", async () => {
+  it("should return lower bound token amount for fee [lowerBound > 0, upperBound > 0]", async () => {
     const depositData = Helpers.createERCDepositData(10000, 20, recipientAddress);
     await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300);
     await PercentageFeeHandlerInstance.changeFee(10000);
@@ -137,11 +139,11 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
       depositData,
       feeData
     );
-    assert.equal(res[0].toString(),"100");
+    assert.equal(res[0].toString(), "100");
   });
 
-  it("should return upper bound token amount for fee", async () => {
-    const depositData = Helpers.createERCDepositData(100000000, 20, recipientAddress);
+  it("should return lower bound token amount for fee [lowerBound > 0, upperBound > 0]", async () => {
+    const depositData = Helpers.createERCDepositData(10000, 20, recipientAddress);
     await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300);
     await PercentageFeeHandlerInstance.changeFee(10000);
 
@@ -153,6 +155,38 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
       depositData,
       feeData
     );
-    assert.equal(res[0].toString(),"300");
+    assert.equal(res[0].toString(), "100");
+  });
+
+  it("should return upper bound token amount for fee [lowerBound = 0, upperBound > 0]", async () => {
+    const depositData = Helpers.createERCDepositData(100000000, 20, recipientAddress);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 0, 300);
+    await PercentageFeeHandlerInstance.changeFee(10000);
+
+    res = await FeeHandlerRouterInstance.calculateFee.call(
+      relayer,
+      originDomainID,
+      destinationDomainID,
+      resourceID,
+      depositData,
+      feeData
+    );
+    assert.equal(res[0].toString(), "300");
+  });
+
+  it("should return percentage of token amount for fee [lowerBound = 0, upperBound > 0]", async () => {
+    const depositData = Helpers.createERCDepositData(100000, 20, recipientAddress);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 0, 300);
+    await PercentageFeeHandlerInstance.changeFee(10000);
+
+    res = await FeeHandlerRouterInstance.calculateFee.call(
+      relayer,
+      originDomainID,
+      destinationDomainID,
+      resourceID,
+      depositData,
+      feeData
+    );
+    assert.equal(res[0].toString(), "10");
   });
 });
