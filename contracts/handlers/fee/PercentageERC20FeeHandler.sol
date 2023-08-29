@@ -13,15 +13,15 @@ import { BasicFeeHandler } from "./BasicFeeHandler.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
+    uint32 public HUNDRED_PERCENT = 1e8;
 
     /**
         @notice _fee inherited from BasicFeeHandler in this implementation is
         in BPS and should be multiplied by 10000 to avoid precision loss
      */
-
     struct Bounds {
-        uint256 lowerBound; // min fee in token amount
-        uint256 upperBound; // max fee in token amount
+        uint128 lowerBound; // min fee in token amount
+        uint128 upperBound; // max fee in token amount
     }
 
     mapping(bytes32 => Bounds) public _resourceIDToFeeBounds;
@@ -61,7 +61,7 @@ contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
 
         (uint256 depositAmount) = abi.decode(depositData, (uint256));
 
-        fee = depositAmount * _fee / 1e8; // 10000 for BPS and 10000 to avoid precision loss
+        fee = depositAmount * _fee / HUNDRED_PERCENT; // 10000 for BPS and 10000 to avoid precision loss
 
         if (fee < bounds.lowerBound) {
             fee = bounds.lowerBound;
@@ -100,10 +100,10 @@ contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
         @param newLowerBound Value {_newLowerBound} will be updated to.
         @param newUpperBound Value {_newUpperBound} will be updated to.
      */
-    function changeFeeBounds(bytes32 resourceID, uint256 newLowerBound, uint256 newUpperBound) external onlyAdmin {
+    function changeFeeBounds(bytes32 resourceID, uint128 newLowerBound, uint128 newUpperBound) external onlyAdmin {
         require(newUpperBound > newLowerBound, "Upper bound must be larger than lower bound");
         Bounds memory existingBounds = _resourceIDToFeeBounds[resourceID];
-        require(existingBounds.lowerBound != newLowerBound &&
+        require(existingBounds.lowerBound != newLowerBound ||
             existingBounds.upperBound != newUpperBound,
             "Current bounds are equal to new bounds"
         );
