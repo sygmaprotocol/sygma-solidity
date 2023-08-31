@@ -31,6 +31,7 @@ async function setupFee(
   feeRouterInstance,
   dynamicFeeHandlerInstance,
   basicFeeHandlerInstance,
+  percentageFeeHandlerInstance,
   token
 ) {
   for await (const network of Object.values(networksConfig)) {
@@ -40,12 +41,18 @@ async function setupFee(
         token.resourceID,
         dynamicFeeHandlerInstance.address
       );
-    } else {
+    } else if (token.feeType == "basic") {
       await feeRouterInstance.adminSetResourceHandler(
         network.domainID,
         token.resourceID,
         basicFeeHandlerInstance.address
       );
+    } else {
+      await feeRouterInstance.adminSetResourceHandler(
+        network.domainID,
+        token.resourceID,
+        percentageFeeHandlerInstance.address
+      )
     }
   }
 }

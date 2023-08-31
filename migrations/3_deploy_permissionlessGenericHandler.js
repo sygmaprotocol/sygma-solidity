@@ -11,6 +11,7 @@ const PermissionlessGenericHandlerContract = artifacts.require(
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
+const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -23,6 +24,7 @@ module.exports = async function (deployer, network) {
   const bridgeInstance = await BridgeContract.deployed();
   const feeRouterInstance = await FeeRouterContract.deployed();
   const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
+  const percentageFeeHandlerInstance = await PercentageFeeHandler.deployed();
   const dynamicFeeHandlerInstance =
     await DynamicFeeHandlerContract.deployed();
 
@@ -71,6 +73,7 @@ module.exports = async function (deployer, network) {
       feeRouterInstance,
       dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
+      percentageFeeHandlerInstance,
       currentNetworkConfig.permissionlessGeneric
     );
   }
