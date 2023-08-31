@@ -142,9 +142,9 @@ contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {
     assert.equal(res[0].toString(), "100");
   });
 
-  it("should return lower bound token amount for fee [lowerBound > 0, upperBound > 0]", async () => {
+  it("should return lower bound token amount for fee [lowerBound > 0, upperBound = 0]", async () => {
     const depositData = Helpers.createERCDepositData(10000, 20, recipientAddress);
-    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300);
+    await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 0);
     await PercentageFeeHandlerInstance.changeFee(10000);
 
     res = await FeeHandlerRouterInstance.calculateFee.call(
