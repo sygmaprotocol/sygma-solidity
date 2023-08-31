@@ -13,7 +13,7 @@ import { BasicFeeHandler } from "./BasicFeeHandler.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
-    uint32 public HUNDRED_PERCENT = 1e8;
+    uint32 public constant HUNDRED_PERCENT = 1e8;
 
     /**
         @notice _fee inherited from BasicFeeHandler in this implementation is
@@ -101,7 +101,6 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         @param newUpperBound Value {_newUpperBound} will be updated to.
      */
     function changeFeeBounds(bytes32 resourceID, uint128 newLowerBound, uint128 newUpperBound) external onlyAdmin {
-        require(newUpperBound > newLowerBound, "Upper bound must be larger than lower bound");
         Bounds memory existingBounds = _resourceIDToFeeBounds[resourceID];
         require(existingBounds.lowerBound != newLowerBound ||
             existingBounds.upperBound != newUpperBound,
