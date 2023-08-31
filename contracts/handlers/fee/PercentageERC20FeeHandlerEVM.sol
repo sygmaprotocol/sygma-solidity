@@ -12,7 +12,7 @@ import { BasicFeeHandler } from "./BasicFeeHandler.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract PercentageFeeHandler is BasicFeeHandler, ERC20Safe {
+contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
     uint32 public HUNDRED_PERCENT = 1e8;
 
     /**
