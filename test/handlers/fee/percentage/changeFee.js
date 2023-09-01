@@ -125,6 +125,17 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
     );
   });
 
+  it("should fail to set lower bound larger than upper bound ", async () => {
+    const PercentageFeeHandlerInstance = await PercentageFeeHandlerContract.new(
+      BridgeInstance.address,
+      FeeHandlerRouterInstance.address
+    );
+    await TruffleAssert.reverts(
+      PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 50, 25),
+      "Upper bound must be larger than lower bound or 0"
+    );
+  });
+
   it("should set only lower bound", async () => {
     const newLowerBound = 30;
     const PercentageFeeHandlerInstance = await PercentageFeeHandlerContract.new(

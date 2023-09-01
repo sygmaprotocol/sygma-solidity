@@ -101,6 +101,7 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         @param newUpperBound Value {_newUpperBound} will be updated to.
      */
     function changeFeeBounds(bytes32 resourceID, uint128 newLowerBound, uint128 newUpperBound) external onlyAdmin {
+        require(newUpperBound == 0 || (newUpperBound > newLowerBound), "Upper bound must be larger than lower bound or 0");
         Bounds memory existingBounds = _resourceIDToFeeBounds[resourceID];
         require(existingBounds.lowerBound != newLowerBound ||
             existingBounds.upperBound != newUpperBound,
