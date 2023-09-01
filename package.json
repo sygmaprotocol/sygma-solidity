@@ -15,6 +15,7 @@
     "build/contracts/PermissionlessGenericHandler.json",
     "build/contracts/BasicFeeHandler.json",
     "build/contracts/DynamicERC20FeeHandlerEVM.json",
+    "build/contracts/PercentageFeeHandlerEVM.json",
     "contracts/interfaces"
   ],
   "directories": {

@@ -70,7 +70,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
+    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual payable external onlyBridgeOrRouter {
         if (msg.value != _fee) revert IncorrectFeeSupplied(msg.value);
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
     }
@@ -85,7 +85,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param feeData Additional data to be passed to the fee handler.
         @return Returns the fee amount.
      */
-    function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external view returns(uint256, address) {
+    function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual external  view returns(uint256, address) {
         return (_fee, address(0));
     }
 
@@ -114,6 +114,4 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
             emit FeeDistributed(address(0), addrs[i], amounts[i]);
         }
     }
-
-
 }

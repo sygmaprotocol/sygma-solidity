@@ -8,6 +8,8 @@ const XC20HandlerContract = artifacts.require("XC20Handler");
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
+const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
+
 
 module.exports = async function (deployer, network) {
   // trim suffix from network name and fetch current network config
@@ -29,6 +31,7 @@ module.exports = async function (deployer, network) {
   const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
   const dynamicFeeHandlerInstance =
     await DynamicFeeHandlerContract.deployed();
+  const percentageFeeHandlerInstance = await PercentageFeeHandler.deployed();
 
   // deploy XC20 contracts
   await deployer.deploy(XC20HandlerContract, bridgeInstance.address);
@@ -42,6 +45,7 @@ module.exports = async function (deployer, network) {
       feeRouterInstance,
       dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
+      percentageFeeHandlerInstance,
       xc20
     );
 

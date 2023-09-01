@@ -10,6 +10,11 @@
       },
       "basic": {
         "fee": "0.001"
+      },
+      "percentage":{
+        "fee": "10000",
+        "lowerBound": "10",
+        "upperBound": "30"
       }
     },
     "access": {

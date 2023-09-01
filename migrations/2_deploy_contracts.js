@@ -19,6 +19,7 @@ const PermissionedGenericHandlerContract = artifacts.require(
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
+const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -76,6 +77,11 @@ module.exports = async function (deployer, network) {
     bridgeInstance.address,
     feeRouterInstance.address
   );
+  const percentageFeeHandlerInstance = await deployer.deploy(
+    PercentageFeeHandler,
+    bridgeInstance.address,
+    feeRouterInstance.address
+  )
 
   // setup fee router and fee handlers
   await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);
@@ -89,6 +95,9 @@ module.exports = async function (deployer, network) {
   await basicFeeHandlerInstance.changeFee(
     Ethers.utils.parseEther(currentNetworkConfig.fee.basic.fee).toString()
   );
+  await percentageFeeHandlerInstance.changeFee(
+    currentNetworkConfig.fee.percentage.fee
+  )
 
   console.table({
     "Deployer Address": deployerAddress,
@@ -101,6 +110,7 @@ module.exports = async function (deployer, network) {
     "FeeRouterContract Address": feeRouterInstance.address,
     "BasicFeeHandler Address": basicFeeHandlerInstance.address,
     "DynamicFeeHandler Address": dynamicFeeHandlerInstance.address,
+    "PercentageFeeHandler Address": percentageFeeHandlerInstance.address
   });
 
   // setup erc20 tokens
@@ -116,8 +126,14 @@ module.exports = async function (deployer, network) {
       feeRouterInstance,
       dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
+      percentageFeeHandlerInstance,
       erc20
     );
+    await percentageFeeHandlerInstance.changeFeeBounds(
+      erc20.resourceID,
+      Ethers.utils.parseEther(currentNetworkConfig.fee.percentage.lowerBound).toString(),
+      Ethers.utils.parseEther(currentNetworkConfig.fee.percentage.upperBound).toString()
+    )
 
     console.log(
       "-------------------------------------------------------------------------------"
@@ -143,6 +159,7 @@ module.exports = async function (deployer, network) {
       feeRouterInstance,
       dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
+      percentageFeeHandlerInstance,
       erc721
     );
 
@@ -168,6 +185,7 @@ module.exports = async function (deployer, network) {
       feeRouterInstance,
       dynamicFeeHandlerInstance,
       basicFeeHandlerInstance,
+      percentageFeeHandlerInstance,
       generic
     );
 
