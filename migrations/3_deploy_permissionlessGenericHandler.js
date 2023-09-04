@@ -10,8 +10,8 @@ const PermissionlessGenericHandlerContract = artifacts.require(
 );
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
+const DynamicGenericFeeHandlerEVMContract = artifacts.require("DynamicGenericFeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -19,20 +19,28 @@ module.exports = async function (deployer, network) {
   const currentNetworkName = network.split("-")[0];
   const currentNetworkConfig = networksConfig[currentNetworkName];
   delete networksConfig[currentNetworkName];
-
+  if (
+    currentNetworkConfig.permissionlessGeneric &&
+    currentNetworkConfig.permissionlessGeneric.resourceID
+  ) {
   // fetch deployed contracts addresses
   const bridgeInstance = await BridgeContract.deployed();
   const feeRouterInstance = await FeeRouterContract.deployed();
   const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
   const percentageFeeHandlerInstance = await PercentageFeeHandler.deployed();
-  const dynamicFeeHandlerInstance =
-    await DynamicFeeHandlerContract.deployed();
 
   // deploy generic handler
   const permissionlessGenericHandlerInstance = await deployer.deploy(
     PermissionlessGenericHandlerContract,
     bridgeInstance.address
   );
+
+  // deploy generic dynamic fee handler
+  const dynamicFeeHandlerInstance = await deployer.deploy(
+    DynamicGenericFeeHandlerEVMContract,
+    bridgeInstance.address,
+    feeRouterInstance.address
+  )
 
   console.log(
     "-------------------------------------------------------------------------------"
@@ -52,10 +60,6 @@ module.exports = async function (deployer, network) {
   );
 
   // setup permissionless generic handler
-  if (
-    currentNetworkConfig.permissionlessGeneric &&
-    currentNetworkConfig.permissionlessGeneric.resourceID
-  ) {
     const genericHandlerSetResourceData =
       Helpers.constructGenericHandlerSetResourceData(
         Helpers.blankFunctionSig,
