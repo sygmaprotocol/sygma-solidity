@@ -57,10 +57,6 @@ module.exports = async function (deployer, network) {
     ERC721HandlerContract,
     bridgeInstance.address
   );
-  const permissionedGenericHandlerInstance = await deployer.deploy(
-    PermissionedGenericHandlerContract,
-    bridgeInstance.address
-  );
 
   // deploy fee handlers
   const feeRouterInstance = await deployer.deploy(
@@ -105,8 +101,6 @@ module.exports = async function (deployer, network) {
     "Bridge Address": bridgeInstance.address,
     "ERC20Handler Address": erc20HandlerInstance.address,
     "ERC721Handler Address": erc721HandlerInstance.address,
-    "PermissionedGenericHandler Address":
-      permissionedGenericHandlerInstance.address,
     "FeeRouterContract Address": feeRouterInstance.address,
     "BasicFeeHandler Address": basicFeeHandlerInstance.address,
     "DynamicFeeHandler Address": dynamicFeeHandlerInstance.address,
@@ -173,31 +167,51 @@ module.exports = async function (deployer, network) {
     );
   }
 
-  for (const generic of currentNetworkConfig.permissionedGeneric) {
-    await Utils.setupGeneric(
-      deployer,
-      generic,
-      bridgeInstance,
-      permissionedGenericHandlerInstance
-    );
-    await Utils.setupFee(
-      networksConfig,
-      feeRouterInstance,
-      dynamicFeeHandlerInstance,
-      basicFeeHandlerInstance,
-      percentageFeeHandlerInstance,
-      generic
+  // check if permissioned generic handler should be deployed
+  if (currentNetworkConfig.permissionedGeneric.length > 0) {
+    const permissionedGenericHandlerInstance = await deployer.deploy(
+      PermissionedGenericHandlerContract,
+      bridgeInstance.address
     );
 
-    console.log(
-      "-------------------------------------------------------------------------------"
-    );
-    console.log("Generic contract address:", "\t", generic.address);
-    console.log("ResourceID:", "\t", generic.resourceID);
-    console.log(
-      "-------------------------------------------------------------------------------"
-    );
+    for (const generic of currentNetworkConfig.permissionedGeneric) {
+      await Utils.setupGeneric(
+        deployer,
+        generic,
+        bridgeInstance,
+        permissionedGenericHandlerInstance
+      );
+      await Utils.setupFee(
+        networksConfig,
+        feeRouterInstance,
+        dynamicFeeHandlerInstance,
+        basicFeeHandlerInstance,
+        percentageFeeHandlerInstance,
+        generic
+      );
+
+      console.log(
+        "-------------------------------------------------------------------------------"
+      );
+      console.log(
+        "Permissioned generic handler address:",
+        "\t",
+        permissionedGenericHandlerInstance.address
+      );
+      console.log(
+        "Generic contract address:",
+        "\t", generic.address
+      );
+      console.log(
+        "ResourceID:",
+        "\t", generic.resourceID
+      );
+      console.log(
+        "-------------------------------------------------------------------------------"
+      );
+    }
   }
+
 
   // set MPC address
   if (currentNetworkConfig.MPCAddress)
