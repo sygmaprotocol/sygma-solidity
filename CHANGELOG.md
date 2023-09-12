@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.4.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.3.0...v2.4.0) (2023-09-12)
+
+
+### Features
+
+* percentage based fee handler ([#194](https://github.com/sygmaprotocol/sygma-solidity/issues/194)) ([26dc82a](https://github.com/sygmaprotocol/sygma-solidity/commit/26dc82a1bd129de968fa2244b7ce36542b46cb27))
+
+
+### Miscellaneous
+
+* permission generic handlers ([#195](https://github.com/sygmaprotocol/sygma-solidity/issues/195)) ([6eb7041](https://github.com/sygmaprotocol/sygma-solidity/commit/6eb704180dd8344f47f5b0d039612c673456de59))
+* update devnet, testnet & mainnet migrations config files ([#190](https://github.com/sygmaprotocol/sygma-solidity/issues/190)) ([fb37549](https://github.com/sygmaprotocol/sygma-solidity/commit/fb37549132519f84c7c284d99c92579f02e1f6b7))
+* update license ([#192](https://github.com/sygmaprotocol/sygma-solidity/issues/192)) ([faf8305](https://github.com/sygmaprotocol/sygma-solidity/commit/faf83050bc6888c054134481d1883a7c15f5090a))
+
 ## [2.3.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.2.1...v2.3.0) (2023-05-11)
 
 
