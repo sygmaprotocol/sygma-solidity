@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.4.0...v2.4.1) (2023-09-14)
+
+
+### Bug Fixes
+
+* deploying local network 2 ([#196](https://github.com/sygmaprotocol/sygma-solidity/issues/196)) ([a67d5d1](https://github.com/sygmaprotocol/sygma-solidity/commit/a67d5d1c3db9aab609db055dd48fdf93e293e0ad))
+
 ## [2.4.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.3.0...v2.4.0) (2023-09-12)
 
 
