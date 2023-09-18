@@ -81,19 +81,27 @@ module.exports = async function (deployer, network) {
 
   // setup fee router and fee handlers
   await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);
-  await dynamicFeeHandlerInstance.setFeeOracle(
-    currentNetworkConfig.fee.oracle.address
-  );
-  await dynamicFeeHandlerInstance.setFeeProperties(
-    currentNetworkConfig.fee.oracle.gasUsed,
-    currentNetworkConfig.fee.oracle.feePercentage
-  );
-  await basicFeeHandlerInstance.changeFee(
-    Ethers.utils.parseEther(currentNetworkConfig.fee.basic.fee).toString()
-  );
-  await percentageFeeHandlerInstance.changeFee(
-    currentNetworkConfig.fee.percentage.fee
-  )
+  if(Object.keys(currentNetworkConfig.fee.oracle).length != 0){
+    await dynamicFeeHandlerInstance.setFeeOracle(
+      currentNetworkConfig.fee.oracle.address
+    );
+    await dynamicFeeHandlerInstance.setFeeProperties(
+      currentNetworkConfig.fee.oracle.gasUsed,
+      currentNetworkConfig.fee.oracle.feePercentage
+    );
+  }
+
+  if(Object.keys(currentNetworkConfig.fee.basic).length != 0) {
+    await basicFeeHandlerInstance.changeFee(
+      Ethers.utils.parseEther(currentNetworkConfig.fee.basic.fee).toString()
+    );
+  }
+
+  if(Object.keys(currentNetworkConfig.fee.percentage).length != 0) {
+    await percentageFeeHandlerInstance.changeFee(
+      currentNetworkConfig.fee.percentage.fee
+    );
+  }
 
   console.table({
     "Deployer Address": deployerAddress,
@@ -123,11 +131,14 @@ module.exports = async function (deployer, network) {
       percentageFeeHandlerInstance,
       erc20
     );
+
+  if(Object.keys(currentNetworkConfig.fee.percentage).length != 0) {
     await percentageFeeHandlerInstance.changeFeeBounds(
       erc20.resourceID,
       Ethers.utils.parseEther(currentNetworkConfig.fee.percentage.lowerBound).toString(),
       Ethers.utils.parseEther(currentNetworkConfig.fee.percentage.upperBound).toString()
-    )
+    );
+  }
 
     console.log(
       "-------------------------------------------------------------------------------"

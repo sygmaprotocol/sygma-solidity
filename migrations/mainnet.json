@@ -6,7 +6,8 @@
       "oracle": {},
       "basic": {
         "fee": "0.0001"
-      }
+      },
+      "percentage": {}
     },
     "access": {
       "feeRouterAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",
