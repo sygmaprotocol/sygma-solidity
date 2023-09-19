@@ -143,6 +143,7 @@ contract PermissionlessGenericHandler is IHandler {
           executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge returns (bytes memory) {
+        uint256        maxFee;
         uint16         lenExecuteFuncSignature;
         bytes4         executeFuncSignature;
         uint8          lenExecuteContractAddress;
@@ -151,6 +152,7 @@ contract PermissionlessGenericHandler is IHandler {
         address        executionDataDepositor;
         bytes   memory executionData;
 
+        maxFee                            = uint256(bytes32(data[0:32]));
         lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
         executeFuncSignature              = bytes4(data[34:34 + lenExecuteFuncSignature]);
         lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
@@ -160,7 +162,7 @@ contract PermissionlessGenericHandler is IHandler {
         executionData                     = bytes(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor:]);
 
         bytes memory callData = abi.encodePacked(executeFuncSignature, abi.encode(executionDataDepositor), executionData);
-        (bool success, bytes memory returndata) = executeContractAddress.call(callData);
+        (bool success, bytes memory returndata) = executeContractAddress.call{gas: maxFee}(callData);
         return abi.encode(success, returndata);
     }
 }

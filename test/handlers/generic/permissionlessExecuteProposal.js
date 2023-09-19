@@ -226,6 +226,74 @@ contract(
       );
     });
 
+    it("ProposalExecution should be emitted even if gas specified too small", async () => {
+      const num = 6;
+      const addresses = [BridgeInstance.address, TestStoreInstance.address];
+      const message = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes("message"));
+      const executionData = Helpers.abiEncode(["uint", "address[]", "bytes"], [num, addresses, message]);
+
+      // If the target function accepts (address depositor, bytes executionData)
+      // then this helper can be used
+      const preparedExecutionData = await TestDepositInstance.prepareDepositData(executionData);
+      const depositFunctionSignature = Helpers.getFunctionSignature(
+        TestDepositInstance,
+        "executePacked"
+      );
+      const tooSmallGas = 500;
+      const depositData = Helpers.createPermissionlessGenericDepositData(
+        depositFunctionSignature,
+        TestDepositInstance.address,
+        tooSmallGas,
+        depositorAddress,
+        preparedExecutionData
+      );
+      const proposal = {
+        originDomainID: originDomainID,
+        depositNonce: expectedDepositNonce,
+        data: depositData,
+        resourceID: resourceID,
+      };
+      const proposalSignedData = await Helpers.signTypedProposal(
+        BridgeInstance.address,
+        [proposal]
+      );
+
+      // relayer1 executes the proposal
+      const executeTx = await BridgeInstance.executeProposal(
+        proposal,
+        proposalSignedData,
+        {from: relayer1Address}
+      );
+      // check that ProposalExecution event is emitted
+      TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
+        return (
+          event.originDomainID.toNumber() === originDomainID &&
+          event.depositNonce.toNumber() === expectedDepositNonce 
+        );
+      });
+
+      // check that deposit nonce isn't unmarked as used in bitmap
+      assert.isTrue(
+        await BridgeInstance.isProposalExecuted(
+          originDomainID,
+          expectedDepositNonce
+        )
+      );
+
+      const internalTx = await TruffleAssert.createTransactionResult(
+        TestDepositInstance,
+        executeTx.tx
+      );
+      TruffleAssert.eventNotEmitted(internalTx, "TestExecute", (event) => {
+        return (
+          event.depositor === depositorAddress &&
+          event.num.toNumber() === num &&
+          event.addr === TestStoreInstance.address &&
+          event.message === message
+        );
+      });
+    });
+
     it("call with packed depositData should be successful", async () => {
       const num = 5;
       const addresses = [BridgeInstance.address, TestStoreInstance.address];
