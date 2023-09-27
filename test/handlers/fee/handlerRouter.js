@@ -18,8 +18,8 @@ contract("FeeHandlerRouter", async (accounts) => {
   const nonAdmin = accounts[1];
   const whitelistAddress = accounts[2];
   const nonWhitelistAddress = accounts[3];
+  const recipientAddress = accounts[3];
   const bridgeAddress = accounts[4];
-  const recipient = accounts[5];
 
   const assertOnlyAdmin = (method, ...params) => {
     return TruffleAssert.reverts(
@@ -126,7 +126,7 @@ contract("FeeHandlerRouter", async (accounts) => {
     );
     await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
 
-    const depositData = Helpers.createERCDepositData(100, 20, recipient);
+    const depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
     let res = await FeeHandlerRouterInstance.calculateFee.call(
       whitelistAddress,
       originDomainID,
@@ -159,7 +159,7 @@ contract("FeeHandlerRouter", async (accounts) => {
     );
     await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
 
-    const depositData = Helpers.createERCDepositData(100, 20, recipient);
+    const depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
     await Helpers.expectToRevertWithCustomError(
       FeeHandlerRouterInstance.collectFee(
         whitelistAddress,
@@ -203,7 +203,7 @@ contract("FeeHandlerRouter", async (accounts) => {
     );
     await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
 
-    const depositData = Helpers.createERCDepositData(100, 20, recipient);
+    const depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
     await TruffleAssert.passes(
       FeeHandlerRouterInstance.collectFee(
         whitelistAddress,
