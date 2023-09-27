@@ -15,10 +15,14 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
 
     // destination domainID => resourceID => feeHandlerAddress
     mapping (uint8 => mapping(bytes32 => IFeeHandler)) public _domainResourceIDToFeeHandlerAddress;
+    // whitelisted address => is whitelisted
+    mapping(address => bool) public _whitelist;
 
     event FeeChanged(
         uint256 newFee
     );
+
+    error IncorrectFeeSupplied(uint256);
 
     modifier onlyBridge() {
         _onlyBridge();
@@ -55,6 +59,15 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
         _domainResourceIDToFeeHandlerAddress[destinationDomainID][resourceID] = handlerAddress;
     }
 
+    /**
+        @notice Sets or revokes fee whitelist from an address.
+        @param whitelistAddress Address to be whitelisted.
+        @param isWhitelisted Set to true to exempt an address from paying fees.
+     */
+    function adminSetWhitelist(address whitelistAddress, bool isWhitelisted) external onlyAdmin {
+        _whitelist[whitelistAddress] = isWhitelisted;
+    }
+
 
     /**
         @notice Initiates collecting fee with corresponding fee handler contract using IFeeHandler interface.
@@ -66,6 +79,11 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
         @param feeData Additional data to be passed to the fee handler.
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge {
+        if (_whitelist[sender]) {
+            if (msg.value != 0) revert IncorrectFeeSupplied(msg.value);
+            return;
+        }
+
         IFeeHandler feeHandler = _domainResourceIDToFeeHandlerAddress[destinationDomainID][resourceID];
         feeHandler.collectFee{value: msg.value}(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
     }
@@ -82,6 +100,10 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
         @return tokenAddress Returns the address of the token to be used for fee.
      */
     function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external view returns(uint256 fee, address tokenAddress) {
+        if (_whitelist[sender]) {
+            return (0, address(0));
+        }
+
         IFeeHandler feeHandler = _domainResourceIDToFeeHandlerAddress[destinationDomainID][resourceID];
         return feeHandler.calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
     }
