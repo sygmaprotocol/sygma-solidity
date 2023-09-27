@@ -24,7 +24,7 @@ contract(
     const invalidExecutionContractAddress = accounts[4];
 
     const feeData = "0x";
-    const destinationMaxFee = 2000000;
+    const destinationMaxFee = 900000;
     const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
     const handlerResponseLength = 64;
     const contractCallReturndata = Ethers.constants.HashZero;

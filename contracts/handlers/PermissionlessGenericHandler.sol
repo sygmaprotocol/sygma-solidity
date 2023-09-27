@@ -10,6 +10,8 @@ import "../interfaces/IHandler.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract PermissionlessGenericHandler is IHandler {
+    uint256 public constant MAX_FEE = 1000000;
+
     address public immutable _bridgeAddress;
 
     modifier onlyBridge() {
@@ -87,16 +89,19 @@ contract PermissionlessGenericHandler is IHandler {
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view returns (bytes memory) {
         require(data.length >= 76, "Incorrect data length"); // 32 + 2 + 1 + 1 + 20 + 20
 
+        uint256        maxFee;
         uint16         lenExecuteFuncSignature;
         uint8          lenExecuteContractAddress;
         uint8          lenExecutionDataDepositor;
         address        executionDataDepositor;
 
+        maxFee                            = uint256(bytes32(data[:32]));
         lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
         lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
         lenExecutionDataDepositor         = uint8(bytes1(data[35 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress]));
         executionDataDepositor            = address(uint160(bytes20(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor])));
 
+        require(maxFee < MAX_FEE, 'requested fee too large');
         require(depositor == executionDataDepositor, 'incorrect depositor in deposit data');
     }
 

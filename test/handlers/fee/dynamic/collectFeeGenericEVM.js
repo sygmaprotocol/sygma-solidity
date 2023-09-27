@@ -20,7 +20,7 @@ contract("DynamicGenericFeeHandlerEVM - [collectFee]", async (accounts) => {
   const depositorAddress = accounts[1];
 
   const emptySetResourceData = "0x";
-  const destinationMaxFee = 2000000;
+  const destinationMaxFee = 900000;
   const msgGasLimit = 2300000;
   const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
   const fee = Ethers.utils.parseEther("0.000036777");
