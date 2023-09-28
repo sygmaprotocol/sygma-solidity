@@ -18,8 +18,9 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
     // whitelisted address => is whitelisted
     mapping(address => bool) public _whitelist;
 
-    event FeeChanged(
-        uint256 newFee
+    event WhitelistChanged(
+        address whitelistAddress,
+        bool isWhitelisted
     );
 
     error IncorrectFeeSupplied(uint256);
@@ -66,6 +67,8 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
      */
     function adminSetWhitelist(address whitelistAddress, bool isWhitelisted) external onlyAdmin {
         _whitelist[whitelistAddress] = isWhitelisted;
+
+        emit WhitelistChanged(whitelistAddress, isWhitelisted);
     }
 
 

@@ -94,7 +94,7 @@ contract("FeeHandlerRouter", async (accounts) => {
       false
     );
 
-    await FeeHandlerRouterInstance.adminSetWhitelist(
+    const whitelistTx = await FeeHandlerRouterInstance.adminSetWhitelist(
       whitelistAddress,
       true
     );
@@ -104,6 +104,12 @@ contract("FeeHandlerRouter", async (accounts) => {
       ),
       true
     );
+    TruffleAssert.eventEmitted(whitelistTx, "WhitelistChanged", (event) => {
+      return (
+        event.whitelistAddress === whitelistAddress &&
+        event.isWhitelisted === true
+      );
+    });
   });
 
   it("should require admin role to set whitelist address", async () => {
