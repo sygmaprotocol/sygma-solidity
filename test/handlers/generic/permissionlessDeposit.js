@@ -20,7 +20,7 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
   const depositorAddress = accounts[1];
 
   const feeData = "0x";
-  const destinationMaxFee = 2000000;
+  const destinationMaxFee = 900000;
   const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
   const emptySetResourceData = "0x";
 
@@ -150,6 +150,29 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
         {from: depositorAddress}
       ),
       "incorrect depositor in deposit data"
+    );
+  });
+
+
+  it("should revert if max fee exceeds 1000000", async () => {
+    const invalidMaxFee = 1000001;
+    const invalidDepositData = Helpers.createPermissionlessGenericDepositData(
+      depositFunctionSignature,
+      TestStoreInstance.address,
+      invalidMaxFee ,
+      depositorAddress,
+      hashOfTestStore
+    );
+
+    await TruffleAssert.reverts(
+      BridgeInstance.deposit(
+        destinationDomainID,
+        resourceID,
+        invalidDepositData,
+        feeData,
+        {from: depositorAddress}
+      ),
+      "requested fee too large"
     );
   });
 });
