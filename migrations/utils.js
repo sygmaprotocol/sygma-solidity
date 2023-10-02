@@ -17,6 +17,12 @@ const DEFAULT_CONFIG_PATH = "./migrations/local.json";
 const emptySetResourceData = "0x";
 const erc20TokenAmount = Ethers.utils.parseUnits("1000", 18);
 
+const FeeType = {
+  ORACLE: "oracle",
+  BASIC: "basic",
+  PERCENTAGE: "PERCENTAGE"
+}
+
 function getNetworksConfig() {
   let path = parseArgs(process.argv.slice(2))["file"];
   if (path == undefined) {
@@ -35,19 +41,19 @@ async function setupFee(
   token
 ) {
   for await (const network of Object.values(networksConfig)) {
-    if (token.feeType == "oracle") {
+    if (token.feeType == FeeType.ORACLE) {
       await feeRouterInstance.adminSetResourceHandler(
         network.domainID,
         token.resourceID,
         dynamicFeeHandlerInstance.address
       );
-    } else if (token.feeType == "basic") {
+    } else if (token.feeType == FeeType.BASIC) {
       await feeRouterInstance.adminSetResourceHandler(
         network.domainID,
         token.resourceID,
         basicFeeHandlerInstance.address
       );
-    } else {
+    } else if (token.feeType == FeeType.PERCENTAGE) {
       await feeRouterInstance.adminSetResourceHandler(
         network.domainID,
         token.resourceID,

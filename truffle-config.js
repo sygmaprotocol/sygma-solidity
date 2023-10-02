@@ -2,7 +2,7 @@
  * Copyright 2020 ChainSafe Systems
  * SPDX-License-Identifier: LGPL-3.0-only
  */
- require("dotenv").config();
+require("dotenv").config();
 
 /**
  * Use this file to configure your truffle project. It's seeded with some
@@ -41,7 +41,7 @@ module.exports = {
    * $ truffle test --network <network-name>
    */
 
-  plugins: ["solidity-coverage"],
+  plugins: ["solidity-coverage", "truffle-plugin-verify"],
   networks: {
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
@@ -101,6 +101,54 @@ module.exports = {
       timeoutBlocks: 200,
       network_id: "1287",
       gasPrice: 30000000000,  // 30 gwei
+    },
+    gnosis: {
+      provider: () => {
+        return new HDWalletProvider({
+          mnemonic: process.env.GNOSIS_MNEMONIC,
+          providerOrUrl: process.env.GNOSIS_PROVIDER_URL
+        })
+      },
+      networkCheckTimeout: 10000,
+      timeoutBlocks: 200,
+      network_id: "100",
+      gasPrice: 2000000000,  // 2 gwei
+    },
+    base:{
+      provider: () => {
+        return new HDWalletProvider({
+          mnemonic: process.env.BASE_MNEMONIC,
+          providerOrUrl: process.env.BASE_PROVIDER_URL
+        })
+      },
+      networkCheckTimeout: 100000,
+      timeoutBlocks: 200,
+      network_id: "84531",
+      gasPrice: 150000000,  // 0.15 gwei
+    },
+    cronos: {
+      provider: () => {
+        return new HDWalletProvider({
+          mnemonic: process.env.CRONOS_MNEMONIC,
+          providerOrUrl: process.env.CRONOS_PROVIDER
+        })
+      },
+      networkCheckTimeout: 10000,
+      timeoutBlocks: 200,
+      network_id: "338",
+      gasPrice: 2000000000000,  // 2000 gwei
+    },
+    mainnet: {
+      provider: () => {
+        return new HDWalletProvider({
+          mnemonic: process.env.MAINNET_MNEMONIC,
+          providerOrUrl: process.env.MAINNET_PROVIDER
+        })
+      },
+      networkCheckTimeout: 100000,
+      timeoutBlocks: 200,
+      network_id: "1",
+      gasPrice: 17000000000,  // 17 gwei
     }
     // Another network with more advanced options...
     // advanced: {
@@ -135,7 +183,14 @@ module.exports = {
   mocha: {
     // timeout: 100000
   },
-
+  // Explorer api keys for verifying contracts
+  api_keys: {
+    etherscan: process.env.ETHERSCAN_API_KEY,
+    moonscan: process.env.MOONSCAN_API_KEY,
+    polygonscan: process.env.POLYGONSCAN_API_KEY,
+    gnosisscan: process.env.GNOSISSCAN_API_KEY,
+    cronoscan: process.env.CRONOSSCAN_API_KEY
+  },
   // Configure your compilers
   compilers: {
     solc: {
