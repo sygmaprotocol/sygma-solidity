@@ -10,58 +10,28 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [18.x]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2.4.0
-      - uses: actions/cache@v2.1.7
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - name: Install Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2.5.1
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+
       - name: Install dependencies
-        run: make install-deps
+        run: yarn install
+
       - name: Compile contracts
-        run: make compile
+        run: npx hardhat compile
+
       - name: Store contract artifacts
         uses: actions/upload-artifact@v3
         with:
           name: contracts-artifacts
-          path: build
-      - name: Ganache Tests
-        run: |
-          SILENT=true make start-ganache
-          make test
+          path: artifacts
 
-  coverage:
-    needs: test
-    name: Coverage
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.x]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2.4.0
-      - name: Install Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2.5.1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Download contracts artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: contracts-artifacts
-          path: build
-      - name: Yarn install
-        run: yarn install --frozen-lockfile
-      - name: Run coverage
-        run: ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
-      - name: Coverall
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Hardhat Tests
+        run:
+          yarn run test

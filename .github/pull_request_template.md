@@ -27,6 +27,6 @@ Closes: #<issue>
 <!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
 - [ ] I have commented my code, particularly in hard-to-understand areas.
 - [ ] I have ensured that all acceptance criteria (or expected behavior) from issue are met
-- [ ] I have updated the documentation locally and in chainbridge-docs.
+- [ ] I have updated the documentation locally and in Sygma-docs.
 - [ ] I have added tests to cover my changes.
 - [ ] I have ensured that all the checks are passing and green, I've signed the CLA bot

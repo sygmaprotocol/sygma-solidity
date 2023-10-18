@@ -1,39 +1,38 @@
 <p align="center"><a href="https://buildwithsygma.com"><img width="250" title="Sygma solidity" src='assets/full-logo.png'/></a></p>
 
-# sygma-solidity
+# sygma-x-solidity
 
-Sygma uses Solidity smart contracts to enable transfers to and from EVM compatible chains. These contracts consist of a core bridge contract (Bridge.sol) and a set of handler contracts (ERC20Handler.sol, ERC721Handler.sol, PermissionedGenericHandler.sol, PermissionlessGenericHandler.sol). The bridge contract is responsible for initiating and executing proposed transfers. The handlers are used by the bridge contract to interact with other existing contracts.
+Sygma uses Solidity smart contracts to enable transfers to and from EVM compatible chains. These contracts consist of a core bridge contract (Bridge.sol) and a set of handler contracts (ERC20Handler.sol, PermissionlessGenericHandler.sol). The bridge contract is responsible for initiating and executing proposed transfers. The handlers are used by the bridge contract to interact with other existing contracts.
 
 ## Deployments
 
-To deploy contracts run `truffle migrate --network NETWORK_NAME --file <path_to_env_config>`.
+To deploy contracts run `npx hardhat run --network NETWORK_NAME scripts/deploy.ts`.
 
-For more details on specific flags that can be used and format of environemnt configuration check out [migrations documentation page](/docs/migrations.md).
+For more details check out the [official hardhat documentation](https://hardhat.org/hardhat-runner/docs/guides/deploying).
 
 To add another network do the following:
- * update `truffle-config.js` with the desired configuration
- * add the required params to config file for the desired environment (local,dev,testnet,mainnet)
- * create a deploy script in `migrations` directory
+ * update `hardhat.config.ts` with the desired configuration
 
 ## Dependencies
 
-Requires `nodejs` and `npm`.
+Requires `yarn` and `@nomicfoundation/hardhat`.
 
 ## Commands
-
-`make install-deps`: Installs truffle and ganache globally, fetches local dependencies. Also installs `abigen` from `go-ethereum`.
-
-`make bindings`: Creates go bindings in `./build/bindings/go`
-
-`PORT=<port> SILENT=<bool> make start-ganache`: Starts a ganache instance, default `PORT=8545 SILENT=false`
-
-`QUIET=<bool> make start-geth`: Starts a geth instance with test keys
-
-`PORT=<port> make deploy`: Deploys all contract instances, default `PORT=8545`
-
-`make test`: Runs truffle tests.
-
-`make compile`: Compile contracts.
+  * hardhat commands: <br>
+    `check` - Check whatever you need <br>
+    `clean` - Clears the cache and deletes all artifacts <br>
+    `compile` - Compiles the entire project, building all artifacts <br>
+    `console` - Opens a hardhat console <br>
+    `coverage` - Generates a code coverage report for tests <br>
+    `flatten` - Flattens and prints contracts and their dependencies <br>
+    `help` - Prints this message <br>
+    `node` - Starts a JSON-RPC server on top of Hardhat Network <br>
+    `run` - Runs a user-defined script after compiling the project <br>
+    `test` - Runs mocha tests <br>
+    `typechain` - Generate Typechain typings for compiled contracts <br>
+    `verify` - Verifies contract on Etherscan <br>
+  * custom commands: <br>
+    `yarn run test`: Runs truffle tests.
 
 # Sygma Security Policy
 
