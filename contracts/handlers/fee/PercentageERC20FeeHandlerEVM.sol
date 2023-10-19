@@ -16,7 +16,7 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
     uint32 public constant HUNDRED_PERCENT = 1e8;
 
     /**
-        @notice _fee inherited from BasicFeeHandler in this implementation is
+        @notice _domainResourceIDToFee[destinationDomainID][resourceID] inherited from BasicFeeHandler in this implementation is
         in BPS and should be multiplied by 10000 to avoid precision loss
      */
     struct Bounds {
@@ -61,7 +61,7 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
 
         (uint256 depositAmount) = abi.decode(depositData, (uint256));
 
-        fee = depositAmount * _fee / HUNDRED_PERCENT; // 10000 for BPS and 10000 to avoid precision loss
+        fee = depositAmount * _domainResourceIDToFee[destinationDomainID][resourceID] / HUNDRED_PERCENT; // 10000 for BPS and 10000 to avoid precision loss
 
         if (fee < bounds.lowerBound) {
             fee = bounds.lowerBound;

@@ -12,7 +12,8 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
 
 contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
-  const domainID = 1;
+  const originDomainID = 1;
+  const destinationDomainID = 2;
   const nonAdmin = accounts[1];
 
   let resourceID;
@@ -29,7 +30,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
   beforeEach(async () => {
     await Promise.all([
       (BridgeInstance = await Helpers.deployBridge(
-        domainID,
+        originDomainID,
         accounts[0]
       )),
       ERC20MintableContract.new("token", "TOK").then(
@@ -43,7 +44,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
 
     resourceID = Helpers.createResourceID(
       ERC20MintableInstance.address,
-      domainID
+      originDomainID
     );
   });
 
@@ -62,7 +63,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       FeeHandlerRouterInstance.address
     );
     const fee = Ethers.utils.parseUnits("25");
-    const tx = await PercentageFeeHandlerInstance.changeFee(fee);
+    const tx = await PercentageFeeHandlerInstance.changeFee(destinationDomainID, resourceID, fee);
     TruffleAssert.eventEmitted(
       tx,
       "FeeChanged",
@@ -70,7 +71,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
         return Ethers.utils.formatUnits(event.newFee.toString()) === "25.0"
       }
     );
-    const newFee = await PercentageFeeHandlerInstance._fee.call();
+    const newFee = await PercentageFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID);
     assert.equal(Ethers.utils.formatUnits(newFee.toString()), "25.0");
   });
 
@@ -80,7 +81,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       FeeHandlerRouterInstance.address
     );
     await TruffleAssert.reverts(
-      PercentageFeeHandlerInstance.changeFee(0),
+      PercentageFeeHandlerInstance.changeFee(destinationDomainID, resourceID, 0),
       "Current fee is equal to new fee"
     );
   });
@@ -90,7 +91,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFee, 1);
+    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFee, destinationDomainID, resourceID, 1);
   });
 
   it("should set fee bounds", async () => {

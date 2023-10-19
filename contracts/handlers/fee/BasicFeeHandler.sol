@@ -4,6 +4,7 @@ pragma solidity 0.8.11;
 
 import "../../interfaces/IFeeHandler.sol";
 import "../../utils/AccessControl.sol";
+import "../FeeHandlerRouter.sol";
 
 /**
     @title Handles deposit fees.
@@ -13,8 +14,8 @@ import "../../utils/AccessControl.sol";
 contract BasicFeeHandler is IFeeHandler, AccessControl {
     address public immutable _bridgeAddress;
     address public immutable _feeHandlerRouterAddress;
+    mapping (uint8 => mapping(bytes32 => uint256)) public _domainResourceIDToFee;
 
-    uint256 public _fee;
 
     event FeeChanged(
         uint256 newFee
@@ -71,8 +72,8 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param feeData Additional data to be passed to the fee handler.
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual payable external onlyBridgeOrRouter {
-        if (msg.value != _fee) revert IncorrectFeeSupplied(msg.value);
-        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
+        if (msg.value != _domainResourceIDToFee[destinationDomainID][resourceID]) revert IncorrectFeeSupplied(msg.value);
+        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _domainResourceIDToFee[destinationDomainID][resourceID], address(0));
     }
 
      /**
@@ -86,17 +87,19 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @return Returns the fee amount.
      */
     function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual external  view returns(uint256, address) {
-        return (_fee, address(0));
+        return (_domainResourceIDToFee[destinationDomainID][resourceID], address(0));
     }
 
     /**
-        @notice Sets new value of the fee.
+        @notice Maps the {newFee} to {destinantionDomainID} to {resourceID} in {_domainResourceIDToFee}.
         @notice Only callable by admin.
-        @param newFee Value {_fee} will be updated to.
+        @param destinationDomainID ID of chain fee will be set.
+        @param resourceID ResourceID for which fee will be set.
+        @param newFee Value to which fee will be updated to for the provided {destinantionDomainID} and {resourceID}.
      */
-    function changeFee(uint256 newFee) external onlyAdmin {
-        require(_fee != newFee, "Current fee is equal to new fee");
-        _fee = newFee;
+    function changeFee(uint8 destinationDomainID, bytes32 resourceID, uint256 newFee) external onlyAdmin {
+        require(_domainResourceIDToFee[destinationDomainID][resourceID] != newFee, "Current fee is equal to new fee");
+        _domainResourceIDToFee[destinationDomainID][resourceID] = newFee;
         emit FeeChanged(newFee);
     }
 

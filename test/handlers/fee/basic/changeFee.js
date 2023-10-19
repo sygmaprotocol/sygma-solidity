@@ -8,9 +8,11 @@ const Helpers = require("../../../helpers");
 
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
 contract("BasicFeeHandler - [changeFee]", async (accounts) => {
-  const domainID = 1;
+  const originDomainID = 1;
+  const destinationDomainID = 2;
   const nonAdmin = accounts[1];
 
   const assertOnlyAdmin = (method, ...params) => {
@@ -21,12 +23,21 @@ contract("BasicFeeHandler - [changeFee]", async (accounts) => {
   };
 
   let BridgeInstance;
+  let OriginERC20MintableInstance;
+  let resourceID;
+
 
   beforeEach(async () => {
-    BridgeInstance = await Helpers.deployBridge(domainID, accounts[0]);
+    BridgeInstance = await Helpers.deployBridge(originDomainID, accounts[0]);
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
+
+    OriginERC20MintableInstance = await ERC20MintableContract.new("token", "TOK")
+    resourceID = Helpers.createResourceID(
+      OriginERC20MintableInstance.address,
+      originDomainID
+    )
   });
 
   it("[sanity] contract should be deployed successfully", async () => {
@@ -44,13 +55,13 @@ contract("BasicFeeHandler - [changeFee]", async (accounts) => {
       FeeHandlerRouterInstance.address
     );
     const fee = Ethers.utils.parseEther("0.05");
-    const tx = await BasicFeeHandlerInstance.changeFee(fee);
+    const tx = await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, fee);
     TruffleAssert.eventEmitted(
       tx,
       "FeeChanged",
       (event) => web3.utils.fromWei(event.newFee, "ether") === "0.05"
     );
-    const newFee = await BasicFeeHandlerInstance._fee.call();
+    const newFee = await BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID);
     assert.equal(web3.utils.fromWei(newFee, "ether"), "0.05");
   });
 
@@ -60,7 +71,7 @@ contract("BasicFeeHandler - [changeFee]", async (accounts) => {
       FeeHandlerRouterInstance.address
     );
     await TruffleAssert.reverts(
-      BasicFeeHandlerInstance.changeFee(0),
+      BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, 0),
       "Current fee is equal to new fee"
     );
   });
@@ -70,6 +81,6 @@ contract("BasicFeeHandler - [changeFee]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await assertOnlyAdmin(BasicFeeHandlerInstance.changeFee, 1);
+    await assertOnlyAdmin(BasicFeeHandlerInstance.changeFee, destinationDomainID, resourceID, 1);
   });
 });

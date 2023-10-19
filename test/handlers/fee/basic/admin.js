@@ -7,9 +7,11 @@ const Helpers = require("../../../helpers");
 
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
 contract("BasicFeeHandler - [admin]", async (accounts) => {
-  const domainID = 1;
+  const originDomainID = 1;
+  const destinationDomainID = 2;
   const initialRelayers = accounts.slice(0, 3);
   const currentFeeHandlerAdmin = accounts[0];
 
@@ -22,11 +24,13 @@ contract("BasicFeeHandler - [admin]", async (accounts) => {
 
   let BridgeInstance;
   let BasicFeeHandlerInstance;
+  let OriginERC20MintableInstance;
   let ADMIN_ROLE;
+  let resourceID;
 
   beforeEach(async () => {
     BridgeInstance = awaitBridgeInstance = await Helpers.deployBridge(
-      domainID,
+      originDomainID,
       accounts[0]
     );
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
@@ -36,20 +40,25 @@ contract("BasicFeeHandler - [admin]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
+    OriginERC20MintableInstance = await ERC20MintableContract.new("token", "TOK")
 
     ADMIN_ROLE = await BasicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
+    resourceID = Helpers.createResourceID(
+      OriginERC20MintableInstance.address,
+      originDomainID
+    )
   });
 
   it("should set fee property", async () => {
     const fee = 3;
-    assert.equal(await BasicFeeHandlerInstance._fee.call(), "0");
-    await BasicFeeHandlerInstance.changeFee(fee);
-    assert.equal(await BasicFeeHandlerInstance._fee.call(), fee);
+    assert.equal(await BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID), "0");
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, fee);
+    assert.equal(await BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID), fee);
   });
 
   it("should require admin role to change fee property", async () => {
     const fee = 3;
-    await assertOnlyAdmin(BasicFeeHandlerInstance.changeFee, fee);
+    await assertOnlyAdmin(BasicFeeHandlerInstance.changeFee, destinationDomainID, resourceID, fee);
   });
 
   it("BasicFeeHandler admin should be changed to expectedBasicFeeHandlerAdmin", async () => {

@@ -88,7 +88,7 @@ contract("PercentageFeeHandler - [distributeFee]", async (accounts) => {
         resourceID,
         PercentageFeeHandlerInstance.address
       ),
-      PercentageFeeHandlerInstance.changeFee(feeBps)
+      PercentageFeeHandlerInstance.changeFee(destinationDomainID, resourceID, feeBps)
     ]);
 
     depositData = Helpers.createERCDepositData(

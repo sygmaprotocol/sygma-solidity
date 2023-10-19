@@ -87,7 +87,7 @@ contract("BasicFeeHandler - [calculateFee]", async (accounts) => {
 
     assert.equal(web3.utils.fromWei(res[0], "ether"), "0");
     // Change fee to 0.5 ether
-    await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, Ethers.utils.parseEther("0.5"));
     res = await FeeHandlerRouterInstance.calculateFee.call(
       relayer,
       originDomainID,

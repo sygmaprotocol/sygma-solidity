@@ -94,9 +94,12 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
   it("should distribute fees", async () => {
     await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
-    await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, Ethers.utils.parseEther("1"));
     assert.equal(
-      web3.utils.fromWei(await BasicFeeHandlerInstance._fee.call(), "ether"),
+      web3.utils.fromWei(await BasicFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        resourceID
+        ), "ether"),
       "1"
     );
 
@@ -161,7 +164,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
   it("should require admin role to distribute fee", async () => {
     await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
-    await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, Ethers.utils.parseEther("1"));
 
     await BridgeInstance.deposit(
       destinationDomainID,
@@ -189,7 +192,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
   it("should revert if addrs and amounts arrays have different length", async () => {
     await BridgeInstance.adminChangeFeeHandler(BasicFeeHandlerInstance.address);
-    await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("1"));
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, Ethers.utils.parseEther("1"));
 
     await BridgeInstance.deposit(
       destinationDomainID,
