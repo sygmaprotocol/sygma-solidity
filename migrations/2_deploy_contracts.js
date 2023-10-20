@@ -1,8 +1,6 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 
-const Ethers = require("ethers");
-
 const Helpers = require("../test/helpers");
 const Utils = require("./utils");
 
@@ -18,7 +16,6 @@ const PermissionedGenericHandlerContract = artifacts.require(
 );
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
 const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
@@ -68,40 +65,11 @@ module.exports = async function (deployer, network) {
     bridgeInstance.address,
     feeRouterInstance.address
   );
-  const dynamicFeeHandlerInstance = await deployer.deploy(
-    DynamicFeeHandlerContract,
-    bridgeInstance.address,
-    feeRouterInstance.address
-  );
   const percentageFeeHandlerInstance = await deployer.deploy(
     PercentageFeeHandler,
     bridgeInstance.address,
     feeRouterInstance.address
   )
-
-  // setup fee router and fee handlers
-  await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);
-  if(Object.keys(currentNetworkConfig.fee.oracle).length != 0){
-    await dynamicFeeHandlerInstance.setFeeOracle(
-      currentNetworkConfig.fee.oracle.address
-    );
-    await dynamicFeeHandlerInstance.setFeeProperties(
-      currentNetworkConfig.fee.oracle.gasUsed,
-      currentNetworkConfig.fee.oracle.feePercentage
-    );
-  }
-
-  if(Object.keys(currentNetworkConfig.fee.basic).length != 0) {
-    await basicFeeHandlerInstance.changeFee(
-      Ethers.utils.parseEther(currentNetworkConfig.fee.basic.fee).toString()
-    );
-  }
-
-  if(Object.keys(currentNetworkConfig.fee.percentage).length != 0) {
-    await percentageFeeHandlerInstance.changeFee(
-      currentNetworkConfig.fee.percentage.fee
-    );
-  }
 
   console.table({
     "Deployer Address": deployerAddress,
@@ -111,7 +79,6 @@ module.exports = async function (deployer, network) {
     "ERC721Handler Address": erc721HandlerInstance.address,
     "FeeRouterContract Address": feeRouterInstance.address,
     "BasicFeeHandler Address": basicFeeHandlerInstance.address,
-    "DynamicFeeHandler Address": dynamicFeeHandlerInstance.address,
     "PercentageFeeHandler Address": percentageFeeHandlerInstance.address
   });
 
@@ -123,22 +90,6 @@ module.exports = async function (deployer, network) {
       bridgeInstance,
       erc20HandlerInstance
     );
-    await Utils.setupFee(
-      networksConfig,
-      feeRouterInstance,
-      dynamicFeeHandlerInstance,
-      basicFeeHandlerInstance,
-      percentageFeeHandlerInstance,
-      erc20
-    );
-
-  if(Object.keys(currentNetworkConfig.fee.percentage).length != 0) {
-    await percentageFeeHandlerInstance.changeFeeBounds(
-      erc20.resourceID,
-      Ethers.utils.parseEther(currentNetworkConfig.fee.percentage.lowerBound).toString(),
-      Ethers.utils.parseEther(currentNetworkConfig.fee.percentage.upperBound).toString()
-    );
-  }
 
     console.log(
       "-------------------------------------------------------------------------------"
@@ -158,14 +109,6 @@ module.exports = async function (deployer, network) {
       erc721,
       bridgeInstance,
       erc721HandlerInstance
-    );
-    await Utils.setupFee(
-      networksConfig,
-      feeRouterInstance,
-      dynamicFeeHandlerInstance,
-      basicFeeHandlerInstance,
-      percentageFeeHandlerInstance,
-      erc721
     );
 
     console.log(
@@ -191,14 +134,6 @@ module.exports = async function (deployer, network) {
         generic,
         bridgeInstance,
         permissionedGenericHandlerInstance
-      );
-      await Utils.setupFee(
-        networksConfig,
-        feeRouterInstance,
-        dynamicFeeHandlerInstance,
-        basicFeeHandlerInstance,
-        percentageFeeHandlerInstance,
-        generic
       );
 
       console.log(

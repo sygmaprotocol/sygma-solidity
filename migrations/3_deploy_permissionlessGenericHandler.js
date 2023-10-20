@@ -8,10 +8,6 @@ const BridgeContract = artifacts.require("Bridge");
 const PermissionlessGenericHandlerContract = artifacts.require(
   "PermissionlessGenericHandler"
 );
-const FeeRouterContract = artifacts.require("FeeHandlerRouter");
-const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
-const DynamicGenericFeeHandlerEVMContract = artifacts.require("DynamicGenericFeeHandlerEVM");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -25,22 +21,12 @@ module.exports = async function (deployer, network) {
   ) {
   // fetch deployed contracts addresses
   const bridgeInstance = await BridgeContract.deployed();
-  const feeRouterInstance = await FeeRouterContract.deployed();
-  const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
-  const percentageFeeHandlerInstance = await PercentageFeeHandler.deployed();
 
   // deploy generic handler
   const permissionlessGenericHandlerInstance = await deployer.deploy(
     PermissionlessGenericHandlerContract,
     bridgeInstance.address
   );
-
-  // deploy generic dynamic fee handler
-  const dynamicFeeHandlerInstance = await deployer.deploy(
-    DynamicGenericFeeHandlerEVMContract,
-    bridgeInstance.address,
-    feeRouterInstance.address
-  )
 
   console.log(
     "-------------------------------------------------------------------------------"
@@ -71,14 +57,6 @@ module.exports = async function (deployer, network) {
       currentNetworkConfig.permissionlessGeneric.resourceID,
       bridgeInstance.address,
       genericHandlerSetResourceData
-    );
-    await Utils.setupFee(
-      networksConfig,
-      feeRouterInstance,
-      dynamicFeeHandlerInstance,
-      basicFeeHandlerInstance,
-      percentageFeeHandlerInstance,
-      currentNetworkConfig.permissionlessGeneric
     );
   }
 };

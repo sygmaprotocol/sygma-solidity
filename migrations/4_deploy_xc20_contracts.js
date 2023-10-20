@@ -5,10 +5,6 @@ const Utils = require("./utils");
 
 const BridgeContract = artifacts.require("Bridge");
 const XC20HandlerContract = artifacts.require("XC20Handler");
-const FeeRouterContract = artifacts.require("FeeHandlerRouter");
-const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVM");
-const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
 
 
 module.exports = async function (deployer, network) {
@@ -27,11 +23,6 @@ module.exports = async function (deployer, network) {
 
   // fetch deployed contracts addresses
   const bridgeInstance = await BridgeContract.deployed();
-  const feeRouterInstance = await FeeRouterContract.deployed();
-  const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
-  const dynamicFeeHandlerInstance =
-    await DynamicFeeHandlerContract.deployed();
-  const percentageFeeHandlerInstance = await PercentageFeeHandler.deployed();
 
   // deploy XC20 contracts
   await deployer.deploy(XC20HandlerContract, bridgeInstance.address);
@@ -40,14 +31,6 @@ module.exports = async function (deployer, network) {
   // setup xc20 tokens
   for (const xc20 of currentNetworkConfig.xc20) {
     await Utils.setupErc20(deployer, xc20, bridgeInstance, xc20HandlerInstance);
-    await Utils.setupFee(
-      networksConfig,
-      feeRouterInstance,
-      dynamicFeeHandlerInstance,
-      basicFeeHandlerInstance,
-      percentageFeeHandlerInstance,
-      xc20
-    );
 
     console.log(
       "-------------------------------------------------------------------------------"
