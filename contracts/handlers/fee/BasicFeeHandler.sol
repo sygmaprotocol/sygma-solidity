@@ -72,8 +72,9 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param feeData Additional data to be passed to the fee handler.
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual payable external onlyBridgeOrRouter {
-        if (msg.value != _domainResourceIDToFee[destinationDomainID][resourceID]) revert IncorrectFeeSupplied(msg.value);
-        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _domainResourceIDToFee[destinationDomainID][resourceID], address(0));
+        uint256 currentFee = _domainResourceIDToFee[destinationDomainID][resourceID];
+        if (msg.value != currentFee) revert IncorrectFeeSupplied(msg.value);
+        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, currentFee, address(0));
     }
 
      /**
@@ -98,7 +99,8 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param newFee Value to which fee will be updated to for the provided {destinantionDomainID} and {resourceID}.
      */
     function changeFee(uint8 destinationDomainID, bytes32 resourceID, uint256 newFee) external onlyAdmin {
-        require(_domainResourceIDToFee[destinationDomainID][resourceID] != newFee, "Current fee is equal to new fee");
+        uint256 currentFee = _domainResourceIDToFee[destinationDomainID][resourceID];
+        require(currentFee != newFee, "Current fee is equal to new fee");
         _domainResourceIDToFee[destinationDomainID][resourceID] = newFee;
         emit FeeChanged(newFee);
     }
