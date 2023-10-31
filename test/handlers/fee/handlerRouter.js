@@ -130,7 +130,7 @@ contract("FeeHandlerRouter", async (accounts) => {
       resourceID,
       BasicFeeHandlerInstance.address
     );
-    await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, Ethers.utils.parseEther("0.5"));
 
     const depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
     let res = await FeeHandlerRouterInstance.calculateFee.call(
@@ -163,7 +163,7 @@ contract("FeeHandlerRouter", async (accounts) => {
       resourceID,
       BasicFeeHandlerInstance.address
     );
-    await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, Ethers.utils.parseEther("0.5"));
 
     const depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
     await Helpers.expectToRevertWithCustomError(
@@ -173,7 +173,7 @@ contract("FeeHandlerRouter", async (accounts) => {
         destinationDomainID,
         resourceID,
         depositData,
-        feeData, 
+        feeData,
         {
           from: bridgeAddress,
           value: Ethers.utils.parseEther("0.5").toString()
@@ -188,7 +188,7 @@ contract("FeeHandlerRouter", async (accounts) => {
         destinationDomainID,
         resourceID,
         depositData,
-        feeData, 
+        feeData,
         {
           from: bridgeAddress,
           value: Ethers.utils.parseEther("0.5").toString()
@@ -207,7 +207,7 @@ contract("FeeHandlerRouter", async (accounts) => {
       resourceID,
       BasicFeeHandlerInstance.address
     );
-    await BasicFeeHandlerInstance.changeFee(Ethers.utils.parseEther("0.5"));
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, Ethers.utils.parseEther("0.5"));
 
     const depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
     await TruffleAssert.passes(
@@ -217,10 +217,10 @@ contract("FeeHandlerRouter", async (accounts) => {
         destinationDomainID,
         resourceID,
         depositData,
-        feeData, 
+        feeData,
         {
           from: bridgeAddress,
-          value: "0" 
+          value: "0"
         }
       ),
     );

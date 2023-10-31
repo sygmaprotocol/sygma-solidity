@@ -64,7 +64,7 @@ contract("PercentageFeeHandler - [collectFee]", async (accounts) => {
       originDomainID
     );
 
-    await PercentageFeeHandlerInstance.changeFee(feeBps);
+    await PercentageFeeHandlerInstance.changeFee(destinationDomainID, resourceID, feeBps);
     await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, lowerBound, upperBound);
 
     await Promise.all([

@@ -146,7 +146,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
   it("deposit should revert if invalid fee amount supplied", async () => {
     // current fee is set to 0
-    assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+    assert.equal(await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID), 0);
     const incorrectFee = Ethers.utils.parseEther("1.0");
 
     const errorValues = await Helpers.expectToRevertWithCustomError(
@@ -169,12 +169,12 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
   it("deposit should pass if valid fee amount supplied for ERC20 deposit", async () => {
     const fee = Ethers.utils.parseEther("0.5");
     // current fee is set to 0
-    assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+    assert.equal(await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID), 0);
     // Change fee to 0.5 ether
-    await ERC20BasicFeeHandlerInstance.changeFee(fee);
+    await ERC20BasicFeeHandlerInstance.changeFee(destinationDomainID, erc20ResourceID, fee);
     assert.equal(
       web3.utils.fromWei(
-        await ERC20BasicFeeHandlerInstance._fee.call(),
+        await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID),
         "ether"
       ),
       "0.5"
@@ -224,12 +224,12 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
   it("deposit should pass if valid fee amount supplied for ERC721 deposit", async () => {
     const fee = Ethers.utils.parseEther("0.4");
     // current fee is set to 0
-    assert.equal(await ERC721BasicFeeHandlerInstance._fee.call(), 0);
+    assert.equal(await ERC721BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc721ResourceID), 0);
     // Change fee to 0.4 ether
-    await ERC721BasicFeeHandlerInstance.changeFee(fee);
+    await ERC721BasicFeeHandlerInstance.changeFee(destinationDomainID, erc721ResourceID, fee);
     assert.equal(
       web3.utils.fromWei(
-        await ERC721BasicFeeHandlerInstance._fee.call(),
+        await ERC721BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc721ResourceID),
         "ether"
       ),
       "0.4"
@@ -314,12 +314,12 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
       ERC20BasicFeeHandlerInstance.address
     );
     // current fee is set to 0
-    assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+    assert.equal(await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID), 0);
     // Change fee to 0.5 ether
-    await ERC20BasicFeeHandlerInstance.changeFee(fee);
+    await ERC20BasicFeeHandlerInstance.changeFee(destinationDomainID, erc20ResourceID, fee);
     assert.equal(
       web3.utils.fromWei(
-        await ERC20BasicFeeHandlerInstance._fee.call(),
+        await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID),
         "ether"
       ),
       "0.5"
@@ -357,12 +357,12 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
       ERC20BasicFeeHandlerInstance.address
     );
     // current fee is set to 0
-    assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+    assert.equal(await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID), 0);
     // Change fee to 0.5 ether
-    await ERC20BasicFeeHandlerInstance.changeFee(fee);
+    await ERC20BasicFeeHandlerInstance.changeFee(destinationDomainID, erc20ResourceID, fee);
     assert.equal(
       web3.utils.fromWei(
-        await ERC20BasicFeeHandlerInstance._fee.call(),
+        await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID),
         "ether"
       ),
       "0.5"
@@ -403,12 +403,12 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
     const fee = Ethers.utils.parseEther("0.5");
     // current fee is set to 0
-    assert.equal(await ERC20BasicFeeHandlerInstance._fee.call(), 0);
+    assert.equal(await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID), 0);
     // Change fee to 0.5 ether
-    await ERC20BasicFeeHandlerInstance.changeFee(fee);
+    await ERC20BasicFeeHandlerInstance.changeFee(destinationDomainID, erc20ResourceID, fee);
     assert.equal(
       web3.utils.fromWei(
-        await ERC20BasicFeeHandlerInstance._fee.call(),
+        await ERC20BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc20ResourceID),
         "ether"
       ),
       "0.5"
@@ -464,12 +464,12 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
 
     const fee = Ethers.utils.parseEther("0.4");
     // current fee is set to 0
-    assert.equal(await ERC721BasicFeeHandlerInstance._fee.call(), 0);
+    assert.equal(await ERC721BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc721ResourceID), 0);
     // Change fee to 0.4 ether
-    await ERC721BasicFeeHandlerInstance.changeFee(fee);
+    await ERC721BasicFeeHandlerInstance.changeFee(destinationDomainID, erc721ResourceID, fee);
     assert.equal(
       web3.utils.fromWei(
-        await ERC721BasicFeeHandlerInstance._fee.call(),
+        await ERC721BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, erc721ResourceID),
         "ether"
       ),
       "0.4"

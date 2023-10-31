@@ -11,7 +11,8 @@ const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
 
 contract("PercentageFeeHandler - [admin]", async (accounts) => {
-  const domainID = 1;
+  const originDomainID = 1;
+  const destinationDomainID = 2;
   const initialRelayers = accounts.slice(0, 3);
   const currentFeeHandlerAdmin = accounts[0];
 
@@ -31,7 +32,7 @@ contract("PercentageFeeHandler - [admin]", async (accounts) => {
   beforeEach(async () => {
     await Promise.all([
       (BridgeInstance = await Helpers.deployBridge(
-        domainID,
+        originDomainID,
         accounts[0]
       )),
       ERC20MintableContract.new("token", "TOK").then(
@@ -49,19 +50,19 @@ contract("PercentageFeeHandler - [admin]", async (accounts) => {
 
     ADMIN_ROLE = await PercentageFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
 
-    resourceID = Helpers.createResourceID(ERC20MintableInstance.address, domainID);
+    resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
   });
 
   it("should set fee property", async () => {
     const fee = 60000;
-    assert.equal(await PercentageFeeHandlerInstance._fee.call(), "0");
-    await PercentageFeeHandlerInstance.changeFee(fee);
-    assert.equal(await PercentageFeeHandlerInstance._fee.call(), fee);
+    assert.equal(await PercentageFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID), "0");
+    await PercentageFeeHandlerInstance.changeFee(destinationDomainID, resourceID, fee);
+    assert.equal(await PercentageFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID), fee);
   });
 
   it("should require admin role to change fee property", async () => {
     const fee = 600;
-    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFee, fee);
+    await assertOnlyAdmin(PercentageFeeHandlerInstance.changeFee, destinationDomainID, resourceID, fee);
   });
 
   it("should set fee bounds", async () => {
