@@ -2,7 +2,8 @@
 
 pragma solidity 0.8.11;
 
-// This is adapted from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.0.0/contracts/access/AccessControl.sol
+// This is adapted from:
+// https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.0.0/contracts/access/AccessControl.sol
 // The only difference is added getRoleMemberIndex(bytes32 role, address account) function.
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -53,7 +54,7 @@ abstract contract AccessControl is Context {
         bytes32 adminRole;
     }
 
-    mapping (bytes32 => RoleData) private _roles;
+    mapping(bytes32 => RoleData) private _roles;
 
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
@@ -97,8 +98,8 @@ abstract contract AccessControl is Context {
      * change at any point.
      *
      * WARNING: When using {getRoleMember} and {getRoleMemberCount}, make sure
-     * you perform all queries on the same block. See the following
-     * https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296[forum post]
+     * you perform all queries on the same block. See the following forum post:
+     * https://forum.openzeppelin.com/t/iterating-over-elements-on-enumerableset-in-openzeppelin-contracts/2296
      * for more information.
      */
     function getRoleMember(bytes32 role, uint256 index) public view returns (address) {

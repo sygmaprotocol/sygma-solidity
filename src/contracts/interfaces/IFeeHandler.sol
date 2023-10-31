@@ -7,7 +7,6 @@ pragma solidity 0.8.11;
     @author ChainSafe Systems.
  */
 interface IFeeHandler {
-
     /**
         @notice This event is emitted when the fee is collected.
         @param sender Sender of the deposit.
@@ -32,11 +31,7 @@ interface IFeeHandler {
         @param recipient Address that receives the distributed fee.
         @param amount Amount that is distributed.
      */
-    event FeeDistributed(
-        address tokenAddress,
-        address recipient,
-        uint256 amount
-    );
+    event FeeDistributed(address tokenAddress, address recipient, uint256 amount);
 
     /**
         @notice Collects fee for deposit.
@@ -47,7 +42,14 @@ interface IFeeHandler {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external;
+    function collectFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external payable;
 
     /**
         @notice Calculates fee for deposit.
@@ -60,5 +62,12 @@ interface IFeeHandler {
         @return Returns the fee amount.
         @return Returns the address of the token to be used for fee.
      */
-    function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external view returns(uint256, address);
+    function calculateFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external view returns (uint256, address);
 }

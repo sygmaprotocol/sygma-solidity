@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "./utils/Pausable.sol";
 
-
 import "./interfaces/IERCHandler.sol";
 import "./interfaces/IHandler.sol";
 import "./interfaces/IFeeHandler.sol";
@@ -20,17 +19,17 @@ import "./interfaces/IAccessControlSegregator.sol";
 contract Bridge is Pausable, Context {
     using ECDSA for bytes32;
 
-    uint8   public immutable _domainID;
+    uint8 public immutable _domainID;
 
     IFeeHandler public _feeHandler;
 
     IAccessControlSegregator public _accessControl;
 
     struct Proposal {
-        uint8   originDomainID;
-        uint64  depositNonce;
+        uint8 originDomainID;
+        uint64 depositNonce;
         bytes32 resourceID;
-        bytes   data;
+        bytes data;
     }
 
     // destinationDomainID => number of deposits
@@ -45,25 +44,16 @@ contract Bridge is Pausable, Context {
     event FeeHandlerChanged(address newFeeHandler);
     event AccessControlChanged(address newAccessControl);
     event Deposit(
-        uint8   destinationDomainID,
+        uint8 destinationDomainID,
         bytes32 resourceID,
-        uint64  depositNonce,
+        uint64 depositNonce,
         address indexed user,
-        bytes   data,
-        bytes   handlerResponse
-    );
-    event ProposalExecution(
-        uint8   originDomainID,
-        uint64  depositNonce,
-        bytes32 dataHash,
+        bytes data,
         bytes handlerResponse
     );
+    event ProposalExecution(uint8 originDomainID, uint64 depositNonce, bytes32 dataHash, bytes handlerResponse);
 
-    event FailedHandlerExecution(
-        bytes  lowLevelData,
-        uint8  originDomainID,
-        uint64 depositNonce
-    );
+    event FailedHandlerExecution(bytes lowLevelData, uint8 originDomainID, uint64 depositNonce);
 
     event StartKeygen();
 
@@ -92,7 +82,7 @@ contract Bridge is Pausable, Context {
         if (!_accessControl.hasAccess(sig, sender)) revert AccessNotAllowed(sender, sig);
     }
 
-    function _msgSender() internal override view returns (address) {
+    function _msgSender() internal view override returns (address) {
         address signer = msg.sender;
         if (msg.data.length >= 20 && isValidForwarder[signer]) {
             assembly {
@@ -108,7 +98,7 @@ contract Bridge is Pausable, Context {
         @param domainID ID of chain the Bridge contract exists on.
         @param accessControl Address of access control contract.
      */
-    constructor (uint8 domainID, address accessControl) {
+    constructor(uint8 domainID, address accessControl) {
         _domainID = domainID;
         _accessControl = IAccessControlSegregator(accessControl);
     }
@@ -141,7 +131,12 @@ contract Bridge is Pausable, Context {
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.
      */
-    function adminSetResource(address handlerAddress, bytes32 resourceID, address contractAddress, bytes calldata args) external onlyAllowed {
+    function adminSetResource(
+        address handlerAddress,
+        bytes32 resourceID,
+        address contractAddress,
+        bytes calldata args
+    ) external onlyAllowed {
         _resourceIDToHandlerAddress[resourceID] = handlerAddress;
         IHandler handler = IHandler(handlerAddress);
         handler.setResource(resourceID, contractAddress, args);
@@ -211,10 +206,7 @@ contract Bridge is Pausable, Context {
         @param handlerAddress Address of handler to withdraw from.
         @param data ABI-encoded withdrawal params relevant to the specified handler.
      */
-    function adminWithdraw(
-        address handlerAddress,
-        bytes memory data
-    ) external onlyAllowed {
+    function adminWithdraw(address handlerAddress, bytes memory data) external onlyAllowed {
         IERCHandler handler = IERCHandler(handlerAddress);
         handler.withdraw(data);
     }
@@ -232,9 +224,12 @@ contract Bridge is Pausable, Context {
         - ERC20Handler: responds with an empty data.
         - PermissionlessGenericHandler: responds with an empty data.
      */
-    function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData)
-        external payable whenNotPaused
-        returns (uint64 depositNonce, bytes memory handlerResponse) {
+    function deposit(
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external payable whenNotPaused returns (uint64 depositNonce, bytes memory handlerResponse) {
         if (destinationDomainID == _domainID) revert DepositToCurrentDomain();
 
         address sender = _msgSender();
@@ -242,7 +237,14 @@ contract Bridge is Pausable, Context {
             require(msg.value == 0, "no FeeHandler, msg.value != 0");
         } else {
             // Reverts on failure
-            _feeHandler.collectFee{value: msg.value}(sender, _domainID, destinationDomainID, resourceID, depositData, feeData);
+            _feeHandler.collectFee{value: msg.value}(
+                sender,
+                _domainID,
+                destinationDomainID,
+                resourceID,
+                depositData,
+                feeData
+            );
         }
         address handler = _resourceIDToHandlerAddress[resourceID];
         if (handler == address(0)) revert ResourceIDNotMappedToHandler();
@@ -289,7 +291,7 @@ contract Bridge is Pausable, Context {
         if (proposals.length == 0) revert EmptyProposalsArray();
 
         for (uint256 i = 0; i < proposals.length; i++) {
-            if(isProposalExecuted(proposals[i].originDomainID, proposals[i].depositNonce)) {
+            if (isProposalExecuted(proposals[i].originDomainID, proposals[i].depositNonce)) {
                 continue;
             }
 
@@ -298,13 +300,23 @@ contract Bridge is Pausable, Context {
 
             IHandler depositHandler = IHandler(handler);
 
-            usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] |= 1 << (proposals[i].depositNonce % 256);
+            usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] |=
+                1 <<
+                (proposals[i].depositNonce % 256);
 
-            try depositHandler.executeProposal(proposals[i].resourceID, proposals[i].data) returns (bytes memory handlerResponse) {
-                emit ProposalExecution(proposals[i].originDomainID, proposals[i].depositNonce, dataHash, handlerResponse);
+            try depositHandler.executeProposal(proposals[i].resourceID, proposals[i].data) returns (
+                bytes memory handlerResponse
+            ) {
+                emit ProposalExecution(
+                    proposals[i].originDomainID,
+                    proposals[i].depositNonce,
+                    dataHash,
+                    handlerResponse
+                );
             } catch (bytes memory lowLevelData) {
                 emit FailedHandlerExecution(lowLevelData, proposals[i].originDomainID, proposals[i].depositNonce);
-                usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] &= ~(1 << (proposals[i].depositNonce % 256));
+                usedNonces[proposals[i].originDomainID][proposals[i].depositNonce / 256] &= ~(1 <<
+                    (proposals[i].depositNonce % 256));
                 continue;
             }
         }

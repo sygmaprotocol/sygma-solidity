@@ -23,8 +23,10 @@ interface IHandler {
     function executeProposal(bytes32 resourceID, bytes calldata data) external returns (bytes memory);
 
     /**
-        @notice Correlates {_resourceIDToContractAddress} with {contractAddress}, {_tokenContractAddressToTokenProperties[tokenAddress].resourceID} with {resourceID} and marks
-        {_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted} to true for {contractAddress} in ERCHandlerHelpers contract.
+        @notice Correlates {_resourceIDToContractAddress} with {contractAddress},
+        {_tokenContractAddressToTokenProperties[tokenAddress].resourceID} with {resourceID} and marks
+        {_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted} to
+        true for {contractAddress} in ERCHandlerHelpers contract.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
         @param args Additional data to be passed to specified handler.

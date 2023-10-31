@@ -46,9 +46,8 @@ contract WithDepositor {
     }
 }
 
-
 contract ReturnData {
-    function returnData(string memory argument) external pure returns(bytes32 response) {
+    function returnData(string memory argument) external pure returns (bytes32 response) {
         assembly {
             response := mload(add(argument, 32))
         }
@@ -56,12 +55,9 @@ contract ReturnData {
 }
 
 contract HandlerRevert is ERCHandlerHelpers {
-    uint private _totalAmount;
+    uint256 private _totalAmount;
 
-    constructor(
-        address          bridgeAddress
-    ) ERCHandlerHelpers(bridgeAddress) {
-    }
+    constructor(address bridgeAddress) ERCHandlerHelpers(bridgeAddress) {}
 
     function executeProposal(bytes32, bytes calldata) external view {
         if (_totalAmount == 0) {
@@ -70,7 +66,7 @@ contract HandlerRevert is ERCHandlerHelpers {
         return;
     }
 
-    function virtualIncreaseBalance(uint amount) external {
+    function virtualIncreaseBalance(uint256 amount) external {
         _totalAmount = amount;
     }
 
@@ -88,10 +84,11 @@ contract TestForwarder {
 }
 
 contract TestTarget {
-    uint public calls = 0;
-    uint public gasLeft;
+    uint256 public calls = 0;
+    uint256 public gasLeft;
     bytes public data;
     bool public burnAllGas;
+
     fallback() external payable {
         gasLeft = gasleft();
         calls++;
@@ -107,24 +104,24 @@ contract TestTarget {
 }
 
 contract TestStore {
-  mapping (bytes32 => bool) public _assetsStored;
+    mapping(bytes32 => bool) public _assetsStored;
 
-  event AssetStored(bytes32 indexed asset);
+    event AssetStored(bytes32 indexed asset);
 
-  /**
+    /**
     @notice Marks {asset} as stored.
     @param asset Hash of asset deposited.
     @notice {asset} must not have already been stored.
     @notice Emits {AssetStored} event.
    */
-  function store(bytes32 asset) external {
-      require(!_assetsStored[asset], "asset is already stored");
+    function store(bytes32 asset) external {
+        require(!_assetsStored[asset], "asset is already stored");
 
-      _assetsStored[asset] = true;
-      emit AssetStored(asset);
-  }
+        _assetsStored[asset] = true;
+        emit AssetStored(asset);
+    }
 
-  /**
+    /**
     @notice Marks {asset} as stored.
     @param depositor Depositor address padded to 32 bytes.
     @param asset Hash of asset deposited.
@@ -133,25 +130,21 @@ contract TestStore {
     @notice {asset} must not have already been stored.
     @notice Emits {AssetStored} event.
    */
-  function storeWithDepositor(address depositor, bytes32 asset, address depositorCheck) external {
-      require(!_assetsStored[asset], "asset is already stored");
+    function storeWithDepositor(address depositor, bytes32 asset, address depositorCheck) external {
+        require(!_assetsStored[asset], "asset is already stored");
 
-      require(depositor == depositorCheck, "invalid depositor address");
+        require(depositor == depositorCheck, "invalid depositor address");
 
-      _assetsStored[asset] = true;
-      emit AssetStored(asset);
-  }
+        _assetsStored[asset] = true;
+        emit AssetStored(asset);
+    }
 }
 
 /**
   @dev This contract mocks ERC20PresetMinterPauser where and "transferFrom()" always fails
  */
 contract ERC20PresetMinterPauserMock is ERC20PresetMinterPauser {
-
-    constructor(
-        string memory name,
-        string memory symbol
-    ) ERC20PresetMinterPauser(name, symbol) {}
+    constructor(string memory name, string memory symbol) ERC20PresetMinterPauser(name, symbol) {}
 
     function transferFrom(address from, address to, uint256 amount) public virtual override(ERC20) returns (bool) {
         address spender = _msgSender();
@@ -162,9 +155,9 @@ contract ERC20PresetMinterPauserMock is ERC20PresetMinterPauser {
 }
 
 contract ERC20PresetMinterPauserDecimals is ERC20PresetMinterPauser {
-
     uint8 private immutable customDecimals;
-    constructor(string memory name, string memory symbol, uint8 decimals) ERC20PresetMinterPauser(name, symbol){
+
+    constructor(string memory name, string memory symbol, uint8 decimals) ERC20PresetMinterPauser(name, symbol) {
         customDecimals = decimals;
     }
 
@@ -187,12 +180,12 @@ contract TestDeposit {
         Usage: pack all parameters as bytes, then use this function, then pack the result of this function
         together with maxFee, executeFuncSignature etc and pass it to Bridge.deposit().
     */
-    function prepareDepositData(bytes calldata executionData) view external returns (bytes memory) {
+    function prepareDepositData(bytes calldata executionData) external view returns (bytes memory) {
         bytes memory encoded = abi.encode(address(0), executionData);
         return this.slice(encoded, 32);
     }
 
-    function slice(bytes calldata input, uint256 position) pure public returns (bytes memory) {
+    function slice(bytes calldata input, uint256 position) public pure returns (bytes memory) {
         return input[position:];
     }
 
@@ -204,7 +197,12 @@ contract TestDeposit {
         emit TestExecute(depositor, num, addresses[1], message);
     }
 
-    function executeUnpacked(address depositor, uint256 num, address[] memory addresses, bytes memory message) external {
+    function executeUnpacked(
+        address depositor,
+        uint256 num,
+        address[] memory addresses,
+        bytes memory message
+    ) external {
         emit TestExecute(depositor, num, addresses[1], message);
     }
 }

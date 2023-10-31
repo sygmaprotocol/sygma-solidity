@@ -14,18 +14,13 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
     address public immutable _bridgeAddress;
 
     // destination domainID => resourceID => feeHandlerAddress
-    mapping (uint8 => mapping(bytes32 => IFeeHandler)) public _domainResourceIDToFeeHandlerAddress;
+    mapping(uint8 => mapping(bytes32 => IFeeHandler)) public _domainResourceIDToFeeHandlerAddress;
     // whitelisted address => is whitelisted
     mapping(address => bool) public _whitelist;
 
-    event FeeChanged(
-        uint256 newFee
-    );
+    event FeeChanged(uint256 newFee);
 
-    event WhitelistChanged(
-        address whitelistAddress,
-        bool isWhitelisted
-    );
+    event WhitelistChanged(address whitelistAddress, bool isWhitelisted);
 
     error IncorrectFeeSupplied(uint256);
 
@@ -67,15 +62,19 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
     }
 
     /**
-        @notice Maps the {handlerAddress} to {resourceID} to {destinantionDomainID} in {_domainResourceIDToFeeHandlerAddress}.
+        @notice Maps the {handlerAddress} to {resourceID} to
+        {destinantionDomainID} in {_domainResourceIDToFeeHandlerAddress}.
         @param destinationDomainID ID of chain FeeHandler contracts will be called.
         @param resourceID ResourceID for which the corresponding FeeHandler will collect/calcualte fee.
         @param handlerAddress Address of FeeHandler which will be called for specified resourceID.
      */
-    function adminSetResourceHandler(uint8 destinationDomainID, bytes32 resourceID, IFeeHandler handlerAddress) external onlyAdmin {
+    function adminSetResourceHandler(
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        IFeeHandler handlerAddress
+    ) external onlyAdmin {
         _domainResourceIDToFeeHandlerAddress[destinationDomainID][resourceID] = handlerAddress;
     }
-
 
     /**
         @notice Initiates collecting fee with corresponding fee handler contract using IFeeHandler interface.
@@ -86,16 +85,30 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridge {
+    function collectFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external payable onlyBridge {
         if (_whitelist[sender]) {
             if (msg.value != 0) revert IncorrectFeeSupplied(msg.value);
             return;
         }
         IFeeHandler feeHandler = _domainResourceIDToFeeHandlerAddress[destinationDomainID][resourceID];
-        feeHandler.collectFee{value: msg.value}(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
+        feeHandler.collectFee{value: msg.value}(
+            sender,
+            fromDomainID,
+            destinationDomainID,
+            resourceID,
+            depositData,
+            feeData
+        );
     }
 
-     /**
+    /**
         @notice Initiates calculating fee with corresponding fee handler contract using IFeeHandler interface.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.
@@ -106,7 +119,14 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
         @return fee Returns the fee amount.
         @return tokenAddress Returns the address of the token to be used for fee.
      */
-    function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external view returns(uint256 fee, address tokenAddress) {
+    function calculateFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external view returns (uint256 fee, address tokenAddress) {
         if (_whitelist[sender]) {
             return (0, address(0));
         }

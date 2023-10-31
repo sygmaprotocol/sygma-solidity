@@ -23,7 +23,7 @@ contract AccessControlSegregator {
         require(accounts.length == functions.length, "array length should be equal");
 
         _grantAccess(GRANT_ACCESS_SIG, msg.sender);
-        for (uint i=0; i < accounts.length; i++) {
+        for (uint8 i = 0; i < accounts.length; i++) {
             _grantAccess(functions[i], accounts[i]);
         }
     }
@@ -34,7 +34,7 @@ contract AccessControlSegregator {
         @param account Address of account.
         @return Boolean value depending if account has access.
     */
-    function hasAccess(bytes4 sig, address account) public view returns (bool)  {
+    function hasAccess(bytes4 sig, address account) public view returns (bool) {
         return functionAccess[sig] == account;
     }
 

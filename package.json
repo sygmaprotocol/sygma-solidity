@@ -5,9 +5,14 @@
   "author": "Sygma",
   "license": "BUSL-1.1",
   "scripts": {
-    "lint": "eslint 'test/**/*.ts' 'scripts/**/*.ts'",
-    "lint:fix": "yarn run lint --fix",
-    "test": "npx hardhat test"
+    "coverage": "npx hardhat coverage",
+    "lint:typescript": "eslint 'test/**/*.ts' 'scripts/**/*.ts'",
+    "lint:typescript:fix": "prettier --config .prettierrc.json --write 'scripts/**/*.ts' 'test/**/*.ts' 'hardhat.config.ts'",
+    "lint:solidity": "npx solhint 'src/contracts/**/*.sol'",
+    "lint:solidity:fix": "prettier --write --plugin=prettier-plugin-solidity 'src/contracts/**/*.sol'",
+    "lint:all": "yarn run lint:typescript && yarn run lint:solidity",
+    "lint:all:fix": "yarn run lint:typescript:fix && yarn run lint:solidity:fix",
+    "test": "REPORT_GAS=true npx hardhat test"
   },
   "devDependencies": {
     "@chainsafe/eslint-config": "^2.1.1",
@@ -29,13 +34,19 @@
     "chai": "^4.2.0",
     "chain": "^0.4.0",
     "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.1",
     "ethers": "^6.7.1",
     "hardhat": "^2.17.4",
     "hardhat-gas-reporter": "^1.0.8",
     "hardhat-preprocessor": "^0.1.5",
+    "prettier": "^3.0.3",
+    "prettier-plugin-solidity": "^1.1.3",
     "sinon": "^16.0.0",
+    "solhint": "^3.6.2",
     "solidity-coverage": "^0.8.0",
     "ts-node": ">=8.0.0",
+    "tslint-config-prettier": "^1.18.0",
     "typechain": "^8.1.0",
     "typescript": ">=4.5.0"
   }

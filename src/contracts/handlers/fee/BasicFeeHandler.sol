@@ -16,9 +16,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
 
     uint256 public _fee;
 
-    event FeeChanged(
-        uint256 newFee
-    );
+    event FeeChanged(uint256 newFee);
 
     error IncorrectFeeSupplied(uint256);
 
@@ -56,7 +54,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
      */
     function renounceAdmin(address newAdmin) external {
         address sender = _msgSender();
-        require(sender != newAdmin, 'Cannot renounce oneself');
+        require(sender != newAdmin, "Cannot renounce oneself");
         grantRole(DEFAULT_ADMIN_ROLE, newAdmin);
         renounceRole(DEFAULT_ADMIN_ROLE, sender);
     }
@@ -70,12 +68,19 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual payable external onlyBridgeOrRouter {
+    function collectFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external payable virtual onlyBridgeOrRouter {
         if (msg.value != _fee) revert IncorrectFeeSupplied(msg.value);
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
     }
 
-     /**
+    /**
         @notice Calculates fee for deposit.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.
@@ -85,7 +90,14 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param feeData Additional data to be passed to the fee handler.
         @return Returns the fee amount.
      */
-    function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual external  view returns(uint256, address) {
+    function calculateFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external view virtual returns (uint256, address) {
         return (_fee, address(0));
     }
 
@@ -101,15 +113,16 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
-        @notice Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
+        @notice Transfers eth in the contract to the specified addresses.
+        The parameters addrs and amounts are mapped 1-1.
         This means that the address at index 0 for addrs will receive the amount (in WEI) from amounts at index 0.
         @param addrs Array of addresses to transfer {amounts} to.
         @param amounts Array of amounts to transfer to {addrs}.
      */
-    function transferFee(address payable[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
+    function transferFee(address payable[] calldata addrs, uint256[] calldata amounts) external onlyAdmin {
         require(addrs.length == amounts.length, "addrs[], amounts[]: diff length");
         for (uint256 i = 0; i < addrs.length; i++) {
-            (bool success,) = addrs[i].call{value: amounts[i]}("");
+            (bool success, ) = addrs[i].call{value: amounts[i]}("");
             require(success, "Fee ether transfer failed");
             emit FeeDistributed(address(0), addrs[i], amounts[i]);
         }

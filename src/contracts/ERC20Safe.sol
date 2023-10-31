@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
     @notice This contract is intended to be used with ERC20Handler contract.
  */
 contract ERC20Safe {
-
     /**
         @notice Used to gain custody of deposited token.
         @param tokenAddress Address of ERC20 to transfer.
@@ -20,7 +19,7 @@ contract ERC20Safe {
         @param recipient Address to transfer tokens to.
         @param amount Amount of tokens to transfer.
      */
-    function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) virtual internal {
+    function lockERC20(address tokenAddress, address owner, address recipient, uint256 amount) internal virtual {
         IERC20 erc20 = IERC20(tokenAddress);
         _safeTransferFrom(erc20, owner, recipient, amount);
     }
@@ -31,7 +30,7 @@ contract ERC20Safe {
         @param recipient Address to transfer tokens to.
         @param amount Amount of tokens to transfer.
      */
-    function releaseERC20(address tokenAddress, address recipient, uint256 amount) virtual internal {
+    function releaseERC20(address tokenAddress, address recipient, uint256 amount) internal virtual {
         IERC20 erc20 = IERC20(tokenAddress);
         _safeTransfer(erc20, recipient, amount);
     }
@@ -42,10 +41,9 @@ contract ERC20Safe {
         @param recipient Address to mint token to.
         @param amount Amount of token to mint.
      */
-    function mintERC20(address tokenAddress, address recipient, uint256 amount) virtual internal {
+    function mintERC20(address tokenAddress, address recipient, uint256 amount) internal virtual {
         ERC20PresetMinterPauser erc20 = ERC20PresetMinterPauser(tokenAddress);
         erc20.mint(recipient, amount);
-
     }
 
     /**
@@ -54,7 +52,7 @@ contract ERC20Safe {
         @param owner Current owner of tokens.
         @param amount Amount of tokens to burn.
      */
-    function burnERC20(address tokenAddress, address owner, uint256 amount) virtual internal {
+    function burnERC20(address tokenAddress, address owner, uint256 amount) internal virtual {
         ERC20Burnable erc20 = ERC20Burnable(tokenAddress);
         erc20.burnFrom(owner, amount);
     }
@@ -68,7 +66,6 @@ contract ERC20Safe {
     function _safeTransfer(IERC20 token, address to, uint256 value) internal {
         _safeCall(token, abi.encodeWithSelector(token.transfer.selector, to, value));
     }
-
 
     /**
         @notice used to transfer ERC20s safely
@@ -97,7 +94,6 @@ contract ERC20Safe {
         require(success, "ERC20: call failed");
 
         if (returndata.length > 0) {
-
             require(abi.decode(returndata, (bool)), "ERC20: operation did not succeed");
         }
     }

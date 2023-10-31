@@ -12,7 +12,7 @@ import "../interfaces/IERCHandler.sol";
 contract ERCHandlerHelpers is IERCHandler {
     address public immutable _bridgeAddress;
 
-    uint8 public constant defaultDecimals = 18;
+    uint8 public constant DEFAULT_DECIMALS = 18;
 
     struct Decimals {
         bool isSet;
@@ -20,21 +20,19 @@ contract ERCHandlerHelpers is IERCHandler {
     }
 
     struct ERCTokenContractProperties {
-      bytes32 resourceID;
-      bool isWhitelisted;
-      bool isBurnable;
-      Decimals decimals;
+        bytes32 resourceID;
+        bool isWhitelisted;
+        bool isBurnable;
+        Decimals decimals;
     }
 
     error ContractAddressNotWhitelisted(address contractAddress);
 
     // resourceID => token contract address
-    mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
+    mapping(bytes32 => address) public _resourceIDToTokenContractAddress;
 
     // token contract address => ERCTokenContractProperties
-    mapping (address => ERCTokenContractProperties) public _tokenContractAddressToTokenProperties;
-
-
+    mapping(address => ERCTokenContractProperties) public _tokenContractAddressToTokenProperties;
 
     modifier onlyBridge() {
         _onlyBridge();
@@ -44,9 +42,7 @@ contract ERCHandlerHelpers is IERCHandler {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
-    constructor(
-        address          bridgeAddress
-    ) {
+    constructor(address bridgeAddress) {
         _bridgeAddress = bridgeAddress;
     }
 
@@ -59,7 +55,7 @@ contract ERCHandlerHelpers is IERCHandler {
         {_tokenContractAddressToTokenProperties[contractAddress].isBurnable} to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
      */
-    function setBurnable(address contractAddress) external override onlyBridge{
+    function setBurnable(address contractAddress) external override onlyBridge {
         _setBurnable(contractAddress);
     }
 
@@ -73,19 +69,21 @@ contract ERCHandlerHelpers is IERCHandler {
     }
 
     function _setBurnable(address contractAddress) internal {
-        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted) revert ContractAddressNotWhitelisted(contractAddress);
+        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted)
+            revert ContractAddressNotWhitelisted(contractAddress);
         _tokenContractAddressToTokenProperties[contractAddress].isBurnable = true;
     }
 
     /**
         @notice First verifies {contractAddress} is whitelisted,
-        then sets {_tokenContractAddressToTokenProperties[contractAddress].decimals.externalDecimals} to it's decimals value and
-        {_tokenContractAddressToTokenProperties[contractAddress].decimals.isSet} to true.
+        then sets {_tokenContractAddressToTokenProperties[contractAddress].decimals.externalDecimals} to it's
+        decimals value and {_tokenContractAddressToTokenProperties[contractAddress].decimals.isSet} to true.
         @param contractAddress Address of contract to be used when making or executing deposits.
         @param externalDecimals Decimal places of token that is transferred.
      */
     function _setDecimals(address contractAddress, uint8 externalDecimals) internal {
-        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted) revert ContractAddressNotWhitelisted(contractAddress);
+        if (!_tokenContractAddressToTokenProperties[contractAddress].isWhitelisted)
+            revert ContractAddressNotWhitelisted(contractAddress);
         _tokenContractAddressToTokenProperties[contractAddress].decimals = Decimals({
             isSet: true,
             externalDecimals: externalDecimals
@@ -98,14 +96,14 @@ contract ERCHandlerHelpers is IERCHandler {
         @param tokenAddress Address of contract to be used when executing proposals.
         @param amount Decimals value to be set for {contractAddress}.
     */
-    function convertToExternalBalance(address tokenAddress, uint256 amount) internal view returns(uint256) {
+    function convertToExternalBalance(address tokenAddress, uint256 amount) internal view returns (uint256) {
         Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
         if (!decimals.isSet) {
             return amount;
-        } else if (decimals.externalDecimals >= defaultDecimals) {
-            return amount * (10 ** (decimals.externalDecimals - defaultDecimals));
+        } else if (decimals.externalDecimals >= DEFAULT_DECIMALS) {
+            return amount * (10 ** (decimals.externalDecimals - DEFAULT_DECIMALS));
         } else {
-            return amount / (10 ** (defaultDecimals - decimals.externalDecimals));
+            return amount / (10 ** (DEFAULT_DECIMALS - decimals.externalDecimals));
         }
     }
 
@@ -115,15 +113,15 @@ contract ERCHandlerHelpers is IERCHandler {
         @param tokenAddress Address of contract to be used when executing proposals.
         @param amount Decimals value to be set for {contractAddress}.
     */
-    function convertToInternalBalance(address tokenAddress, uint256 amount) internal view returns(bytes memory) {
+    function convertToInternalBalance(address tokenAddress, uint256 amount) internal view returns (bytes memory) {
         Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
         uint256 convertedBalance;
         if (!decimals.isSet) {
             return "";
-        } else if (decimals.externalDecimals >= defaultDecimals) {
-            convertedBalance =  amount / (10 ** (decimals.externalDecimals - defaultDecimals));
+        } else if (decimals.externalDecimals >= DEFAULT_DECIMALS) {
+            convertedBalance = amount / (10 ** (decimals.externalDecimals - DEFAULT_DECIMALS));
         } else {
-            convertedBalance = amount * (10 ** (defaultDecimals - decimals.externalDecimals));
+            convertedBalance = amount * (10 ** (DEFAULT_DECIMALS - decimals.externalDecimals));
         }
 
         return abi.encodePacked(convertedBalance);

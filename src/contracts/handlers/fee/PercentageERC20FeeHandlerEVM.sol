@@ -5,7 +5,7 @@ pragma solidity 0.8.11;
 import "../../interfaces/IBridge.sol";
 import "../../interfaces/IERCHandler.sol";
 import "../../ERC20Safe.sol";
-import { BasicFeeHandler } from "./BasicFeeHandler.sol";
+import {BasicFeeHandler} from "./BasicFeeHandler.sol";
 
 /**
     @title Handles deposit fees.
@@ -50,23 +50,36 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         @return fee Returns the fee amount.
         @return tokenAddress Returns the address of the token to be used for fee.
      */
-    function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external view override returns(uint256 fee, address tokenAddress) {
+    function calculateFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external view override returns (uint256 fee, address tokenAddress) {
         return _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
     }
 
-    function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view returns(uint256 fee, address tokenAddress) {
+    function _calculateFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) internal view returns (uint256 fee, address tokenAddress) {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
         Bounds memory bounds = _resourceIDToFeeBounds[resourceID];
 
-        (uint256 depositAmount) = abi.decode(depositData, (uint256));
+        uint256 depositAmount = abi.decode(depositData, (uint256));
 
-        fee = depositAmount * _fee / HUNDRED_PERCENT; // 10000 for BPS and 10000 to avoid precision loss
+        fee = (depositAmount * _fee) / HUNDRED_PERCENT; // 10000 for BPS and 10000 to avoid precision loss
 
         if (fee < bounds.lowerBound) {
             fee = bounds.lowerBound;
         }
-
         // if upper bound is not set, fee is % of token amount
         else if (fee > bounds.upperBound && bounds.upperBound > 0) {
             fee = bounds.upperBound;
@@ -75,7 +88,7 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         return (fee, tokenAddress);
     }
 
-        /**
+    /**
         @notice Collects fee for deposit.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.
@@ -84,10 +97,24 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         @param depositData Additional data about the deposit.
         @param feeData Additional data to be passed to the fee handler.
      */
-    function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external override onlyBridgeOrRouter {
+    function collectFee(
+        address sender,
+        uint8 fromDomainID,
+        uint8 destinationDomainID,
+        bytes32 resourceID,
+        bytes calldata depositData,
+        bytes calldata feeData
+    ) external payable override onlyBridgeOrRouter {
         require(msg.value == 0, "collectFee: msg.value != 0");
 
-        (uint256 fee, address tokenAddress) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
+        (uint256 fee, address tokenAddress) = _calculateFee(
+            sender,
+            fromDomainID,
+            destinationDomainID,
+            resourceID,
+            depositData,
+            feeData
+        );
         lockERC20(tokenAddress, sender, address(this), fee);
 
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, fee, tokenAddress);
@@ -101,10 +128,13 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         @param newUpperBound Value {_newUpperBound} will be updated to.
      */
     function changeFeeBounds(bytes32 resourceID, uint128 newLowerBound, uint128 newUpperBound) external onlyAdmin {
-        require(newUpperBound == 0 || (newUpperBound > newLowerBound), "Upper bound must be larger than lower bound or 0");
+        require(
+            newUpperBound == 0 || (newUpperBound > newLowerBound),
+            "Upper bound must be larger than lower bound or 0"
+        );
         Bounds memory existingBounds = _resourceIDToFeeBounds[resourceID];
-        require(existingBounds.lowerBound != newLowerBound ||
-            existingBounds.upperBound != newUpperBound,
+        require(
+            existingBounds.lowerBound != newLowerBound || existingBounds.upperBound != newUpperBound,
             "Current bounds are equal to new bounds"
         );
 
@@ -114,14 +144,19 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         emit FeeBoundsChanged(newLowerBound, newUpperBound);
     }
 
-        /**
-        @notice Transfers tokens from the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.
+    /**
+        @notice Transfers tokens from the contract to the specified addresses.
+        The parameters addrs and amounts are mapped 1-1.
         This means that the address at index 0 for addrs will receive the amount of tokens from amounts at index 0.
         @param resourceID ResourceID of the token.
         @param addrs Array of addresses to transfer {amounts} to.
         @param amounts Array of amounts to transfer to {addrs}.
      */
-    function transferERC20Fee(bytes32 resourceID, address[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
+    function transferERC20Fee(
+        bytes32 resourceID,
+        address[] calldata addrs,
+        uint256[] calldata amounts
+    ) external onlyAdmin {
         require(addrs.length == amounts.length, "addrs[], amounts[]: diff length");
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);

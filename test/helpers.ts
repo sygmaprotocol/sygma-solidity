@@ -101,7 +101,6 @@ export async function deployBridge(domainID: number): Promise<Bridge> {
   );
   const accessControlInstance = await AccessControlSegregatorContract.deploy(
     accessControlFuncSignatures,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     Array(9).fill(await adminAccount.getAddress()),
   );
   const BridgeContract = await ethers.getContractFactory("Bridge");
@@ -118,7 +117,6 @@ export async function createDepositProposalDataFromHandlerResponse(
   recipientAccount: string,
 ): Promise<string> {
   return createERCDepositData(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     BigInt((await depositTx.wait(1)).logs[2]["args"][5]).toString(),
     lenRecipientAddress,
     recipientAccount,

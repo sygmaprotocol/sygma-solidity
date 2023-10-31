@@ -35,3 +35,7 @@ jobs:
       - name: Hardhat Tests
         run:
           yarn run test
+
+      - name: Coverage
+        if: ${{ success() }}
+        run: npx hardhat coverage

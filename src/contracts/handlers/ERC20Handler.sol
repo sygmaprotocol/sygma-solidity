@@ -15,10 +15,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
-    constructor(
-        address          bridgeAddress
-    ) ERCHandlerHelpers(bridgeAddress) {
-    }
+    constructor(address bridgeAddress) ERCHandlerHelpers(bridgeAddress) {}
 
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.
@@ -30,19 +27,21 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         destinationRecipientAddress     length      uint256     bytes  32 - 64
         destinationRecipientAddress                 bytes       bytes  64 - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
-        marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
+        marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable},
+        deposited tokens will be burned, if not, they will be locked.
         @return an empty data.
      */
     function deposit(
         bytes32 resourceID,
         address depositor,
-        bytes   calldata data
+        bytes calldata data
     ) external override onlyBridge returns (bytes memory) {
-        uint256        amount;
+        uint256 amount;
         (amount) = abi.decode(data, (uint));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
+        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted)
+            revert ContractAddressNotWhitelisted(tokenAddress);
 
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             burnERC20(tokenAddress, depositor, amount);
@@ -64,10 +63,13 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         destinationRecipientAddress length     uint256     bytes  32 - 64
         destinationRecipientAddress            bytes       bytes  64 - END
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        uint256       amount;
-        uint256       lenDestinationRecipientAddress;
-        bytes  memory destinationRecipientAddress;
+    function executeProposal(
+        bytes32 resourceID,
+        bytes calldata data
+    ) external override onlyBridge returns (bytes memory) {
+        uint256 amount;
+        uint256 lenDestinationRecipientAddress;
+        bytes memory destinationRecipientAddress;
 
         (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
         destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
@@ -79,7 +81,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
             recipientAddress := mload(add(destinationRecipientAddress, 0x20))
         }
 
-        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
+        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted)
+            revert ContractAddressNotWhitelisted(tokenAddress);
 
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
             mintERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
@@ -95,14 +98,14 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         @notice Data passed into the function should be constructed as follows:
         tokenAddress                           address     bytes  0 - 32
         recipient                              address     bytes  32 - 64
-        amount                                 uint        bytes  64 - 96
+        amount                                 uint256     bytes  64 - 96
      */
     function withdraw(bytes memory data) external override onlyBridge {
         address tokenAddress;
         address recipient;
-        uint amount;
+        uint256 amount;
 
-        (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
+        (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint256));
 
         releaseERC20(tokenAddress, recipient, amount);
     }
@@ -110,7 +113,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
     /**
         @notice Sets {_resourceIDToContractAddress} with {contractAddress},
         {_tokenContractAddressToTokenProperties[tokenAddress].resourceID} with {resourceID} and
-        {_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted} to true for {contractAddress} in ERCHandlerHelpers contract.
+        {_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted} to true for
+        {contractAddress} in ERCHandlerHelpers contract.
         Sets decimals value for contractAddress if value is provided in args.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
