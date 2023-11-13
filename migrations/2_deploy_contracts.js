@@ -71,6 +71,9 @@ module.exports = async function (deployer, network) {
     feeRouterInstance.address
   )
 
+  // setup fee router
+  await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);
+
   console.table({
     "Deployer Address": deployerAddress,
     "Domain ID": currentNetworkConfig.domainID,
