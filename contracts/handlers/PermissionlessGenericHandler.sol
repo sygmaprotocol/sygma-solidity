@@ -95,11 +95,15 @@ contract PermissionlessGenericHandler is IHandler {
         uint8          lenExecutionDataDepositor;
         address        executionDataDepositor;
 
-        maxFee                            = uint256(bytes32(data[:32]));
-        lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
-        lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
-        lenExecutionDataDepositor         = uint8(bytes1(data[35 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress]));
-        executionDataDepositor            = address(uint160(bytes20(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor])));
+        uint256 pointer = 0;
+
+        maxFee                            = uint256(bytes32(data[:pointer += 32])); 
+        lenExecuteFuncSignature           = uint16(bytes2(data[pointer:pointer += 2]));
+        pointer += lenExecuteFuncSignature;
+        lenExecuteContractAddress         = uint8(bytes1(data[pointer:pointer += 1]));
+        pointer += lenExecuteContractAddress;
+        lenExecutionDataDepositor         = uint8(bytes1(data[pointer:pointer += 1]));
+        executionDataDepositor            = address(uint160(bytes20(data[pointer:pointer + lenExecutionDataDepositor])));
 
         require(maxFee < MAX_FEE, 'requested fee too large');
         require(depositor == executionDataDepositor, 'incorrect depositor in deposit data');
@@ -156,15 +160,17 @@ contract PermissionlessGenericHandler is IHandler {
         uint8          lenExecutionDataDepositor;
         address        executionDataDepositor;
         bytes   memory executionData;
+        
+        uint256 pointer = 0;
 
-        maxFee                            = uint256(bytes32(data[0:32]));
-        lenExecuteFuncSignature           = uint16(bytes2(data[32:34]));
-        executeFuncSignature              = bytes4(data[34:34 + lenExecuteFuncSignature]);
-        lenExecuteContractAddress         = uint8(bytes1(data[34 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature]));
-        executeContractAddress            = address(uint160(bytes20(data[35 + lenExecuteFuncSignature:35 + lenExecuteFuncSignature + lenExecuteContractAddress])));
-        lenExecutionDataDepositor         = uint8(bytes1(data[35 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress]));
-        executionDataDepositor            = address(uint160(bytes20(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress:36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor])));
-        executionData                     = bytes(data[36 + lenExecuteFuncSignature + lenExecuteContractAddress + lenExecutionDataDepositor:]);
+        maxFee                            = uint256(bytes32(data[:pointer += 32])); 
+        lenExecuteFuncSignature           = uint16(bytes2(data[pointer:pointer += 2]));
+        executeFuncSignature              = bytes4(data[pointer:pointer += lenExecuteFuncSignature]);
+        lenExecuteContractAddress         = uint8(bytes1(data[pointer:pointer += 1]));
+        executeContractAddress            = address(uint160(bytes20(data[pointer:pointer += lenExecuteContractAddress])));
+        lenExecutionDataDepositor         = uint8(bytes1(data[pointer:pointer += 1]));
+        executionDataDepositor            = address(uint160(bytes20(data[pointer:pointer += lenExecutionDataDepositor])));
+        executionData                     = bytes(data[pointer:]);
 
         bytes memory callData = abi.encodePacked(executeFuncSignature, abi.encode(executionDataDepositor), executionData);
         (bool success, bytes memory returndata) = executeContractAddress.call{gas: maxFee}(callData);
