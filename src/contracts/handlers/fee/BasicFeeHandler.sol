@@ -4,6 +4,7 @@ pragma solidity 0.8.11;
 
 import "../../interfaces/IFeeHandler.sol";
 import "../../utils/AccessControl.sol";
+import "../FeeHandlerRouter.sol";
 
 /**
     @title Handles deposit fees.
@@ -13,8 +14,9 @@ import "../../utils/AccessControl.sol";
 contract BasicFeeHandler is IFeeHandler, AccessControl {
     address public immutable _bridgeAddress;
     address public immutable _feeHandlerRouterAddress;
+    address public immutable _routerAddress;
+    mapping (uint8 => mapping(bytes32 => uint256)) public _domainResourceIDToFee;
 
-    uint256 public _fee;
 
     event FeeChanged(uint256 newFee);
 
@@ -32,7 +34,9 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
 
     function _onlyBridgeOrRouter() private view {
         require(
-            msg.sender == _bridgeAddress || msg.sender == _feeHandlerRouterAddress,
+            msg.sender == _bridgeAddress ||
+            msg.sender == _feeHandlerRouterAddress ||
+            msg.sender == _routerAddress,
             "sender must be bridge or fee router contract"
         );
     }
@@ -41,9 +45,10 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address bridgeAddress, address feeHandlerRouterAddress) {
+    constructor(address bridgeAddress, address feeHandlerRouterAddress, address routerAddress) {
         _bridgeAddress = bridgeAddress;
         _feeHandlerRouterAddress = feeHandlerRouterAddress;
+        _routerAddress = routerAddress;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -75,9 +80,10 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         bytes32 resourceID,
         bytes calldata depositData,
         bytes calldata feeData
-    ) external payable virtual onlyBridgeOrRouter {
-        if (msg.value != _fee) revert IncorrectFeeSupplied(msg.value);
-        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, _fee, address(0));
+    ) external virtual payable  onlyBridgeOrRouter {
+        uint256 currentFee = _domainResourceIDToFee[destinationDomainID][resourceID];
+        if (msg.value != currentFee) revert IncorrectFeeSupplied(msg.value);
+        emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, currentFee, address(0));
     }
 
     /**
@@ -97,18 +103,21 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         bytes32 resourceID,
         bytes calldata depositData,
         bytes calldata feeData
-    ) external view virtual returns (uint256, address) {
-        return (_fee, address(0));
+    ) virtual external  view returns(uint256, address) {
+        return (_domainResourceIDToFee[destinationDomainID][resourceID], address(0));
     }
 
     /**
-        @notice Sets new value of the fee.
+        @notice Maps the {newFee} to {destinantionDomainID} to {resourceID} in {_domainResourceIDToFee}.
         @notice Only callable by admin.
-        @param newFee Value {_fee} will be updated to.
+        @param destinationDomainID ID of chain fee will be set.
+        @param resourceID ResourceID for which fee will be set.
+        @param newFee Value to which fee will be updated to for the provided {destinantionDomainID} and {resourceID}.
      */
-    function changeFee(uint256 newFee) external onlyAdmin {
-        require(_fee != newFee, "Current fee is equal to new fee");
-        _fee = newFee;
+    function changeFee(uint8 destinationDomainID, bytes32 resourceID, uint256 newFee) external onlyAdmin {
+        uint256 currentFee = _domainResourceIDToFee[destinationDomainID][resourceID];
+        require(currentFee != newFee, "Current fee is equal to new fee");
+        _domainResourceIDToFee[destinationDomainID][resourceID] = newFee;
         emit FeeChanged(newFee);
     }
 

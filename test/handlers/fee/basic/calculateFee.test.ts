@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 import { assert } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../../helpers";
@@ -15,6 +15,8 @@ import type {
   ERC20Handler,
   ERC20PresetMinterPauser,
   FeeHandlerRouter,
+  Router,
+  Executor,
 } from "../../../../typechain-types";
 
 describe("BasicFeeHandler - [calculateFee]", () => {
@@ -25,6 +27,8 @@ describe("BasicFeeHandler - [calculateFee]", () => {
   const emptySetResourceData = "0x";
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
   let feeHandlerRouterInstance: FeeHandlerRouter;
@@ -38,7 +42,8 @@ describe("BasicFeeHandler - [calculateFee]", () => {
   beforeEach(async () => {
     [, , recipientAccount, relayer1] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -47,6 +52,8 @@ describe("BasicFeeHandler - [calculateFee]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
     const FeeHandlerRouterContract =
       await ethers.getContractFactory("FeeHandlerRouter");
@@ -58,6 +65,7 @@ describe("BasicFeeHandler - [calculateFee]", () => {
     basicFeeHandlerInstance = await BasicFeeHandlerContract.deploy(
       await bridgeInstance.getAddress(),
       await feeHandlerRouterInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
 
     resourceID = createResourceID(
@@ -102,7 +110,11 @@ describe("BasicFeeHandler - [calculateFee]", () => {
 
     assert.deepEqual(ethers.formatEther(response1[0]), "0.0");
     // Change fee to 0.5 ether
-    await basicFeeHandlerInstance.changeFee(ethers.parseEther("0.5"));
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      ethers.parseEther("0.5"),
+    );
     const response2 = await feeHandlerRouterInstance.calculateFee(
       relayer1.getAddress(),
       originDomainID,

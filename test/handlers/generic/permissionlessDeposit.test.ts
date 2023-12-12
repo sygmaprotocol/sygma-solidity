@@ -5,12 +5,14 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createPermissionlessGenericDepositData,
 } from "../../helpers";
 import type {
   Bridge,
+  Router,
+  Executor,
   PermissionlessGenericHandler,
   TestStore,
 } from "../../../typechain-types";
@@ -26,6 +28,8 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
   const emptySetResourceData = "0x";
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let permissionlessGenericHandlerInstance: PermissionlessGenericHandler;
   let testStoreInstance: TestStore;
   let depositorAccount: HardhatEthersSigner;
@@ -38,12 +42,14 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
   beforeEach(async () => {
     [, depositorAccount, invalidDepositorAccount] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const PermissionlessGenericHandlerContract =
       await ethers.getContractFactory("PermissionlessGenericHandler");
     permissionlessGenericHandlerInstance =
       await PermissionlessGenericHandlerContract.deploy(
         await bridgeInstance.getAddress(),
+        await executorInstance.getAddress(),
       );
     const TestStoreContract = await ethers.getContractFactory("TestStore");
     testStoreInstance = await TestStoreContract.deploy();
@@ -74,19 +80,19 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
 
   it("deposit can be made successfully", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
   });
 
   it("depositEvent is emitted with expected values", async () => {
-    const depositTx = await bridgeInstance
+    const depositTx = await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID, depositData, feeData);
 
     await expect(depositTx)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         resourceID.toLowerCase(),
@@ -102,7 +108,7 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     const invalidDepositData = "0x" + "aa".repeat(75);
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, invalidDepositData, feeData),
     ).to.be.revertedWith("Incorrect data length");
@@ -118,7 +124,7 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     );
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, invalidDepositData, feeData),
     ).to.be.revertedWith("incorrect depositor in deposit data");
@@ -135,7 +141,7 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     );
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, invalidDepositData, feeData, {
           from: depositorAccount,

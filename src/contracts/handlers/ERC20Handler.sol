@@ -15,7 +15,15 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
-    constructor(address bridgeAddress) ERCHandlerHelpers(bridgeAddress) {}
+    constructor(
+        address bridgeAddress,
+        address routerAddress,
+        address executorAddress
+    ) ERCHandlerHelpers(
+        bridgeAddress,
+        routerAddress,
+        executorAddress
+    ) {}
 
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.

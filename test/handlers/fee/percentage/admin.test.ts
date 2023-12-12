@@ -4,18 +4,21 @@
 import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { deployBridge, createResourceID } from "../../../helpers";
+import { deployBridgeContracts, createResourceID } from "../../../helpers";
 import type {
   Bridge,
   ERC20PresetMinterPauser,
   FeeHandlerRouter,
   PercentageERC20FeeHandlerEVM,
+  Router,
 } from "../../../../typechain-types";
 
 describe("PercentageFeeHandler - [admin]", () => {
-  const domainID = 1;
+  const originDomainID = 1;
+  const destinationDomainID = 1;
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
   let percentageFeeHandlerInstance: PercentageERC20FeeHandlerEVM;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let feeHandlerRouterInstance: FeeHandlerRouter;
@@ -30,7 +33,8 @@ describe("PercentageFeeHandler - [admin]", () => {
     [currentFeeHandlerAdmin, newPercentageFeeHandlerAdmin, nonAdminAccount] =
       await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(domainID);
+    [bridgeInstance, routerInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -46,27 +50,46 @@ describe("PercentageFeeHandler - [admin]", () => {
       await PercentageERC20FeeHandlerEVMContract.deploy(
         await bridgeInstance.getAddress(),
         await feeHandlerRouterInstance.getAddress(),
+        await routerInstance.getAddress(),
       );
 
     ADMIN_ROLE = await percentageFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
 
     resourceID = createResourceID(
       await ERC20MintableInstance.getAddress(),
-      domainID,
+      originDomainID,
     );
   });
 
   it("should set fee property", async () => {
     const fee = 60000;
-    assert.deepEqual(await percentageFeeHandlerInstance._fee(), BigInt(0));
-    await percentageFeeHandlerInstance.changeFee(fee);
-    assert.deepEqual(await percentageFeeHandlerInstance._fee(), BigInt(fee));
+    assert.deepEqual(
+      await percentageFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        resourceID,
+      ),
+      BigInt(0),
+    );
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      fee,
+    );
+    assert.deepEqual(
+      await percentageFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        resourceID,
+      ),
+      BigInt(fee),
+    );
   });
 
   it("should require admin role to change fee property", async () => {
     const fee = 600;
     await expect(
-      percentageFeeHandlerInstance.connect(nonAdminAccount).changeFee(fee),
+      percentageFeeHandlerInstance
+        .connect(nonAdminAccount)
+        .changeFee(destinationDomainID, resourceID, fee),
     ).to.be.revertedWith("sender doesn't have admin role");
   });
 

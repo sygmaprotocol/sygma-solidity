@@ -5,12 +5,14 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../helpers";
 import type {
   Bridge,
+  Router,
+  Executor,
   ERC20Handler,
   ERC20PresetMinterPauser,
 } from "../../../typechain-types";
@@ -30,11 +32,15 @@ describe("E2E ERC20 - Two EVM Chains", () => {
   let originDepositData: string;
   let originResourceID: string;
   let originBridgeInstance: Bridge;
+  let originRouterInstance: Router;
+  let originExecutorInstance: Executor;
   let originERC20MintableInstance: ERC20PresetMinterPauser;
   let originERC20HandlerInstance: ERC20Handler;
   let originRelayer1: HardhatEthersSigner;
 
   let destinationBridgeInstance: Bridge;
+  let destinationRouterInstance: Router;
+  let destinationExecutorInstance: Executor;
   let destinationDepositData: string;
   let destinationResourceID: string;
   let destinationERC20MintableInstance: ERC20PresetMinterPauser;
@@ -58,8 +64,13 @@ describe("E2E ERC20 - Two EVM Chains", () => {
     [depositorAccount, recipientAccount, originRelayer1, destinationRelayer1] =
       await ethers.getSigners();
 
-    originBridgeInstance = await deployBridge(originDomainID);
-    destinationBridgeInstance = await deployBridge(destinationDomainID);
+    [originBridgeInstance, originRouterInstance, originExecutorInstance] =
+      await deployBridgeContracts(originDomainID);
+    [
+      destinationBridgeInstance,
+      destinationRouterInstance,
+      destinationExecutorInstance,
+    ] = await deployBridgeContracts(destinationDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -75,9 +86,13 @@ describe("E2E ERC20 - Two EVM Chains", () => {
       await ethers.getContractFactory("ERC20Handler");
     originERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await originBridgeInstance.getAddress(),
+      await originRouterInstance.getAddress(),
+      await originExecutorInstance.getAddress(),
     );
     destinationERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await destinationBridgeInstance.getAddress(),
+      await destinationRouterInstance.getAddress(),
+      await destinationExecutorInstance.getAddress(),
     );
 
     originResourceID = createResourceID(
@@ -182,7 +197,7 @@ describe("E2E ERC20 - Two EVM Chains", () => {
 
     // depositorAccount makes initial deposit of depositAmount
     await expect(
-      originBridgeInstance
+      originRouterInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,
@@ -194,7 +209,7 @@ describe("E2E ERC20 - Two EVM Chains", () => {
 
     // destinationRelayer1 executes the proposal
     await expect(
-      destinationBridgeInstance
+      destinationExecutorInstance
         .connect(destinationRelayer1)
         .executeProposal(originDomainProposal),
     ).not.to.be.reverted;
@@ -230,7 +245,7 @@ describe("E2E ERC20 - Two EVM Chains", () => {
 
     // recipientAccount makes a deposit of the received depositAmount
     await expect(
-      destinationBridgeInstance
+      destinationRouterInstance
         .connect(recipientAccount)
         .deposit(
           originDomainID,
@@ -247,7 +262,7 @@ describe("E2E ERC20 - Two EVM Chains", () => {
 
     // destinationRelayer1 executes the proposal
     await expect(
-      originBridgeInstance
+      originExecutorInstance
         .connect(originRelayer1)
         .executeProposal(destinationDomainProposal),
     ).not.to.be.reverted;

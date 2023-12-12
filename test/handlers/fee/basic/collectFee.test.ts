@@ -5,13 +5,15 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../../helpers";
 import type {
   BasicFeeHandler,
   Bridge,
+  Router,
+  Executor,
   ERC20Handler,
   ERC20PresetMinterPauser,
   FeeHandlerRouter,
@@ -26,6 +28,8 @@ describe("BasicFeeHandler - [collectFee]", () => {
   const expectedDepositNonce = 1;
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let basicFeeHandlerInstance: BasicFeeHandler;
   let ERC20HandlerInstance: ERC20Handler;
@@ -38,7 +42,8 @@ describe("BasicFeeHandler - [collectFee]", () => {
   beforeEach(async () => {
     [, depositorAccount, recipientAccount] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -47,17 +52,20 @@ describe("BasicFeeHandler - [collectFee]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
     const FeeHandlerRouterContract =
       await ethers.getContractFactory("FeeHandlerRouter");
     feeHandlerRouterInstance = await FeeHandlerRouterContract.deploy(
-      await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
     const BasicFeeHandlerContract =
       await ethers.getContractFactory("BasicFeeHandler");
     basicFeeHandlerInstance = await BasicFeeHandlerContract.deploy(
       await bridgeInstance.getAddress(),
       await feeHandlerRouterInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
     erc20ResourceID = createResourceID(
       await ERC20MintableInstance.getAddress(),
@@ -95,7 +103,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
 
   it("[sanity] ERC20 deposit can be made", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,
@@ -108,11 +116,17 @@ describe("BasicFeeHandler - [collectFee]", () => {
 
   it("deposit should revert if invalid fee amount supplied", async () => {
     // current fee is set to 0
-    assert.deepEqual(await basicFeeHandlerInstance._fee(), BigInt(0));
+    assert.deepEqual(
+      await basicFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        erc20ResourceID,
+      ),
+      BigInt(0),
+    );
     const incorrectFee = ethers.parseEther("1.0");
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,
@@ -134,11 +148,26 @@ describe("BasicFeeHandler - [collectFee]", () => {
   it("deposit should pass if valid fee amount supplied for ERC20 deposit", async () => {
     const fee = ethers.parseEther("0.5");
     // current fee is set to 0
-    assert.deepEqual(await basicFeeHandlerInstance._fee(), BigInt(0));
-    // Change fee to 0.5 ether
-    await basicFeeHandlerInstance.changeFee(fee);
     assert.deepEqual(
-      ethers.formatEther(await basicFeeHandlerInstance._fee()),
+      await basicFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        erc20ResourceID,
+      ),
+      BigInt(0),
+    );
+    // Change fee to 0.5 ether
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      erc20ResourceID,
+      fee,
+    );
+    assert.deepEqual(
+      ethers.formatEther(
+        await basicFeeHandlerInstance._domainResourceIDToFee(
+          destinationDomainID,
+          erc20ResourceID,
+        ),
+      ),
       "0.5",
     );
 
@@ -146,7 +175,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       await basicFeeHandlerInstance.getAddress(),
     );
 
-    const depositTx = bridgeInstance
+    const depositTx = routerInstance
       .connect(depositorAccount)
       .deposit(
         destinationDomainID,
@@ -159,7 +188,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       );
 
     await expect(depositTx)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         erc20ResourceID.toLowerCase(),
@@ -195,7 +224,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
     );
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,
@@ -211,7 +240,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
 
   it("deposit should pass if fee handler not set and fee not supplied", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,
@@ -228,11 +257,26 @@ describe("BasicFeeHandler - [collectFee]", () => {
       await basicFeeHandlerInstance.getAddress(),
     );
     // current fee is set to 0
-    assert.deepEqual(await basicFeeHandlerInstance._fee(), BigInt(0));
-    // Change fee to 0.5 ether
-    await basicFeeHandlerInstance.changeFee(fee);
     assert.deepEqual(
-      ethers.formatEther(await basicFeeHandlerInstance._fee()),
+      await basicFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        erc20ResourceID,
+      ),
+      BigInt(0),
+    );
+    // Change fee to 0.5 ether
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      erc20ResourceID,
+      fee,
+    );
+    assert.deepEqual(
+      ethers.formatEther(
+        await basicFeeHandlerInstance._domainResourceIDToFee(
+          destinationDomainID,
+          erc20ResourceID,
+        ),
+      ),
       "0.5",
     );
 
@@ -268,11 +312,26 @@ describe("BasicFeeHandler - [collectFee]", () => {
       await basicFeeHandlerInstance.getAddress(),
     );
     // current fee is set to 0
-    assert.deepEqual(await basicFeeHandlerInstance._fee(), BigInt(0));
-    // Change fee to 0.5 ether
-    await basicFeeHandlerInstance.changeFee(fee);
     assert.deepEqual(
-      ethers.formatEther(await basicFeeHandlerInstance._fee()),
+      await basicFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        erc20ResourceID,
+      ),
+      BigInt(0),
+    );
+    // Change fee to 0.5 ether
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      erc20ResourceID,
+      fee,
+    );
+    assert.deepEqual(
+      ethers.formatEther(
+        await basicFeeHandlerInstance._domainResourceIDToFee(
+          destinationDomainID,
+          erc20ResourceID,
+        ),
+      ),
       "0.5",
     );
 
@@ -294,7 +353,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
             value: ethers.parseEther("0.5"),
           },
         ),
-    ).to.be.revertedWith("sender must be bridge contract");
+    ).to.be.revertedWith("sender must be router contract");
 
     const balanceAfter = await ethers.provider.getBalance(
       await basicFeeHandlerInstance.getAddress(),
@@ -309,11 +368,26 @@ describe("BasicFeeHandler - [collectFee]", () => {
 
     const fee = ethers.parseEther("0.5");
     // current fee is set to 0
-    assert.deepEqual(await basicFeeHandlerInstance._fee(), BigInt(0));
-    // Change fee to 0.5 ether
-    await basicFeeHandlerInstance.changeFee(fee);
     assert.deepEqual(
-      ethers.formatEther(await basicFeeHandlerInstance._fee()),
+      await basicFeeHandlerInstance._domainResourceIDToFee(
+        destinationDomainID,
+        erc20ResourceID,
+      ),
+      BigInt(0),
+    );
+    // Change fee to 0.5 ether
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      erc20ResourceID,
+      fee,
+    );
+    assert.deepEqual(
+      ethers.formatEther(
+        await basicFeeHandlerInstance._domainResourceIDToFee(
+          destinationDomainID,
+          erc20ResourceID,
+        ),
+      ),
       "0.5",
     );
 
@@ -321,7 +395,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       await basicFeeHandlerInstance.getAddress(),
     );
 
-    const depositTx = bridgeInstance
+    const depositTx = routerInstance
       .connect(depositorAccount)
       .deposit(
         destinationDomainID,
@@ -334,7 +408,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       );
 
     await expect(depositTx)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         erc20ResourceID,

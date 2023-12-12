@@ -9,7 +9,7 @@ import {
   createERCDepositData,
   createResourceID,
   decimalToPaddedBinary,
-  deployBridge,
+  deployBridgeContracts,
   blankFunctionDepositorOffset,
   blankFunctionSig,
   createPermissionlessGenericDepositData,
@@ -17,6 +17,8 @@ import {
 } from "../helpers";
 import type {
   Bridge,
+  Router,
+  Executor,
   ERC20PresetMinterPauser,
   HandlerRevert,
   PermissionlessGenericHandler,
@@ -36,6 +38,8 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
   const contractCallReturndata = ethers.ZeroHash;
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: HandlerRevert;
   let permissionlessGenericHandlerInstance: PermissionlessGenericHandler;
@@ -66,7 +70,8 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
       invalidExecutionContractAddress,
     ] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -75,6 +80,8 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
       await ethers.getContractFactory("HandlerRevert");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
 
     const PermissionlessGenericHandlerContract =
@@ -82,6 +89,7 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
     permissionlessGenericHandlerInstance =
       await PermissionlessGenericHandlerContract.deploy(
         await bridgeInstance.getAddress(),
+        await executorInstance.getAddress(),
       );
 
     const TestStoreContract = await ethers.getContractFactory("TestStore");
@@ -163,7 +171,7 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
   it(`[executeProposal - ERC20] - Should not revert if handler execution failed.
       FailedHandlerExecution event should be emitted`, async () => {
     const depositProposalBeforeFailedExecute =
-      await bridgeInstance.isProposalExecuted(
+      await executorInstance.isProposalExecuted(
         originDomainID,
         expectedDepositNonces[0],
       );
@@ -171,12 +179,12 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
     // depositNonce is not used
     assert.isFalse(depositProposalBeforeFailedExecute);
 
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(relayer1)
       .executeProposal(proposalsForExecution[0]);
 
     await expect(executeTx)
-      .to.emit(bridgeInstance, "FailedHandlerExecution")
+      .to.emit(executorInstance, "FailedHandlerExecution")
       .withArgs(
         "0x08c379a0" + // func signature
           "0000000000000000000000000000000000000000000000000000000000000020" +
@@ -187,7 +195,7 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
       );
 
     const depositProposalAfterFailedExecute =
-      await bridgeInstance.isProposalExecuted(
+      await executorInstance.isProposalExecuted(
         originDomainID,
         expectedDepositNonces[0],
       );
@@ -199,7 +207,7 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
   it(`[executeProposals] - Should not revert if handler execute is reverted and continue to process next execution.
       FailedHandlerExecution event should be emitted with expected values.`, async () => {
     const depositProposalBeforeFailedExecute =
-      await bridgeInstance.isProposalExecuted(
+      await executorInstance.isProposalExecuted(
         originDomainID,
         expectedDepositNonces[0],
       );
@@ -208,7 +216,7 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
     assert.isFalse(depositProposalBeforeFailedExecute);
 
     // check that all nonces in nonce set are 0
-    const noncesSetBeforeDeposit = await bridgeInstance.usedNonces(
+    const noncesSetBeforeDeposit = await executorInstance.usedNonces(
       originDomainID,
       0,
     );
@@ -218,12 +226,12 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
       "0000000000000000000000000000000000000000000000000000000000000000",
     );
 
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(relayer1)
       .executeProposals(proposalsForExecution);
 
     await expect(executeTx)
-      .to.emit(bridgeInstance, "FailedHandlerExecution")
+      .to.emit(executorInstance, "FailedHandlerExecution")
       .withArgs(
         "0x08c379a0" + // func signature
           "0000000000000000000000000000000000000000000000000000000000000020" +
@@ -234,14 +242,14 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
       );
 
     const erc20depositProposalAfterFailedExecute =
-      await bridgeInstance.isProposalExecuted(
+      await executorInstance.isProposalExecuted(
         originDomainID,
         expectedDepositNonces[0],
       );
     // depositNonce for failed ERC20 deposit is unset
     assert.isFalse(erc20depositProposalAfterFailedExecute);
 
-    const genericDepositProposal = await bridgeInstance.isProposalExecuted(
+    const genericDepositProposal = await executorInstance.isProposalExecuted(
       originDomainID,
       expectedDepositNonces[4],
     );
@@ -254,7 +262,7 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
     assert.strictEqual(recipientERC20Balance, BigInt(0));
 
     // check that other nonces in nonce set are not affected after failed deposit
-    const noncesSetAfterDeposit = await bridgeInstance.usedNonces(
+    const noncesSetAfterDeposit = await executorInstance.usedNonces(
       originDomainID,
       0,
     );
@@ -266,7 +274,7 @@ describe("Bridge - [execute - FailedHandlerExecution]", () => {
 
     // check that 'ProposalExecution' event has been emitted with proper values for generic deposit
     await expect(executeTx)
-      .to.emit(bridgeInstance, "ProposalExecution")
+      .to.emit(executorInstance, "ProposalExecution")
       .withArgs(
         originDomainID,
         expectedDepositNonces[4],

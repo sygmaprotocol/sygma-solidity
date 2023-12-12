@@ -5,12 +5,14 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../helpers";
 import type {
   Bridge,
+  Router,
+  Executor,
   ERC20Handler,
   ERC20PresetMinterPauser,
 } from "../../typechain-types";
@@ -25,6 +27,8 @@ describe("Bridge - [execute proposals]", () => {
   const emptySetResourceData = "0x";
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
   let depositorAccount: HardhatEthersSigner;
@@ -46,7 +50,8 @@ describe("Bridge - [execute proposals]", () => {
     [, depositorAccount, recipientAccount, relayer1] =
       await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(destinationDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(destinationDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -55,6 +60,8 @@ describe("Bridge - [execute proposals]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
 
     erc20ResourceID = createResourceID(
@@ -108,12 +115,12 @@ describe("Bridge - [execute proposals]", () => {
     // depositorAccount makes initial deposit of depositAmount
     assert.isFalse(await bridgeInstance.paused());
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, erc20ResourceID, erc20DepositData, feeData),
     ).not.to.be.reverted;
 
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(relayer1)
       .executeProposals(proposalsForExecution);
 
@@ -122,7 +129,7 @@ describe("Bridge - [execute proposals]", () => {
     // check that deposit nonces had been marked as used in bitmap
     expectedDepositNonces.map(async (_, index) => {
       assert.isTrue(
-        await bridgeInstance.isProposalExecuted(
+        await executorInstance.isProposalExecuted(
           originDomainID,
           expectedDepositNonces[index],
         ),
@@ -139,12 +146,12 @@ describe("Bridge - [execute proposals]", () => {
     // depositorAccount makes initial deposit of depositAmount
     assert.isFalse(await bridgeInstance.paused());
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, erc20ResourceID, erc20DepositData, feeData),
     ).not.to.be.reverted;
 
-    const executeTx = await bridgeInstance.executeProposals(
+    const executeTx = await executorInstance.executeProposals(
       proposalsForExecution,
     );
 
@@ -153,7 +160,7 @@ describe("Bridge - [execute proposals]", () => {
     // check that deposit nonces had been marked as used in bitmap
     expectedDepositNonces.map(async (_, index) => {
       assert.isTrue(
-        await bridgeInstance.isProposalExecuted(
+        await executorInstance.isProposalExecuted(
           originDomainID,
           expectedDepositNonces[index],
         ),
@@ -165,38 +172,38 @@ describe("Bridge - [execute proposals]", () => {
       await ERC20MintableInstance.balanceOf(recipientAccount);
     assert.strictEqual(recipientERC20Balance, BigInt(depositAmount));
 
-    const skipExecuteTx = await bridgeInstance
+    const skipExecuteTx = await executorInstance
       .connect(relayer1)
       .executeProposals(proposalsForExecution);
 
     // check that no ProposalExecution events are emitted
     await expect(skipExecuteTx).not.to.emit(
-      bridgeInstance,
+      executorInstance,
       "ProposalExecution",
     );
   });
 
   it("should fail executing proposals if empty array is passed for execution", async () => {
     await expect(
-      bridgeInstance.connect(relayer1).executeProposals([]),
-    ).to.be.revertedWithCustomError(bridgeInstance, "EmptyProposalsArray()");
+      executorInstance.connect(relayer1).executeProposals([]),
+    ).to.be.revertedWithCustomError(executorInstance, "EmptyProposalsArray()");
   });
 
   it("executeProposal event should be emitted with expected values", async () => {
     // depositorAccount makes initial deposit of depositAmount
     assert.isFalse(await bridgeInstance.paused());
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, erc20ResourceID, erc20DepositData, feeData),
     ).not.to.be.reverted;
 
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(relayer1)
       .executeProposals(proposalsForExecution);
 
     await expect(executeTx)
-      .to.emit(bridgeInstance, "ProposalExecution")
+      .to.emit(executorInstance, "ProposalExecution")
       .withArgs(
         originDomainID,
         expectedDepositNonces[0],
@@ -214,7 +221,7 @@ describe("Bridge - [execute proposals]", () => {
     // check that deposit nonces had been marked as used in bitmap
     expectedDepositNonces.map(async (_, index) => {
       assert.isTrue(
-        await bridgeInstance.isProposalExecuted(
+        await executorInstance.isProposalExecuted(
           originDomainID,
           expectedDepositNonces[index],
         ),

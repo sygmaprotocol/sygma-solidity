@@ -5,13 +5,14 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../../helpers";
 import type {
   BasicFeeHandler,
   Bridge,
+  Router,
   ERC20Handler,
   ERC20PresetMinterPauser,
   FeeHandlerRouter,
@@ -28,6 +29,8 @@ describe("BasicFeeHandler - [distributeFee]", () => {
   let resourceID: string;
   let depositData: string;
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let basicFeeHandlerInstance: BasicFeeHandler;
   let ERC20HandlerInstance: ERC20Handler;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
@@ -46,7 +49,8 @@ describe("BasicFeeHandler - [distributeFee]", () => {
       nonAdminAccount,
     ] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -55,17 +59,20 @@ describe("BasicFeeHandler - [distributeFee]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
     const FeeHandlerRouterContract =
       await ethers.getContractFactory("FeeHandlerRouter");
     feeHandlerRouterInstance = await FeeHandlerRouterContract.deploy(
-      await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
     const BasicFeeHandlerContract =
       await ethers.getContractFactory("BasicFeeHandler");
     basicFeeHandlerInstance = await BasicFeeHandlerContract.deploy(
       await bridgeInstance.getAddress(),
       await feeHandlerRouterInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
 
     resourceID = createResourceID(
@@ -95,17 +102,22 @@ describe("BasicFeeHandler - [distributeFee]", () => {
     );
   });
 
-  it("testing test", () => {
-    expect(1).to.be.equal(1);
-  });
-
   it("should distribute fees", async () => {
     await bridgeInstance.adminChangeFeeHandler(
       basicFeeHandlerInstance.getAddress(),
     );
-    await basicFeeHandlerInstance.changeFee(ethers.parseEther("1.0"));
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      ethers.parseEther("1.0"),
+    );
     assert.deepEqual(
-      ethers.formatEther(await basicFeeHandlerInstance._fee()),
+      ethers.formatEther(
+        await basicFeeHandlerInstance._domainResourceIDToFee(
+          destinationDomainID,
+          resourceID,
+        ),
+      ),
       "1.0",
     );
 
@@ -117,7 +129,7 @@ describe("BasicFeeHandler - [distributeFee]", () => {
       "0.0",
     );
 
-    await bridgeInstance
+    await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID, depositData, feeData, {
         value: ethers.parseEther("1.0"),
@@ -181,9 +193,13 @@ describe("BasicFeeHandler - [distributeFee]", () => {
     await bridgeInstance.adminChangeFeeHandler(
       basicFeeHandlerInstance.getAddress(),
     );
-    await basicFeeHandlerInstance.changeFee(ethers.parseEther("1.0"));
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      ethers.parseEther("1.0"),
+    );
 
-    await bridgeInstance
+    await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID, depositData, feeData, {
         value: ethers.parseEther("1.0"),
@@ -214,9 +230,13 @@ describe("BasicFeeHandler - [distributeFee]", () => {
     await bridgeInstance.adminChangeFeeHandler(
       basicFeeHandlerInstance.getAddress(),
     );
-    await basicFeeHandlerInstance.changeFee(ethers.parseEther("1.0"));
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      ethers.parseEther("1.0"),
+    );
 
-    await bridgeInstance
+    await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID, depositData, feeData, {
         value: ethers.parseEther("1.0"),

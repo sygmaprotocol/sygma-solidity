@@ -6,13 +6,15 @@ import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import type {
   Bridge,
+  Depositor,
   ERC20Handler,
   ERC20PresetMinterPauser,
+  Executor,
 } from "../../typechain-types";
 import {
   createERCDepositData,
   createResourceID,
-  deployBridge,
+  deployBridgeContracts,
 } from "../helpers";
 
 describe("Bridge - [deposit - ERC20]", () => {
@@ -26,6 +28,8 @@ describe("Bridge - [deposit - ERC20]", () => {
   const emptySetResourceData = "0x";
 
   let bridgeInstance: Bridge;
+  let routerInstance: Depositor;
+  let executorInstance: Executor;
   let ERC20MintableInstance1: ERC20PresetMinterPauser;
   let ERC20MintableInstance2: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
@@ -39,7 +43,8 @@ describe("Bridge - [deposit - ERC20]", () => {
   beforeEach(async () => {
     [, depositorAccount, recipientAccount] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(Number(originDomainID));
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -55,6 +60,8 @@ describe("Bridge - [deposit - ERC20]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
 
     resourceID1 = createResourceID(
@@ -123,24 +130,35 @@ describe("Bridge - [deposit - ERC20]", () => {
 
   it("ERC20 deposit can be made", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID1, depositData, feeData),
     ).not.to.be.reverted;
   });
 
+  it("should revert ERC20 deposit if Bridge is paused", async () => {
+    assert.isFalse(await bridgeInstance.paused());
+    await expect(bridgeInstance.adminPauseTransfers()).not.to.be.reverted;
+    assert.isTrue(await bridgeInstance.paused());
+    await expect(
+      routerInstance
+        .connect(depositorAccount)
+        .deposit(destinationDomainID, resourceID1, depositData, feeData),
+    ).to.be.revertedWithCustomError(routerInstance, "BridgeIsPaused()");
+  });
+
   it("_depositCounts should be increments from 0 to 1", async () => {
-    await bridgeInstance
+    await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID1, depositData, feeData);
 
     const depositCount =
-      await bridgeInstance._depositCounts(destinationDomainID);
+      await routerInstance._depositCounts(destinationDomainID);
     assert.strictEqual(depositCount, BigInt(expectedDepositNonce));
   });
 
   it("ERC20 can be deposited with correct balances", async () => {
-    await bridgeInstance
+    await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID1, depositData, feeData);
 
@@ -158,12 +176,12 @@ describe("Bridge - [deposit - ERC20]", () => {
   });
 
   it("Deposit event is fired with expected value", async () => {
-    const depositTx1 = bridgeInstance
+    const depositTx1 = routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID1, depositData, feeData);
 
     await expect(depositTx1)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         resourceID1.toLowerCase(),
@@ -173,12 +191,12 @@ describe("Bridge - [deposit - ERC20]", () => {
         "0x",
       );
 
-    const depositTx2 = bridgeInstance
+    const depositTx2 = routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID1, depositData, feeData);
 
     await expect(depositTx2)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         resourceID1,
@@ -191,7 +209,7 @@ describe("Bridge - [deposit - ERC20]", () => {
 
   it("deposit requires resourceID that is mapped to a handler", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,
@@ -204,7 +222,7 @@ describe("Bridge - [deposit - ERC20]", () => {
 
   it("Deposit destination domain can not be current bridge domain ", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID1, depositData, feeData),
     ).to.be.rejectedWith("DepositToCurrentDomain()");
@@ -212,7 +230,7 @@ describe("Bridge - [deposit - ERC20]", () => {
 
   it("should revert if ERC20Safe contract call fails", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID2, depositData, feeData),
     ).to.be.revertedWith("ERC20: operation did not succeed");

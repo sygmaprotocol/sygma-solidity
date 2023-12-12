@@ -4,7 +4,7 @@
 import { ethers } from "hardhat";
 import type { TransactionResponse } from "ethers";
 import { generateAccessControlFuncSignatures } from "../scripts/utils";
-import type { Bridge } from "../typechain-types";
+import type { Bridge, Router, Executor } from "../typechain-types";
 
 export const blankFunctionSig = "0x00000000";
 export const blankFunctionDepositorOffset = "0x0000";
@@ -91,24 +91,39 @@ export function decimalToPaddedBinary(decimal: bigint): string {
 }
 
 // filter out only func signatures
-export const accessControlFuncSignatures =
-  generateAccessControlFuncSignatures().map((e) => e.hash);
+const contractsToGenerateSignatures = ["Bridge", "Router"];
+export const accessControlFuncSignatures = generateAccessControlFuncSignatures(
+  contractsToGenerateSignatures,
+).map((e) => e.hash);
 
-export async function deployBridge(domainID: number): Promise<Bridge> {
+export async function deployBridgeContracts(
+  domainID: number,
+): Promise<[Bridge, Router, Executor]> {
   const [adminAccount] = await ethers.getSigners();
   const AccessControlSegregatorContract = await ethers.getContractFactory(
     "AccessControlSegregator",
   );
   const accessControlInstance = await AccessControlSegregatorContract.deploy(
     accessControlFuncSignatures,
-    Array(9).fill(await adminAccount.getAddress()),
+    Array(accessControlFuncSignatures.length).fill(
+      await adminAccount.getAddress(),
+    ),
   );
   const BridgeContract = await ethers.getContractFactory("Bridge");
-  const BridgeInstance = await BridgeContract.deploy(
+  const bridgeInstance = await BridgeContract.deploy(
     domainID,
-    accessControlInstance.getAddress(),
+    await accessControlInstance.getAddress(),
   );
-  return BridgeInstance;
+  const RouterContract = await ethers.getContractFactory("Router");
+  const routerInstance = await RouterContract.deploy(
+    await bridgeInstance.getAddress(),
+    await accessControlInstance.getAddress(),
+  );
+  const ExecutorContract = await ethers.getContractFactory("Executor");
+  const executorInstance = await ExecutorContract.deploy(
+    await bridgeInstance.getAddress(),
+  );
+  return [bridgeInstance, routerInstance, executorInstance];
 }
 
 export async function createDepositProposalDataFromHandlerResponse(
@@ -154,7 +169,7 @@ module.exports = {
   constructGenericHandlerSetResourceData,
   createResourceID,
   decimalToPaddedBinary,
-  deployBridge,
+  deployBridgeContracts,
   createDepositProposalDataFromHandlerResponse,
   createPermissionlessGenericExecutionData,
 };

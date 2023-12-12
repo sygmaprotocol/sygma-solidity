@@ -5,16 +5,18 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCWithdrawData,
 } from "../helpers";
 import type {
   Bridge,
+  Router,
   ERC20Handler,
   ERC20Handler__factory,
   ERC20PresetMinterPauser,
   ERC20PresetMinterPauser__factory,
+  Executor,
 } from "../../typechain-types";
 
 // This test does NOT include all getter methods, just
@@ -26,6 +28,8 @@ describe("Bridge - [admin]", () => {
   const bytes32 = ethers.zeroPadValue("0x01", 32);
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableContract: ERC20PresetMinterPauser__factory;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerContract: ERC20Handler__factory;
@@ -40,7 +44,8 @@ describe("Bridge - [admin]", () => {
     [tokenOwnerAccount, nonAdminAccount, someAddress] =
       await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(domainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(domainID);
     ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -48,11 +53,12 @@ describe("Bridge - [admin]", () => {
     ERC20HandlerContract = await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
   });
 
   // Testing pausable methods
-
   it("[sanity] Bridge should not be paused after deployments", async () => {
     assert.isFalse(await bridgeInstance.paused());
   });
@@ -109,6 +115,8 @@ describe("Bridge - [admin]", () => {
     );
     const ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
 
     await expect(
@@ -180,6 +188,8 @@ describe("Bridge - [admin]", () => {
     );
     const ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
 
     await expect(
@@ -233,6 +243,8 @@ describe("Bridge - [admin]", () => {
     );
     const ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
 
     await expect(
@@ -289,26 +301,32 @@ describe("Bridge - [admin]", () => {
 
   it("Should set nonce", async () => {
     const nonce = 3;
-    await bridgeInstance.adminSetDepositNonce(domainID, nonce);
-    const nonceAfterSet = await bridgeInstance._depositCounts(domainID);
+    await routerInstance
+      .connect(tokenOwnerAccount)
+      .adminSetDepositNonce(domainID, nonce);
+    const nonceAfterSet = await routerInstance._depositCounts(domainID);
     assert.deepEqual(nonceAfterSet, BigInt(nonce));
   });
 
   it("Should require admin role to set nonce", async () => {
     await expect(
-      bridgeInstance.connect(nonAdminAccount).adminSetDepositNonce(1, 3),
+      routerInstance.connect(nonAdminAccount).adminSetDepositNonce(1, 3),
     ).to.be.revertedWithCustomError(
-      bridgeInstance,
+      routerInstance,
       "AccessNotAllowed(address,bytes4)",
     );
   });
 
   it("Should not allow for decrements of the nonce", async () => {
     const currentNonce = 3;
-    await bridgeInstance.adminSetDepositNonce(domainID, currentNonce);
+    await routerInstance
+      .connect(tokenOwnerAccount)
+      .adminSetDepositNonce(domainID, currentNonce);
     const newNonce = 2;
     await expect(
-      bridgeInstance.adminSetDepositNonce(domainID, newNonce),
+      routerInstance
+        .connect(tokenOwnerAccount)
+        .adminSetDepositNonce(domainID, newNonce),
     ).to.be.revertedWith("Does not allow decrements of the nonce");
   });
 

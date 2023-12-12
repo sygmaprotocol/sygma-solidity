@@ -32,7 +32,7 @@ Requires `yarn` and `@nomicfoundation/hardhat`.
     `typechain` - Generate Typechain typings for compiled contracts <br>
     `verify` - Verifies contract on Etherscan <br>
   * custom commands: <br>
-    `yarn run test`: Runs truffle tests.
+    `yarn run test`: Runs tests.
 
 # Sygma Security Policy
 

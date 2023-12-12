@@ -4,11 +4,16 @@
 import { assert, expect } from "chai";
 import { ethers } from "hardhat";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { createResourceID, createERCDepositData } from "../../helpers";
+import {
+  createResourceID,
+  createERCDepositData,
+  deployBridgeContracts,
+} from "../../helpers";
 import type {
   BasicFeeHandler,
   ERC20PresetMinterPauser,
   FeeHandlerRouter,
+  Router,
 } from "../../../typechain-types";
 
 describe("FeeHandlerRouter", () => {
@@ -16,6 +21,7 @@ describe("FeeHandlerRouter", () => {
   const destinationDomainID = 2;
   const feeData = "0x";
 
+  let routerInstance: Router;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let feeHandlerRouterInstance: FeeHandlerRouter;
   let basicFeeHandlerInstance: BasicFeeHandler;
@@ -39,6 +45,8 @@ describe("FeeHandlerRouter", () => {
       bridgeInstance,
     ] = await ethers.getSigners();
 
+    [, routerInstance] = await deployBridgeContracts(originDomainID);
+
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -53,6 +61,7 @@ describe("FeeHandlerRouter", () => {
     basicFeeHandlerInstance = await BasicFeeHandlerContract.deploy(
       await bridgeInstance.getAddress(),
       await feeHandlerRouterInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
     resourceID = createResourceID(
       await ERC20MintableInstance.getAddress(),
@@ -134,7 +143,11 @@ describe("FeeHandlerRouter", () => {
       resourceID,
       await basicFeeHandlerInstance.getAddress(),
     );
-    await basicFeeHandlerInstance.changeFee(ethers.parseEther("0.5"));
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      ethers.parseEther("0.5"),
+    );
 
     const depositData = createERCDepositData(
       100,
@@ -171,7 +184,11 @@ describe("FeeHandlerRouter", () => {
       resourceID,
       await basicFeeHandlerInstance.getAddress(),
     );
-    await basicFeeHandlerInstance.changeFee(ethers.parseEther("0.5"));
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      ethers.parseEther("0.5"),
+    );
 
     const depositData = createERCDepositData(
       100,
@@ -224,7 +241,11 @@ describe("FeeHandlerRouter", () => {
       resourceID,
       await basicFeeHandlerInstance.getAddress(),
     );
-    await basicFeeHandlerInstance.changeFee(ethers.parseEther("0.5"));
+    await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      ethers.parseEther("0.5"),
+    );
 
     const depositData = createERCDepositData(
       100,

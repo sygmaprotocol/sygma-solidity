@@ -57,7 +57,15 @@ contract ReturnData {
 contract HandlerRevert is ERCHandlerHelpers {
     uint256 private _totalAmount;
 
-    constructor(address bridgeAddress) ERCHandlerHelpers(bridgeAddress) {}
+    constructor(
+        address bridgeAddress,
+        address routerAddress,
+        address executorAddress
+    ) ERCHandlerHelpers(
+        bridgeAddress,
+        routerAddress,
+        executorAddress
+    ) {}
 
     function executeProposal(bytes32, bytes calldata) external view {
         if (_totalAmount == 0) {

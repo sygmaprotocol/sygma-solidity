@@ -5,6 +5,7 @@
   "author": "Sygma",
   "license": "BUSL-1.1",
   "scripts": {
+    "compile": "npx hardhat compile",
     "coverage": "npx hardhat coverage",
     "lint:typescript": "eslint 'test/**/*.ts' 'scripts/**/*.ts'",
     "lint:typescript:fix": "prettier --config .prettierrc.json --write 'scripts/**/*.ts' 'test/**/*.ts' 'hardhat.config.ts'",

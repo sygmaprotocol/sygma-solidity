@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../../helpers";
@@ -13,8 +13,10 @@ import type {
   Bridge,
   ERC20Handler,
   ERC20PresetMinterPauser,
+  Executor,
   FeeHandlerRouter,
   PercentageERC20FeeHandlerEVM,
+  Router,
 } from "../../../../typechain-types";
 
 describe("PercentageFeeHandler - [collectFee]", () => {
@@ -31,6 +33,8 @@ describe("PercentageFeeHandler - [collectFee]", () => {
   const expectedDepositNonce = 1;
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
   let feeHandlerRouterInstance: FeeHandlerRouter;
@@ -44,11 +48,14 @@ describe("PercentageFeeHandler - [collectFee]", () => {
   beforeEach(async () => {
     [, depositorAccount, recipientAccount] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20HandlerContract =
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
@@ -57,7 +64,7 @@ describe("PercentageFeeHandler - [collectFee]", () => {
     const FeeHandlerRouterContract =
       await ethers.getContractFactory("FeeHandlerRouter");
     feeHandlerRouterInstance = await FeeHandlerRouterContract.deploy(
-      await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
     const PercentageERC20FeeHandlerEVMContract =
       await ethers.getContractFactory("PercentageERC20FeeHandlerEVM");
@@ -65,6 +72,7 @@ describe("PercentageFeeHandler - [collectFee]", () => {
       await PercentageERC20FeeHandlerEVMContract.deploy(
         await bridgeInstance.getAddress(),
         await feeHandlerRouterInstance.getAddress(),
+        await routerInstance.getAddress(),
       );
 
     resourceID = createResourceID(
@@ -72,7 +80,11 @@ describe("PercentageFeeHandler - [collectFee]", () => {
       originDomainID,
     );
 
-    await percentageFeeHandlerInstance.changeFee(feeBps);
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      feeBps,
+    );
     await percentageFeeHandlerInstance.changeFeeBounds(
       resourceID,
       lowerBound,
@@ -117,12 +129,12 @@ describe("PercentageFeeHandler - [collectFee]", () => {
       await percentageFeeHandlerInstance.getAddress(),
     );
 
-    const depositTx = await bridgeInstance
+    const depositTx = await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID, depositData, feeData);
 
     await expect(depositTx)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         resourceID,
@@ -151,7 +163,7 @@ describe("PercentageFeeHandler - [collectFee]", () => {
 
   it("deposit should revert if msg.value != 0", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, depositData, feeData, {
           value: ethers.parseEther("0.5"),
@@ -171,7 +183,7 @@ describe("PercentageFeeHandler - [collectFee]", () => {
       0,
     );
     await expect(
-      bridgeInstance.deposit(
+      routerInstance.deposit(
         destinationDomainID,
         resourceID,
         depositData,
@@ -234,7 +246,7 @@ describe("PercentageFeeHandler - [collectFee]", () => {
             value: ethers.parseEther("0.5"),
           },
         ),
-    ).to.be.revertedWith("sender must be bridge contract");
+    ).to.be.revertedWith("sender must be router contract");
   });
 
   it("should successfully change fee handler from FeeRouter to PercentageFeeHandler and collect fee", async () => {
@@ -246,11 +258,11 @@ describe("PercentageFeeHandler - [collectFee]", () => {
       await percentageFeeHandlerInstance.getAddress(),
     );
 
-    const depositTx = await bridgeInstance
+    const depositTx = await routerInstance
       .connect(depositorAccount)
       .deposit(destinationDomainID, resourceID, depositData, feeData);
     await expect(depositTx)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         resourceID,

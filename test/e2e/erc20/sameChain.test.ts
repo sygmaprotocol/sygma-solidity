@@ -5,12 +5,14 @@ import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signer
 import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../helpers";
 import type {
   Bridge,
+  Router,
+  Executor,
   ERC20Handler,
   ERC20PresetMinterPauser,
 } from "../../../typechain-types";
@@ -26,6 +28,8 @@ describe("E2E ERC20 - Same Chain", () => {
   const emptySetResourceData = "0x";
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
   let depositorAccount: HardhatEthersSigner;
@@ -47,7 +51,8 @@ describe("E2E ERC20 - Same Chain", () => {
     [, depositorAccount, recipientAccount, relayer1] =
       await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(destinationDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(destinationDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -56,6 +61,8 @@ describe("E2E ERC20 - Same Chain", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
     resourceID = createResourceID(
       await ERC20MintableInstance.getAddress(),
@@ -114,7 +121,7 @@ describe("E2E ERC20 - Same Chain", () => {
     // depositorAccount makes initial deposit of depositAmount
     assert.isFalse(await bridgeInstance.paused());
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
@@ -126,8 +133,8 @@ describe("E2E ERC20 - Same Chain", () => {
     assert.strictEqual(handlerBalance, BigInt(depositAmount));
 
     // relayer2 executes the proposal
-    await expect(bridgeInstance.connect(relayer1).executeProposal(proposal)).not
-      .to.be.reverted;
+    await expect(executorInstance.connect(relayer1).executeProposal(proposal))
+      .not.to.be.reverted;
 
     // Assert ERC20 balance was transferred from depositorAccount
     const depositorBalance =

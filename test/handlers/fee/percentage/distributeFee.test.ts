@@ -5,7 +5,7 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../../helpers";
@@ -13,8 +13,10 @@ import type {
   Bridge,
   ERC20Handler,
   ERC20PresetMinterPauser,
+  Executor,
   FeeHandlerRouter,
   PercentageERC20FeeHandlerEVM,
+  Router,
 } from "../../../../typechain-types";
 
 describe("PercentageFeeHandler - [distributeFee]", () => {
@@ -29,6 +31,8 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
   const payout = BigInt("10");
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
   let feeHandlerRouterInstance: FeeHandlerRouter;
@@ -50,7 +54,8 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
       nonAdminAccount,
     ] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -58,12 +63,14 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
     ERC20MintableInstance = await ERC20MintableContract.deploy("Token", "TOK");
     const FeeHandlerRouterContract =
       await ethers.getContractFactory("FeeHandlerRouter");
     feeHandlerRouterInstance = await FeeHandlerRouterContract.deploy(
-      await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
     );
     const PercentageERC20FeeHandlerEVMContract =
       await ethers.getContractFactory("PercentageERC20FeeHandlerEVM");
@@ -71,6 +78,7 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
       await PercentageERC20FeeHandlerEVMContract.deploy(
         await bridgeInstance.getAddress(),
         await feeHandlerRouterInstance.getAddress(),
+        await routerInstance.getAddress(),
       );
 
     resourceID = createResourceID(
@@ -105,7 +113,11 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
         resourceID,
         await percentageFeeHandlerInstance.getAddress(),
       ),
-      percentageFeeHandlerInstance.changeFee(feeBps),
+      percentageFeeHandlerInstance.changeFee(
+        destinationDomainID,
+        resourceID,
+        feeBps,
+      ),
     ]);
 
     depositData = createERCDepositData(
@@ -125,7 +137,7 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
     );
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
@@ -172,7 +184,7 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
 
   it("should not distribute fees with other resourceID", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
@@ -202,7 +214,7 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
 
   it("should require admin role to distribute fee", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
@@ -227,7 +239,7 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
 
   it("should revert if addrs and amounts arrays have different length", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(destinationDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;

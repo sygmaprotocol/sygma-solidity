@@ -11,6 +11,8 @@ import "../interfaces/IERCHandler.sol";
  */
 contract ERCHandlerHelpers is IERCHandler {
     address public immutable _bridgeAddress;
+    address public immutable _routerAddress;
+    address public immutable _executorAddress;
 
     uint8 public constant DEFAULT_DECIMALS = 18;
 
@@ -42,12 +44,18 @@ contract ERCHandlerHelpers is IERCHandler {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
-    constructor(address bridgeAddress) {
+    constructor(address bridgeAddress, address routerAddress, address executorAddress) {
         _bridgeAddress = bridgeAddress;
+        _routerAddress = routerAddress;
+        _executorAddress = executorAddress;
     }
 
     function _onlyBridge() private view {
-        require(msg.sender == _bridgeAddress, "sender must be bridge contract");
+        require(
+            msg.sender == _bridgeAddress ||
+            msg.sender == _routerAddress ||
+            msg.sender == _executorAddress,
+            "sender must be bridge, router or executor contract");
     }
 
     /**

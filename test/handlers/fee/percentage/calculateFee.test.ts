@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 import { assert } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../../helpers";
@@ -12,8 +12,10 @@ import type {
   Bridge,
   ERC20Handler,
   ERC20PresetMinterPauser,
+  Executor,
   FeeHandlerRouter,
   PercentageERC20FeeHandlerEVM,
+  Router,
 } from "../../../../typechain-types";
 
 describe("PercentageFeeHandler - [calculateFee]", () => {
@@ -23,6 +25,8 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
   const emptySetResourceData = "0x";
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let percentageFeeHandlerInstance: PercentageERC20FeeHandlerEVM;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
@@ -35,7 +39,8 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
   beforeEach(async () => {
     [, recipientAccount, relayer] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -43,6 +48,8 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
     ERC20MintableInstance = await ERC20MintableContract.deploy("Token", "TOK");
     const FeeHandlerRouterContract =
@@ -56,6 +63,7 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
       await PercentageERC20FeeHandlerEVMContract.deploy(
         await bridgeInstance.getAddress(),
         await feeHandlerRouterInstance.getAddress(),
+        await routerInstance.getAddress(),
       );
 
     resourceID = createResourceID(
@@ -101,7 +109,11 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
 
     assert.deepEqual(response[0].toString(), "0");
     // Change fee to 1 BPS ()
-    await percentageFeeHandlerInstance.changeFee(10000);
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      10000,
+    );
     await percentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300000);
     response = await feeHandlerRouterInstance.calculateFee(
       relayer.getAddress(),
@@ -134,7 +146,11 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
 
     assert.deepEqual(response1[0].toString(), "0");
     // Change fee to 1 BPS ()
-    await percentageFeeHandlerInstance.changeFee(10000);
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      10000,
+    );
     const response2 = await feeHandlerRouterInstance.calculateFee(
       relayer.getAddress(),
       originDomainID,
@@ -153,7 +169,11 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
       await recipientAccount.getAddress(),
     );
     await percentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 300);
-    await percentageFeeHandlerInstance.changeFee(10000);
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      10000,
+    );
 
     const response = await feeHandlerRouterInstance.calculateFee(
       relayer.getAddress(),
@@ -173,7 +193,11 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
       await recipientAccount.getAddress(),
     );
     await percentageFeeHandlerInstance.changeFeeBounds(resourceID, 100, 0);
-    await percentageFeeHandlerInstance.changeFee(10000);
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      10000,
+    );
 
     const response = await feeHandlerRouterInstance.calculateFee(
       relayer.getAddress(),
@@ -193,7 +217,11 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
       await recipientAccount.getAddress(),
     );
     await percentageFeeHandlerInstance.changeFeeBounds(resourceID, 0, 300);
-    await percentageFeeHandlerInstance.changeFee(10000);
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      10000,
+    );
 
     const response = await feeHandlerRouterInstance.calculateFee(
       relayer.getAddress(),
@@ -213,7 +241,11 @@ describe("PercentageFeeHandler - [calculateFee]", () => {
       await recipientAccount.getAddress(),
     );
     await percentageFeeHandlerInstance.changeFeeBounds(resourceID, 0, 300);
-    await percentageFeeHandlerInstance.changeFee(10000);
+    await percentageFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      10000,
+    );
 
     const response = await feeHandlerRouterInstance.calculateFee(
       relayer.getAddress(),

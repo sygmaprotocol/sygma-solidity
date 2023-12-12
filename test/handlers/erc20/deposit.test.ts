@@ -5,12 +5,14 @@ import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   createERCDepositData,
 } from "../../helpers";
 import type {
   Bridge,
+  Router,
+  Executor,
   ERC20Handler,
   ERC20PresetMinterPauser,
 } from "../../../typechain-types";
@@ -24,6 +26,8 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
   const emptySetResourceData = "0x";
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
   let adminAccount: HardhatEthersSigner;
@@ -34,7 +38,8 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
   beforeEach(async () => {
     [adminAccount, depositorAccount] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(originDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(originDomainID);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -43,6 +48,8 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
       await bridgeInstance.getAddress(),
+      await routerInstance.getAddress(),
+      await executorInstance.getAddress(),
     );
 
     resourceID = createResourceID(
@@ -86,7 +93,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       (await depositorAccount.getAddress()).substring(2);
     const lenRecipientAddress = 40;
 
-    const depositTx = bridgeInstance
+    const depositTx = routerInstance
       .connect(depositorAccount)
       .deposit(
         destinationDomainID,
@@ -100,7 +107,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       );
 
     await expect(depositTx)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         resourceID,
@@ -119,7 +126,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
     const recipientAccount = ethers.keccak256(await adminAccount.getAddress());
     const lenRecipientAddress = 32;
 
-    const depositTx = bridgeInstance
+    const depositTx = routerInstance
       .connect(depositorAccount)
       .deposit(
         destinationDomainID,
@@ -133,7 +140,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       );
 
     await expect(depositTx)
-      .to.emit(bridgeInstance, "Deposit")
+      .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
         resourceID,
@@ -179,7 +186,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
     const lenRecipientAddress = 40;
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,
@@ -194,7 +201,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
     ).to.be.revertedWith("ERC20: not a contract");
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(
           destinationDomainID,

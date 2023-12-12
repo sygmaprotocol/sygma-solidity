@@ -6,7 +6,7 @@ import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { hashMessage } from "ethers";
 import {
-  deployBridge,
+  deployBridgeContracts,
   createResourceID,
   constructGenericHandlerSetResourceData,
   createPermissionlessGenericDepositData,
@@ -33,6 +33,8 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
   const contractCallReturndata = ethers.ZeroHash;
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
+  let executorInstance: Executor;
   let permissionlessGenericHandlerInstance: PermissionlessGenericHandler;
   let testStoreInstance: TestStore;
   let testDepositInstance: TestDeposit;
@@ -55,12 +57,14 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
     [, depositorAccount, relayerAccount, invalidExecutionContractAddress] =
       await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(destinationDomainID);
+    [bridgeInstance, routerInstance, executorInstance] =
+      await deployBridgeContracts(destinationDomainID);
     const PermissionlessGenericHandlerContract =
       await ethers.getContractFactory("PermissionlessGenericHandler");
     permissionlessGenericHandlerInstance =
       await PermissionlessGenericHandlerContract.deploy(
         await bridgeInstance.getAddress(),
+        await executorInstance.getAddress(),
       );
     const TestStoreContract = await ethers.getContractFactory("TestStore");
     testStoreInstance = await TestStoreContract.deploy();
@@ -109,14 +113,14 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
 
   it("deposit can be executed successfully", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
 
     // relayer executes the proposal
     await expect(
-      bridgeInstance.connect(relayerAccount).executeProposal(proposal),
+      executorInstance.connect(relayerAccount).executeProposal(proposal),
     ).not.to.be.reverted;
 
     // Verifying asset was marked as stored in testStoreInstance
@@ -125,13 +129,13 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
 
   it("AssetStored event should be emitted", async () => {
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
 
     // relayer executes the proposal
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(relayerAccount)
       .executeProposal(proposal);
 
@@ -156,19 +160,19 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
     );
 
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID, invalidDepositData, feeData),
     ).not.to.be.reverted;
 
     // relayerAccount executes the proposal
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(relayerAccount)
       .executeProposal(proposal);
 
     // check that ProposalExecution event is emitted
     await expect(executeTx)
-      .to.emit(bridgeInstance, "ProposalExecution")
+      .to.emit(executorInstance, "ProposalExecution")
       .withArgs(
         originDomainID,
         expectedDepositNonce,
@@ -181,7 +185,7 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
 
     // check that deposit nonce isn't unmarked as used in bitmap
     assert.isTrue(
-      await bridgeInstance.isProposalExecuted(
+      await executorInstance.isProposalExecuted(
         originDomainID,
         expectedDepositNonce,
       ),
@@ -226,19 +230,19 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
       resourceID: resourceID,
     };
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
 
     // relayerAccount executes the proposal
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(depositorAccount)
       .executeProposal(proposal);
 
     // check that ProposalExecution event is emitted
     await expect(executeTx)
-      .to.emit(bridgeInstance, "ProposalExecution")
+      .to.emit(executorInstance, "ProposalExecution")
       .withArgs(
         originDomainID,
         expectedDepositNonce,
@@ -285,19 +289,19 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
       resourceID: resourceID,
     };
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
 
     // relayerAccount executes the proposal
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(depositorAccount)
       .executeProposal(proposal);
 
     // check that ProposalExecution event is emitted
     await expect(executeTx)
-      .to.emit(bridgeInstance, "ProposalExecution")
+      .to.emit(executorInstance, "ProposalExecution")
       .withArgs(
         originDomainID,
         expectedDepositNonce,
@@ -348,19 +352,19 @@ describe("PermissionlessGenericHandler - [Execute Proposal]", () => {
       resourceID: resourceID,
     };
     await expect(
-      bridgeInstance
+      routerInstance
         .connect(depositorAccount)
         .deposit(originDomainID, resourceID, depositData, feeData),
     ).not.to.be.reverted;
 
     // relayer executes the proposal
-    const executeTx = await bridgeInstance
+    const executeTx = await executorInstance
       .connect(depositorAccount)
       .executeProposal(proposal);
 
     // check that ProposalExecution event is emitted
     await expect(executeTx)
-      .to.emit(bridgeInstance, "ProposalExecution")
+      .to.emit(executorInstance, "ProposalExecution")
       .withArgs(
         originDomainID,
         expectedDepositNonce,

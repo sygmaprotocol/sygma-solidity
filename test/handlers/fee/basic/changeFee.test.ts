@@ -4,25 +4,33 @@
 import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import { deployBridge } from "../../../helpers";
+import { createResourceID, deployBridgeContracts } from "../../../helpers";
 import type {
   BasicFeeHandler,
   Bridge,
+  Router,
   FeeHandlerRouter,
+  ERC20PresetMinterPauser,
 } from "../../../../typechain-types";
 
 describe("BasicFeeHandler - [changeFee]", () => {
-  const domainID = 1;
+  const originDomainID = 1;
+  const destinationDomainID = 2;
 
   let bridgeInstance: Bridge;
+  let routerInstance: Router;
   let basicFeeHandlerInstance: BasicFeeHandler;
+  let originERC20MintableInstance: ERC20PresetMinterPauser;
   let feeHandlerRouterInstance: FeeHandlerRouter;
   let nonAdminAccount: HardhatEthersSigner;
+
+  let resourceID: string;
 
   beforeEach(async () => {
     [, nonAdminAccount] = await ethers.getSigners();
 
-    bridgeInstance = await deployBridge(domainID);
+    [bridgeInstance, routerInstance] =
+      await deployBridgeContracts(originDomainID);
     const FeeHandlerRouterContract =
       await ethers.getContractFactory("FeeHandlerRouter");
     feeHandlerRouterInstance = await FeeHandlerRouterContract.deploy(
@@ -33,6 +41,30 @@ describe("BasicFeeHandler - [changeFee]", () => {
     basicFeeHandlerInstance = await BasicFeeHandlerContract.deploy(
       await bridgeInstance.getAddress(),
       await feeHandlerRouterInstance.getAddress(),
+      await routerInstance.getAddress(),
+    );
+    const ERC20PresetMinterPauserContract = await ethers.getContractFactory(
+      "ERC20PresetMinterPauser",
+    );
+    originERC20MintableInstance = await ERC20PresetMinterPauserContract.deploy(
+      "token",
+      "TOK",
+    );
+
+    resourceID = createResourceID(
+      await originERC20MintableInstance.getAddress(),
+      originDomainID,
+    );
+    const ERC20MintableContract = await ethers.getContractFactory(
+      "ERC20PresetMinterPauser",
+    );
+    originERC20MintableInstance = await ERC20MintableContract.deploy(
+      "token",
+      "TOK",
+    );
+    resourceID = createResourceID(
+      await originERC20MintableInstance.getAddress(),
+      originDomainID,
     );
   });
 
@@ -42,25 +74,34 @@ describe("BasicFeeHandler - [changeFee]", () => {
 
   it("should set fee", async () => {
     const fee = ethers.parseEther("0.05");
-    const changeFeeTx = await basicFeeHandlerInstance.changeFee(fee);
+    const changeFeeTx = await basicFeeHandlerInstance.changeFee(
+      destinationDomainID,
+      resourceID,
+      fee,
+    );
 
     await expect(changeFeeTx)
       .to.emit(basicFeeHandlerInstance, "FeeChanged")
       .withArgs(ethers.parseEther("0.05"));
 
-    const newFee = await basicFeeHandlerInstance._fee();
+    const newFee = await basicFeeHandlerInstance._domainResourceIDToFee(
+      destinationDomainID,
+      resourceID,
+    );
     assert.deepEqual(ethers.formatEther(newFee), "0.05");
   });
 
   it("should not set the same fee", async () => {
-    await expect(basicFeeHandlerInstance.changeFee(0)).to.be.rejectedWith(
-      "Current fee is equal to new fee",
-    );
+    await expect(
+      basicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, 0),
+    ).to.be.rejectedWith("Current fee is equal to new fee");
   });
 
   it("should require admin role to change fee", async () => {
     await expect(
-      basicFeeHandlerInstance.connect(nonAdminAccount).changeFee(1),
+      basicFeeHandlerInstance
+        .connect(nonAdminAccount)
+        .changeFee(destinationDomainID, resourceID, 1),
     ).to.be.revertedWith("sender doesn't have admin role");
   });
 });

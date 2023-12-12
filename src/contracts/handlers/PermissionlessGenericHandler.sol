@@ -13,6 +13,7 @@ contract PermissionlessGenericHandler is IHandler {
     uint256 public constant MAX_FEE = 1000000;
 
     address public immutable _bridgeAddress;
+    address public immutable _executorAddress;
 
     modifier onlyBridge() {
         _onlyBridge();
@@ -23,11 +24,22 @@ contract PermissionlessGenericHandler is IHandler {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
     }
 
+    modifier onlyExecutor() {
+        _onlyExecutor();
+        _;
+    }
+
+    function _onlyExecutor() private view {
+        require(msg.sender == _executorAddress, "sender must be executor contract");
+    }
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
+        @param executorAddress Contract address of previously deployed Executor.
      */
-    constructor(address bridgeAddress) {
+    constructor(address bridgeAddress, address executorAddress) {
         _bridgeAddress = bridgeAddress;
+        _executorAddress = executorAddress;
     }
 
     /**
@@ -190,7 +202,7 @@ contract PermissionlessGenericHandler is IHandler {
             After this, the target contract will get the following:
             executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
      */
-    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyBridge returns (bytes memory) {
+    function executeProposal(bytes32 resourceID, bytes calldata data) external onlyExecutor returns (bytes memory) {
         uint256 maxFee;
         uint16 lenExecuteFuncSignature;
         bytes4 executeFuncSignature;

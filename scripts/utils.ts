@@ -3,57 +3,67 @@ import { resolve } from "path";
 import type { InterfaceAbi, Fragment } from "ethers";
 import { keccak256, ContractFactory } from "ethers";
 
-const BRIDGE_CONTRACT_PATH = resolve(__dirname, "../src/contracts/Bridge.sol");
-const ARTIFACTS_PATH = resolve(
-  __dirname,
-  "../artifacts/src/contracts/Bridge.sol/Bridge.json",
-);
-
-export function generateAccessControlFuncSignatures(): {
+export function generateAccessControlFuncSignatures(contracts: Array<string>): {
   function: string;
   hash: string;
 }[] {
-  const bridgeArtifacts = JSON.parse(
-    fs.readFileSync(ARTIFACTS_PATH).toString(),
-  );
-  const bridgeContractFactory = new ContractFactory(
-    bridgeArtifacts.abi as InterfaceAbi,
-    bridgeArtifacts.bytecode as string,
-  );
-  const bridgeContractMethods = bridgeContractFactory.interface.fragments
-    .map((fragment: Fragment) => {
-      if (fragment.type == "function") {
-        return fragment.format();
-      }
-    })
-    .filter((item) => item) as Array<string>;
+  const allAccessControlFuncSignatures: {
+    function: string;
+    hash: string;
+  }[] = [];
 
-  const bridgeContract = fs.readFileSync(BRIDGE_CONTRACT_PATH);
+  contracts.map((contractName) => {
+    const CONTRACT_PATH = resolve(
+      __dirname,
+      `../src/contracts/${contractName}.sol`,
+    );
+    const ARTIFACTS_PATH = resolve(
+      __dirname,
+      `../artifacts/src/contracts/${contractName}.sol/${contractName}.json`,
+    );
 
-  // regex that will match all functions that have "onlyAllowed" modifier
-  const regex = RegExp(
-    "function\\s+(?:(?!_onlyAllowed|function).)+onlyAllowed",
-    "gs",
-  );
+    const bridgeArtifacts = JSON.parse(
+      fs.readFileSync(ARTIFACTS_PATH).toString(),
+    );
+    const contractFactory = new ContractFactory(
+      bridgeArtifacts.abi as InterfaceAbi,
+      bridgeArtifacts.bytecode as string,
+    );
+    const contractMethods = contractFactory.interface.fragments
+      .map((fragment: Fragment) => {
+        if (fragment.type == "function") {
+          return fragment.format();
+        }
+      })
+      .filter((item) => item) as Array<string>;
 
-  let a;
-  const b: Array<string> = [];
-  // fetch all functions that have "onlyAllowed" modifier from "Bridge.sol"
-  while ((a = regex.exec(bridgeContract.toString())) !== null) {
-    // filter out only function name from matching (onlyAllowed) functions
-    b.push(a[0].split(/[\s()]+/)[1]);
-  }
+    const contractInstance = fs.readFileSync(CONTRACT_PATH);
 
-  let accessControlFuncSignatures = [];
-  // filter out from Bridge ABI functions signatures with "onlyAllowed" modifier
-  accessControlFuncSignatures = bridgeContractMethods
-    .filter((el1) => b.some((el2) => el1.includes(el2)))
-    .map((func) => ({
-      function: func,
-      hash: keccak256(Buffer.from(func)).substring(0, 10),
-    }));
+    // regex that will match all functions that have "onlyAllowed" modifier
+    const regex = RegExp(
+      "function\\s+(?:(?!_onlyAllowed|function).)+onlyAllowed",
+      "gs",
+    );
 
-  console.table(accessControlFuncSignatures);
+    let a;
+    const b: Array<string> = [];
+    // fetch all functions that have "onlyAllowed" modifier
+    while ((a = regex.exec(contractInstance.toString())) !== null) {
+      // filter out only function name from matching (onlyAllowed) functions
+      b.push(a[0].split(/[\s()]+/)[1]);
+    }
 
-  return accessControlFuncSignatures;
+    // filter out from Bridge ABI functions signatures with "onlyAllowed" modifier
+    const accessControlFuncSignatures = contractMethods
+      .filter((el1) => b.some((el2) => el1.includes(el2)))
+      .map((func) => ({
+        function: func,
+        hash: keccak256(Buffer.from(func)).substring(0, 10),
+      }));
+    allAccessControlFuncSignatures.push(...accessControlFuncSignatures);
+  });
+
+  console.table(allAccessControlFuncSignatures);
+
+  return allAccessControlFuncSignatures;
 }
