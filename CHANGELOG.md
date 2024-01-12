@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.5.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.4.1...v2.5.0) (2024-01-12)
+
+
+### Features
+
+* add support for different fees per dest domain to basic/percentage fee handler ([#206](https://github.com/sygmaprotocol/sygma-solidity/issues/206)) ([944d4ee](https://github.com/sygmaprotocol/sygma-solidity/commit/944d4eef8f94fd27dc3b8d5ab083b4eb0a2b6d2a))
+* Implement fee whitelist ([#203](https://github.com/sygmaprotocol/sygma-solidity/issues/203)) ([4463bcb](https://github.com/sygmaprotocol/sygma-solidity/commit/4463bcb03fd046875e8109fa5e9266ffdc304015))
+* limit permissionless generic call gas usage ([#200](https://github.com/sygmaprotocol/sygma-solidity/issues/200)) ([d7823d7](https://github.com/sygmaprotocol/sygma-solidity/commit/d7823d7fc1879718387355b8f687e12bd587aa9c))
+
+
+### Bug Fixes
+
+* name for percentage fee handler abi publishing ([#211](https://github.com/sygmaprotocol/sygma-solidity/issues/211)) ([6861ddc](https://github.com/sygmaprotocol/sygma-solidity/commit/6861ddc36f44e7bf8d08658757783b28b4c87c95))
+* set up fee handler router in migration ([#207](https://github.com/sygmaprotocol/sygma-solidity/issues/207)) ([b1a9760](https://github.com/sygmaprotocol/sygma-solidity/commit/b1a97608b81a198fee0f065d9aad296dceaaad5b))
+
+
+### Miscellaneous
+
+* release v2.4.2 ([#212](https://github.com/sygmaprotocol/sygma-solidity/issues/212)) ([5f11451](https://github.com/sygmaprotocol/sygma-solidity/commit/5f11451e23c0ac2e83d7638b2e14440352613964))
+* update migrations to support percetange fee handler + flow improvements ([#198](https://github.com/sygmaprotocol/sygma-solidity/issues/198)) ([746d51e](https://github.com/sygmaprotocol/sygma-solidity/commit/746d51e108fb3b03616ba533b2dbde96b4c2bbdc))
+
 ## [2.4.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.4.0...v2.4.1) (2023-09-14)
 
 
