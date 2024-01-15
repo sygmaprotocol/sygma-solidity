@@ -109,7 +109,7 @@ contract PermissionlessGenericHandler is IHandler {
             After this, the target contract will get the following:
             executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
      */
-    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external view returns (bytes memory) {
+    function deposit(bytes32 resourceID, address depositor, bytes calldata data) external pure returns (bytes memory) {
         require(data.length >= 76, "Incorrect data length"); // 32 + 2 + 1 + 1 + 20 + 20
 
         uint256 maxFee;
@@ -141,6 +141,7 @@ contract PermissionlessGenericHandler is IHandler {
 
         require(maxFee < MAX_FEE, "requested fee too large");
         require(depositor == executionDataDepositor, "incorrect depositor in deposit data");
+        return data;
     }
 
     /**

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 import { ethers } from "hardhat";
-import type { TransactionResponse } from "ethers";
+import type { TransactionReceipt, TransactionResponse } from "ethers";
 import { generateAccessControlFuncSignatures } from "../scripts/utils";
 import type { Bridge, Router, Executor } from "../typechain-types";
 
@@ -126,16 +126,14 @@ export async function deployBridgeContracts(
   return [bridgeInstance, routerInstance, executorInstance];
 }
 
-export async function createDepositProposalDataFromHandlerResponse(
+export async function getDepositEventData(
   depositTx: TransactionResponse,
-  lenRecipientAddress: number,
-  recipientAccount: string,
 ): Promise<string> {
-  return createERCDepositData(
-    BigInt((await depositTx.wait(1)).logs[2]["args"][5]).toString(),
-    lenRecipientAddress,
-    recipientAccount,
-  );
+  return (
+    ((await depositTx.wait(1)) as TransactionReceipt).logs[2] as unknown as {
+      args: string[];
+    }
+  )["args"][4];
 }
 
 // This helper can be used to prepare execution data for PermissionlessGenericHandler
@@ -170,6 +168,6 @@ module.exports = {
   createResourceID,
   decimalToPaddedBinary,
   deployBridgeContracts,
-  createDepositProposalDataFromHandlerResponse,
   createPermissionlessGenericExecutionData,
+  getDepositEventData,
 };

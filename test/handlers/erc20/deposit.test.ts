@@ -118,7 +118,6 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
           lenRecipientAddress,
           recipientAccount,
         ).toLowerCase(),
-        "0x",
       );
   });
 
@@ -151,7 +150,6 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
           lenRecipientAddress,
           recipientAccount,
         ),
-        "0x",
       );
   });
 

@@ -188,7 +188,6 @@ describe("Bridge - [deposit - ERC20]", () => {
         expectedDepositNonce,
         await depositorAccount.getAddress(),
         depositData.toLowerCase(),
-        "0x",
       );
 
     const depositTx2 = routerInstance
@@ -203,7 +202,6 @@ describe("Bridge - [deposit - ERC20]", () => {
         expectedDepositNonce + 1,
         await depositorAccount.getAddress(),
         depositData.toLowerCase(),
-        "0x",
       );
   });
 

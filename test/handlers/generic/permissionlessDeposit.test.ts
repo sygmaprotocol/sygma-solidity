@@ -99,7 +99,6 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
         expectedDepositNonce,
         await depositorAccount.getAddress(),
         depositData.toLowerCase(),
-        "0x",
       );
   });
 

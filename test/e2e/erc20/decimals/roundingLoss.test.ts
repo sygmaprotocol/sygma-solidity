@@ -9,7 +9,7 @@ import {
   createResourceID,
   createERCDepositData,
   toHex,
-  createDepositProposalDataFromHandlerResponse,
+  getDepositEventData,
 } from "../../../helpers";
 import type {
   Bridge,
@@ -216,8 +216,10 @@ describe("E2E ERC20 - Two EVM Chains both with decimal places != 18 with roundin
       );
     await expect(originDepositTx).not.to.be.reverted;
 
-    // check that deposited amount converted to 18 decimal places is
-    // emitted in handlerResponse
+    // check that deposited amount converted to 18 decimal places is emitted in data
+    const originExpectedDepositAmount =
+      toHex(originRelayerConvertedAmount.toString(), 32) +
+      originDepositData.substring(66);
     await expect(originDepositTx)
       .to.emit(originRouterInstance, "Deposit")
       .withArgs(
@@ -225,23 +227,13 @@ describe("E2E ERC20 - Two EVM Chains both with decimal places != 18 with roundin
         originResourceID.toLowerCase(),
         expectedDepositNonce,
         await depositorAccount.getAddress(),
-        originDepositData.toLowerCase(),
-        toHex(originRelayerConvertedAmount.toString(), 32),
-      );
-
-    // this mocks depositProposal data for executing on
-    // destination chain which is returned from relayers
-    const originDepositProposalData =
-      await createDepositProposalDataFromHandlerResponse(
-        originDepositTx,
-        20,
-        await recipientAccount.getAddress(),
+        originExpectedDepositAmount.toLowerCase(),
       );
 
     const originDomainProposal = {
       originDomainID: originDomainID,
       depositNonce: expectedDepositNonce,
-      data: originDepositProposalData,
+      data: getDepositEventData(originDepositTx),
       resourceID: destinationResourceID,
     };
 
@@ -292,8 +284,10 @@ describe("E2E ERC20 - Two EVM Chains both with decimal places != 18 with roundin
       );
     await expect(destinationDepositTx).not.to.be.reverted;
 
-    // check that deposited amount converted to 18 decimal places is
-    // emitted in handlerResponse
+    // check that deposited amount converted to 18 decimal places is emitted in data
+    const destinationExpectedDepositData =
+      toHex(destinationRelayerConvertedAmount.toString(), 32) +
+      destinationDepositData.substring(66);
     await expect(destinationDepositTx)
       .to.emit(destinationRouterInstance, "Deposit")
       .withArgs(
@@ -301,23 +295,13 @@ describe("E2E ERC20 - Two EVM Chains both with decimal places != 18 with roundin
         destinationResourceID,
         expectedDepositNonce,
         await recipientAccount.getAddress(),
-        destinationDepositData.toLowerCase(),
-        toHex(destinationRelayerConvertedAmount.toString(), 32),
-      );
-
-    // this mocks depositProposal data for executing on
-    // destination chain which is returned from relayers
-    const destinationDepositProposalData =
-      await createDepositProposalDataFromHandlerResponse(
-        destinationDepositTx,
-        20,
-        await depositorAccount.getAddress(),
+        destinationExpectedDepositData.toLowerCase(),
       );
 
     const destinationDomainProposal = {
       originDomainID: destinationDomainID,
       depositNonce: expectedDepositNonce,
-      data: destinationDepositProposalData,
+      data: await getDepositEventData(destinationDepositTx),
       resourceID: originResourceID,
     };
 

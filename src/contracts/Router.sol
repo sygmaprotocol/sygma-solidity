@@ -37,8 +37,7 @@ contract Router is Context {
         bytes32 resourceID,
         uint64 depositNonce,
         address indexed user,
-        bytes data,
-        bytes handlerResponse
+        bytes data
     );
 
     modifier onlyAllowed() {
@@ -80,18 +79,15 @@ contract Router is Context {
         @param resourceID ResourceID used to find address of handler to be used for deposit.
         @param depositData Additional data to be passed to specified handler.
         @param feeData Additional data to be passed to the fee handler.
-        @notice Emits {Deposit} event with all necessary parameters and a handler response.
+        @notice Emits {Deposit} event with all necessary parameters.
         @return depositNonce deposit nonce for the destination domain.
-        @return handlerResponse a handler response:
-        - ERC20Handler: responds with an empty data.
-        - PermissionlessGenericHandler: responds with an empty data.
      */
     function deposit(
         uint8 destinationDomainID,
         bytes32 resourceID,
         bytes calldata depositData,
         bytes calldata feeData
-    ) external payable whenBridgeNotPaused returns (uint64 depositNonce, bytes memory handlerResponse) {
+    ) external payable whenBridgeNotPaused returns (uint64 depositNonce) {
         if (destinationDomainID == _domainID) revert DepositToCurrentDomain();
 
         address sender = _msgSender();
@@ -114,10 +110,11 @@ contract Router is Context {
 
         depositNonce = ++_depositCounts[destinationDomainID];
 
-        IHandler depositHandler = IHandler(handler);
-        handlerResponse = depositHandler.deposit(resourceID, sender, depositData);
 
-        emit Deposit(destinationDomainID, resourceID, depositNonce, sender, depositData, handlerResponse);
-        return (depositNonce, handlerResponse);
+        IHandler depositHandler = IHandler(handler);
+        bytes memory handlerDepositData = depositHandler.deposit(resourceID, sender, depositData);
+
+        emit Deposit(destinationDomainID, resourceID, depositNonce, sender, handlerDepositData);
+        return depositNonce;
     }
 }

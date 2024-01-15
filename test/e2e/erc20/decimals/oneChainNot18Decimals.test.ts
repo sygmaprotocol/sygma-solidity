@@ -8,7 +8,7 @@ import {
   deployBridgeContracts,
   createResourceID,
   createERCDepositData,
-  createDepositProposalDataFromHandlerResponse,
+  getDepositEventData,
 } from "../../../helpers";
 import type {
   Bridge,
@@ -224,19 +224,10 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
       );
     await expect(originDepositTx).not.to.be.reverted;
 
-    // this mocks depositProposal data for executing on
-    // destination chain which is returned from relayers
-    const originDepositProposalData =
-      await createDepositProposalDataFromHandlerResponse(
-        originDepositTx,
-        20,
-        await recipientAccount.getAddress(),
-      );
-
     const originDomainProposal = {
       originDomainID: originDomainID,
       depositNonce: expectedDepositNonce,
-      data: originDepositProposalData,
+      data: await getDepositEventData(originDepositTx),
       resourceID: destinationResourceID,
     };
 
@@ -297,7 +288,6 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
         expectedDepositNonce,
         await recipientAccount.getAddress(),
         destinationDepositData.toLowerCase(),
-        "0x",
       );
 
     // Recipient should have a balance of 0 (deposit amount)

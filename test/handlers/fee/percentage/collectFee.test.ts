@@ -141,7 +141,6 @@ describe("PercentageFeeHandler - [collectFee]", () => {
         expectedDepositNonce,
         await depositorAccount.getAddress(),
         depositData.toLowerCase(),
-        "0x",
       );
 
     await expect(depositTx)
@@ -269,7 +268,6 @@ describe("PercentageFeeHandler - [collectFee]", () => {
         expectedDepositNonce,
         await depositorAccount.getAddress(),
         depositData.toLowerCase(),
-        "0x",
       );
 
     await expect(depositTx)
