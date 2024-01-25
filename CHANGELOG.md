@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.5.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.0...v2.5.1) (2024-01-25)
+
+
+### Bug Fixes
+
+* dependency and update artifacts ([#215](https://github.com/sygmaprotocol/sygma-solidity/issues/215)) ([42ebf5f](https://github.com/sygmaprotocol/sygma-solidity/commit/42ebf5f0301b29d8019d6515cb1648facbe52d89))
+* node version in lint ci ([#217](https://github.com/sygmaprotocol/sygma-solidity/issues/217)) ([57fbb9b](https://github.com/sygmaprotocol/sygma-solidity/commit/57fbb9be4cc8a126d68e0fa24b82e3f869217486))
+
 ## [2.5.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.4.1...v2.5.0) (2024-01-12)
 
 
