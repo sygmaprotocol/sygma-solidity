@@ -215,6 +215,36 @@ contract TestDeposit {
     }
 }
 
+contract TestSpectre {
+    struct SyncStepInput {
+        uint64 attestedSlot;
+        uint64 finalizedSlot;
+        uint64 participation;
+        bytes32 finalizedHeaderRoot;
+        bytes32 executionPayloadRoot;
+        uint256[12] accumulator;
+    }
+
+    struct RotateInput {
+        bytes32 syncCommitteeSSZ;
+        uint256 syncCommitteePoseidon;
+        uint256[12] accumulator;
+    }
+
+    mapping(uint256 => bytes32) public executionPayloadRoots;
+
+    function step(SyncStepInput calldata input, bytes calldata proof) external {
+        executionPayloadRoots[input.finalizedSlot] = input.executionPayloadRoot;
+    }
+
+    function rotate(
+        RotateInput calldata rotateInput, 
+        bytes calldata rotateProof, 
+        SyncStepInput calldata stepInput, 
+        bytes calldata stepProof
+    ) external {}
+}
+
 contract StateRootStorage {
     mapping(uint8 => mapping(uint256 => bytes32)) public _stateRoots;
 
