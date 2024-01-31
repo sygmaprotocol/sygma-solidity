@@ -26,6 +26,7 @@ describe("ERC20Handler - [decimals]", () => {
   const tokenAmount = 100;
   const setDecimalPlaces = ethers.zeroPadValue(ethers.toBeHex(11), 1);
   const emptySetResourceData = "0x";
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let resourceID: string;
 
@@ -33,7 +34,7 @@ describe("ERC20Handler - [decimals]", () => {
     [, depositorAccount] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(originDomainID);
+      await deployBridgeContracts(originDomainID, routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauserDecimals",
     );

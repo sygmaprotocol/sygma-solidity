@@ -1,10 +1,17 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
 import type { TransactionReceipt, TransactionResponse } from "ethers";
 import { generateAccessControlFuncSignatures } from "../scripts/utils";
-import type { Bridge, Router, Executor } from "../typechain-types";
+import type {
+  Bridge,
+  Router,
+  Executor,
+  StateRootStorage,
+  TestStore,
+  TestDeposit,
+} from "../typechain-types";
 
 export const blankFunctionSig = "0x00000000";
 export const blankFunctionDepositorOffset = "0x0000";
@@ -91,14 +98,15 @@ export function decimalToPaddedBinary(decimal: bigint): string {
 }
 
 // filter out only func signatures
-const contractsToGenerateSignatures = ["Bridge", "Router"];
+const contractsToGenerateSignatures = ["Bridge", "Router", "Executor"];
 export const accessControlFuncSignatures = generateAccessControlFuncSignatures(
   contractsToGenerateSignatures,
 ).map((e) => e.hash);
 
 export async function deployBridgeContracts(
   domainID: number,
-): Promise<[Bridge, Router, Executor]> {
+  routerAddress: string,
+): Promise<[Bridge, Router, Executor, StateRootStorage]> {
   const [adminAccount] = await ethers.getSigners();
   const AccessControlSegregatorContract = await ethers.getContractFactory(
     "AccessControlSegregator",
@@ -119,11 +127,28 @@ export async function deployBridgeContracts(
     await bridgeInstance.getAddress(),
     await accessControlInstance.getAddress(),
   );
+  const StateRootStorageContract =
+    await ethers.getContractFactory("StateRootStorage");
+  const stateRootStorageInstance = await StateRootStorageContract.deploy();
+
   const ExecutorContract = await ethers.getContractFactory("Executor");
   const executorInstance = await ExecutorContract.deploy(
     await bridgeInstance.getAddress(),
+    await accessControlInstance.getAddress(),
+    1,
+    await stateRootStorageInstance.getAddress(),
   );
-  return [bridgeInstance, routerInstance, executorInstance];
+  await executorInstance.adminChangeRouter(
+    // mock that the origin domain the is different than executor domainID
+    domainID == 1 ? 2 : 1,
+    routerAddress,
+  );
+  return [
+    bridgeInstance,
+    routerInstance,
+    executorInstance,
+    stateRootStorageInstance,
+  ];
 }
 
 export async function getDepositEventData(
@@ -133,7 +158,7 @@ export async function getDepositEventData(
     ((await depositTx.wait(1)) as TransactionReceipt).logs[2] as unknown as {
       args: string[];
     }
-  )["args"][4];
+  )["args"][5];
 }
 
 // This helper can be used to prepare execution data for PermissionlessGenericHandler
@@ -156,6 +181,46 @@ export function createPermissionlessGenericExecutionData(
   );
 }
 
+export async function deployMockTestContracts(
+  testStoreAddress: string,
+  testDepositAddress: string,
+): Promise<[TestStore, TestDeposit]> {
+  // Deploy fake contracts to generate bytecode and override address for proof  verification logic
+  const fakeTestStore = await ethers.getContractFactory("TestStore");
+  const fakeTestStoreInstance = await fakeTestStore.deploy();
+  const fakeTestDeposit = await ethers.getContractFactory("TestDeposit");
+  const fakeTestDepositInstance = await fakeTestDeposit.deploy();
+  // Get bytecode of the deployed contract using "eth_getCode"
+  const fakeTestStoreInstanceBytecode = await network.provider.send(
+    "eth_getCode",
+    [await fakeTestStoreInstance.getAddress()],
+  );
+  const fakeTestDepositInstanceBytecode = await network.provider.send(
+    "eth_getCode",
+    [await fakeTestDepositInstance.getAddress()],
+  );
+  // Set bytecode at the target contract address with the fake contract bytecode
+  await network.provider.send("hardhat_setCode", [
+    testStoreAddress,
+    fakeTestStoreInstanceBytecode,
+  ]);
+  await network.provider.send("hardhat_setCode", [
+    testDepositAddress,
+    fakeTestDepositInstanceBytecode,
+  ]);
+  // Fetch contract instances
+  const testStoreInstance = await ethers.getContractAt(
+    "TestStore",
+    testStoreAddress,
+  );
+  const testDepositInstance = await ethers.getContractAt(
+    "TestDeposit",
+    testDepositAddress,
+  );
+
+  return [testStoreInstance, testDepositInstance];
+}
+
 module.exports = {
   blankFunctionSig,
   blankFunctionDepositorOffset,
@@ -170,4 +235,5 @@ module.exports = {
   deployBridgeContracts,
   createPermissionlessGenericExecutionData,
   getDepositEventData,
+  deployMockTestContracts,
 };

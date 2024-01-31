@@ -26,6 +26,7 @@ describe("Bridge - [admin]", () => {
 
   const emptySetResourceData = "0x";
   const bytes32 = ethers.zeroPadValue("0x01", 32);
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -45,7 +46,7 @@ describe("Bridge - [admin]", () => {
       await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(domainID);
+      await deployBridgeContracts(domainID, routerAddress);
     ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );

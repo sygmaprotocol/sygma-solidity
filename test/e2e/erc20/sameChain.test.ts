@@ -4,17 +4,17 @@ import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signer
 
 import { ethers } from "hardhat";
 import { assert, expect } from "chai";
-import {
-  deployBridgeContracts,
-  createResourceID,
-  createERCDepositData,
-} from "../../helpers";
+import { deployBridgeContracts, createERCDepositData } from "../../helpers";
+
+import { accountProof1, storageProof1 } from "../../testingProofs";
+
 import type {
   Bridge,
   Router,
   Executor,
   ERC20Handler,
   ERC20PresetMinterPauser,
+  StateRootStorage,
 } from "../../../typechain-types";
 
 describe("E2E ERC20 - Same Chain", () => {
@@ -26,12 +26,18 @@ describe("E2E ERC20 - Same Chain", () => {
   const expectedDepositNonce = 1;
   const feeData = "0x";
   const emptySetResourceData = "0x";
+  const securityModel = 1;
+  const slot = 5090531;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
+  const stateRoot =
+    "0xdf5a6882ccba1fd513c68a254fa729e05f769b2fa312011e1f5c38cde69964c7";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
   let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
+  let stateRootStorageInstance: StateRootStorage;
   let depositorAccount: HardhatEthersSigner;
   let recipientAccount: HardhatEthersSigner;
   let relayer1: HardhatEthersSigner;
@@ -42,17 +48,23 @@ describe("E2E ERC20 - Same Chain", () => {
 
   let proposal: {
     originDomainID: number;
+    securityModel: number;
     depositNonce: number;
     resourceID: string;
     data: string;
+    storageProof: Array<string>;
   };
 
   beforeEach(async () => {
     [, depositorAccount, recipientAccount, relayer1] =
       await ethers.getSigners();
 
-    [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(destinationDomainID);
+    [
+      bridgeInstance,
+      routerInstance,
+      executorInstance,
+      stateRootStorageInstance,
+    ] = await deployBridgeContracts(destinationDomainID, routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -64,10 +76,8 @@ describe("E2E ERC20 - Same Chain", () => {
       await routerInstance.getAddress(),
       await executorInstance.getAddress(),
     );
-    resourceID = createResourceID(
-      await ERC20MintableInstance.getAddress(),
-      originDomainID,
-    );
+    resourceID =
+      "0x0000000000000000000000000000000000000000000000000000000000000000";
 
     await Promise.all([
       ERC20MintableInstance.mint(depositorAccount, initialTokenAmount),
@@ -97,10 +107,18 @@ describe("E2E ERC20 - Same Chain", () => {
 
     proposal = {
       originDomainID: originDomainID,
+      securityModel: securityModel,
       depositNonce: expectedDepositNonce,
       data: depositProposalData,
       resourceID: resourceID,
+      storageProof: storageProof1[0].proof,
     };
+
+    await stateRootStorageInstance.storeStateRoot(
+      originDomainID,
+      slot,
+      stateRoot,
+    );
   });
 
   it("[sanity] depositorAccount' balance should be equal to initialTokenAmount", async () => {
@@ -123,7 +141,13 @@ describe("E2E ERC20 - Same Chain", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(originDomainID, resourceID, depositData, feeData),
+        .deposit(
+          originDomainID,
+          resourceID,
+          securityModel,
+          depositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
 
     // Handler should have a balance of depositAmount
@@ -133,8 +157,11 @@ describe("E2E ERC20 - Same Chain", () => {
     assert.strictEqual(handlerBalance, BigInt(depositAmount));
 
     // relayer2 executes the proposal
-    await expect(executorInstance.connect(relayer1).executeProposal(proposal))
-      .not.to.be.reverted;
+    await expect(
+      executorInstance
+        .connect(relayer1)
+        .executeProposal(proposal, accountProof1, slot),
+    ).not.to.be.reverted;
 
     // Assert ERC20 balance was transferred from depositorAccount
     const depositorBalance =

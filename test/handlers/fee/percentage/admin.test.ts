@@ -16,6 +16,7 @@ import type {
 describe("PercentageFeeHandler - [admin]", () => {
   const originDomainID = 1;
   const destinationDomainID = 1;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -33,8 +34,10 @@ describe("PercentageFeeHandler - [admin]", () => {
     [currentFeeHandlerAdmin, newPercentageFeeHandlerAdmin, nonAdminAccount] =
       await ethers.getSigners();
 
-    [bridgeInstance, routerInstance] =
-      await deployBridgeContracts(originDomainID);
+    [bridgeInstance, routerInstance] = await deployBridgeContracts(
+      originDomainID,
+      routerAddress,
+    );
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );

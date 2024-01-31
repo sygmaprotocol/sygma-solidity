@@ -25,6 +25,8 @@ describe("BasicFeeHandler - [distributeFee]", () => {
   const depositAmount = 10;
   const feeData = "0x";
   const emptySetResourceData = "0x";
+  const securityModel = 1;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let resourceID: string;
   let depositData: string;
@@ -50,7 +52,7 @@ describe("BasicFeeHandler - [distributeFee]", () => {
     ] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(originDomainID);
+      await deployBridgeContracts(originDomainID, routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -131,9 +133,16 @@ describe("BasicFeeHandler - [distributeFee]", () => {
 
     await routerInstance
       .connect(depositorAccount)
-      .deposit(destinationDomainID, resourceID, depositData, feeData, {
-        value: ethers.parseEther("1.0"),
-      });
+      .deposit(
+        destinationDomainID,
+        resourceID,
+        securityModel,
+        depositData,
+        feeData,
+        {
+          value: ethers.parseEther("1.0"),
+        },
+      );
     assert.deepEqual(
       ethers.formatEther(
         await ethers.provider.getBalance(await bridgeInstance.getAddress()),
@@ -201,9 +210,16 @@ describe("BasicFeeHandler - [distributeFee]", () => {
 
     await routerInstance
       .connect(depositorAccount)
-      .deposit(destinationDomainID, resourceID, depositData, feeData, {
-        value: ethers.parseEther("1.0"),
-      });
+      .deposit(
+        destinationDomainID,
+        resourceID,
+        securityModel,
+        depositData,
+        feeData,
+        {
+          value: ethers.parseEther("1.0"),
+        },
+      );
 
     assert.deepEqual(
       ethers.formatEther(
@@ -238,9 +254,16 @@ describe("BasicFeeHandler - [distributeFee]", () => {
 
     await routerInstance
       .connect(depositorAccount)
-      .deposit(destinationDomainID, resourceID, depositData, feeData, {
-        value: ethers.parseEther("1.0"),
-      });
+      .deposit(
+        destinationDomainID,
+        resourceID,
+        securityModel,
+        depositData,
+        feeData,
+        {
+          value: ethers.parseEther("1.0"),
+        },
+      );
 
     assert.deepEqual(
       ethers.formatEther(

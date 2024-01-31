@@ -29,6 +29,8 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
   const feeAmount = BigInt(30);
   const feeBps = 30000; // 3 BPS
   const payout = BigInt("10");
+  const securityModel = 1;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -55,7 +57,7 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
     ] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(originDomainID);
+      await deployBridgeContracts(originDomainID, routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -139,7 +141,13 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, depositData, feeData),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          depositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
     const balance = await ERC20MintableInstance.balanceOf(
       await percentageFeeHandlerInstance.getAddress(),
@@ -186,7 +194,13 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, depositData, feeData),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          depositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
     const balance = await ERC20MintableInstance.balanceOf(
       await percentageFeeHandlerInstance.getAddress(),
@@ -216,7 +230,13 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, depositData, feeData),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          depositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
     const balance = await ERC20MintableInstance.balanceOf(
       await percentageFeeHandlerInstance.getAddress(),
@@ -241,7 +261,13 @@ describe("PercentageFeeHandler - [distributeFee]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, depositData, feeData),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          depositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
     const balance = await ERC20MintableInstance.balanceOf(
       await percentageFeeHandlerInstance.getAddress(),

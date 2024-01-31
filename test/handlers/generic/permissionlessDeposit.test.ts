@@ -26,6 +26,8 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
   const destinationMaxFee = BigInt("900000");
   const hashOfTestStore = ethers.keccak256("0xc0ffee");
   const emptySetResourceData = "0x";
+  const securityModel = 1;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -43,7 +45,7 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     [, depositorAccount, invalidDepositorAccount] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(originDomainID);
+      await deployBridgeContracts(originDomainID, routerAddress);
     const PermissionlessGenericHandlerContract =
       await ethers.getContractFactory("PermissionlessGenericHandler");
     permissionlessGenericHandlerInstance =
@@ -82,19 +84,32 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, depositData, feeData),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          depositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
   });
 
   it("depositEvent is emitted with expected values", async () => {
     const depositTx = await routerInstance
       .connect(depositorAccount)
-      .deposit(destinationDomainID, resourceID, depositData, feeData);
+      .deposit(
+        destinationDomainID,
+        resourceID,
+        securityModel,
+        depositData,
+        feeData,
+      );
 
     await expect(depositTx)
       .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
+        securityModel,
         resourceID.toLowerCase(),
         expectedDepositNonce,
         await depositorAccount.getAddress(),
@@ -109,7 +124,13 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, invalidDepositData, feeData),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          invalidDepositData,
+          feeData,
+        ),
     ).to.be.revertedWith("Incorrect data length");
   });
 
@@ -125,7 +146,13 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, invalidDepositData, feeData),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          invalidDepositData,
+          feeData,
+        ),
     ).to.be.revertedWith("incorrect depositor in deposit data");
   });
 
@@ -142,9 +169,16 @@ describe("PermissionlessGenericHandler - [deposit]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, invalidDepositData, feeData, {
-          from: depositorAccount,
-        }),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          invalidDepositData,
+          feeData,
+          {
+            from: depositorAccount,
+          },
+        ),
     ).to.be.revertedWith("requested fee too large");
   });
 });

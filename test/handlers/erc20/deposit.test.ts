@@ -24,6 +24,8 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
   const tokenAmount = 100;
   const feeData = "0x";
   const emptySetResourceData = "0x";
+  const securityModel = 1;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -39,7 +41,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
     [adminAccount, depositorAccount] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(originDomainID);
+      await deployBridgeContracts(originDomainID, routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -98,6 +100,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       .deposit(
         destinationDomainID,
         resourceID,
+        securityModel,
         createERCDepositData(
           tokenAmount,
           lenRecipientAddress,
@@ -110,6 +113,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
+        securityModel,
         resourceID,
         expectedDepositNonce,
         await depositorAccount.getAddress(),
@@ -130,6 +134,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       .deposit(
         destinationDomainID,
         resourceID,
+        securityModel,
         createERCDepositData(
           tokenAmount,
           lenRecipientAddress,
@@ -142,6 +147,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
       .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
+        securityModel,
         resourceID,
         expectedDepositNonce,
         await depositorAccount.getAddress(),
@@ -189,6 +195,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
         .deposit(
           destinationDomainID,
           resourceID_ZERO_Address,
+          securityModel,
           createERCDepositData(
             tokenAmount,
             lenRecipientAddress,
@@ -204,6 +211,7 @@ describe("ERC20Handler - [Deposit ERC20]", () => {
         .deposit(
           destinationDomainID,
           resourceID_EOA_Address,
+          securityModel,
           createERCDepositData(
             tokenAmount,
             lenRecipientAddress,

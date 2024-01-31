@@ -31,6 +31,8 @@ describe("PercentageFeeHandler - [collectFee]", () => {
   const lowerBound = ethers.parseEther("100");
   const upperBound = ethers.parseEther("300");
   const expectedDepositNonce = 1;
+  const securityModel = 1;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -49,7 +51,7 @@ describe("PercentageFeeHandler - [collectFee]", () => {
     [, depositorAccount, recipientAccount] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(originDomainID);
+      await deployBridgeContracts(originDomainID, routerAddress);
     const ERC20HandlerContract =
       await ethers.getContractFactory("ERC20Handler");
     ERC20HandlerInstance = await ERC20HandlerContract.deploy(
@@ -131,12 +133,19 @@ describe("PercentageFeeHandler - [collectFee]", () => {
 
     const depositTx = await routerInstance
       .connect(depositorAccount)
-      .deposit(destinationDomainID, resourceID, depositData, feeData);
+      .deposit(
+        destinationDomainID,
+        resourceID,
+        securityModel,
+        depositData,
+        feeData,
+      );
 
     await expect(depositTx)
       .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
+        securityModel,
         resourceID,
         expectedDepositNonce,
         await depositorAccount.getAddress(),
@@ -164,9 +173,16 @@ describe("PercentageFeeHandler - [collectFee]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(destinationDomainID, resourceID, depositData, feeData, {
-          value: ethers.parseEther("0.5"),
-        }),
+        .deposit(
+          destinationDomainID,
+          resourceID,
+          securityModel,
+          depositData,
+          feeData,
+          {
+            value: ethers.parseEther("0.5"),
+          },
+        ),
     ).to.be.revertedWith("collectFee: msg.value != 0");
   });
 
@@ -185,6 +201,7 @@ describe("PercentageFeeHandler - [collectFee]", () => {
       routerInstance.deposit(
         destinationDomainID,
         resourceID,
+        securityModel,
         depositData,
         feeData,
         {
@@ -259,11 +276,18 @@ describe("PercentageFeeHandler - [collectFee]", () => {
 
     const depositTx = await routerInstance
       .connect(depositorAccount)
-      .deposit(destinationDomainID, resourceID, depositData, feeData);
+      .deposit(
+        destinationDomainID,
+        resourceID,
+        securityModel,
+        depositData,
+        feeData,
+      );
     await expect(depositTx)
       .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
+        securityModel,
         resourceID,
         expectedDepositNonce,
         await depositorAccount.getAddress(),

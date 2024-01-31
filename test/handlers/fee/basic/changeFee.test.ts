@@ -16,6 +16,7 @@ import type {
 describe("BasicFeeHandler - [changeFee]", () => {
   const originDomainID = 1;
   const destinationDomainID = 2;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -29,8 +30,10 @@ describe("BasicFeeHandler - [changeFee]", () => {
   beforeEach(async () => {
     [, nonAdminAccount] = await ethers.getSigners();
 
-    [bridgeInstance, routerInstance] =
-      await deployBridgeContracts(originDomainID);
+    [bridgeInstance, routerInstance] = await deployBridgeContracts(
+      originDomainID,
+      routerAddress,
+    );
     const FeeHandlerRouterContract =
       await ethers.getContractFactory("FeeHandlerRouter");
     feeHandlerRouterInstance = await FeeHandlerRouterContract.deploy(

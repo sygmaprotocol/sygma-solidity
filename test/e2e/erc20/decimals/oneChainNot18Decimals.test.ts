@@ -6,14 +6,24 @@ import { ethers } from "hardhat";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import {
   deployBridgeContracts,
-  createResourceID,
   createERCDepositData,
   getDepositEventData,
 } from "../../../helpers";
+
+import {
+  accountProof3,
+  storageProof3,
+  accountProof4,
+  storageProof4,
+} from "../../../testingProofs";
+
 import type {
+  StateRootStorage,
   Bridge,
   ERC20Handler,
   ERC20PresetMinterPauser,
+  Executor,
+  Router,
 } from "../../../../typechain-types";
 
 describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with != 18", () => {
@@ -29,19 +39,29 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
     "14",
     destinationDecimalPlaces,
   );
-  const relayerConvertedAmount = ethers.parseUnits(
+  const convertedDepositAmount = ethers.parseUnits(
     "14",
     bridgeDefaultDecimalPlaces,
   );
   const expectedDepositNonce = 1;
   const feeData = "0x";
   const emptySetResourceData = "0x";
+  const securityModel = 1;
+  const destinationSlot = 5133413;
+  const originSlot = 5139374;
+  const originRouterAddress = "0x48b09e09E10A2cd8E991bc00392a689590ed8e77";
+  const destinationRouterAddress = "0xc7B065F6c2A3e203692C0b01217f423caC15662e";
+  const originStateRoot =
+    "0xed91524a194957d604ab37fd1c8aa37e9435714c31e8c788819a1b6d8f1ff783";
+  const destinationStateRoot =
+    "0xdd18a15cab4810bf308fe626ba155496b77f73b3a68e6daf29fc2c7c7fb52a44";
 
   let depositorAccount: HardhatEthersSigner;
   let recipientAccount: HardhatEthersSigner;
   let originDepositData: string;
   let originResourceID: string;
   let originBridgeInstance: Bridge;
+  let originStateRootStorageInstance: StateRootStorage;
   let originERC20MintableInstance: ERC20PresetMinterPauser;
   let originERC20HandlerInstance: ERC20Handler;
   let originRelayer1: HardhatEthersSigner;
@@ -51,6 +71,7 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
   let originExecutorInstance: Executor;
   let destinationRouterInstance: Router;
   let destinationExecutorInstance: Executor;
+  let destinationStateRootStorageInstance: StateRootStorage;
   let destinationDepositData: string;
   let destinationResourceID: string;
   let destinationERC20MintableInstance: ERC20PresetMinterPauser;
@@ -60,9 +81,11 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
   let destinationDepositProposalData: string;
   let destinationDomainProposal: {
     originDomainID: number;
+    securityModel: number;
     depositNonce: number;
     data: string;
     resourceID: string;
+    storageProof: Array<string>;
   };
 
   beforeEach(async () => {
@@ -74,13 +97,21 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
       destinationRelayer1,
     ] = await ethers.getSigners();
 
-    [originBridgeInstance, originRouterInstance, originExecutorInstance] =
-      await deployBridgeContracts(originDomainID);
+    [
+      originBridgeInstance,
+      originRouterInstance,
+      originExecutorInstance,
+      originStateRootStorageInstance,
+    ] = await deployBridgeContracts(originDomainID, originRouterAddress);
     [
       destinationBridgeInstance,
       destinationRouterInstance,
       destinationExecutorInstance,
-    ] = await deployBridgeContracts(destinationDomainID);
+      destinationStateRootStorageInstance,
+    ] = await deployBridgeContracts(
+      destinationDomainID,
+      destinationRouterAddress,
+    );
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauserDecimals",
     );
@@ -107,14 +138,10 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
       await destinationExecutorInstance.getAddress(),
     );
 
-    originResourceID = createResourceID(
-      await originERC20MintableInstance.getAddress(),
-      originDomainID,
-    );
-    destinationResourceID = createResourceID(
-      await destinationERC20MintableInstance.getAddress(),
-      originDomainID,
-    );
+    originResourceID =
+      "0x0000000000000000000000000000000000000000000000000000000000000000";
+    destinationResourceID =
+      "0x0000000000000000000000000000000000000000000000000000000000000000";
 
     await originERC20MintableInstance.mint(
       depositorAccount,
@@ -166,20 +193,33 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
     destinationDepositData = createERCDepositData(
       destinationDepositAmount.toString(),
       20,
-      await depositorAccount.getAddress(),
+      await recipientAccount.getAddress(),
     );
     destinationDepositProposalData = createERCDepositData(
-      relayerConvertedAmount.toString(),
+      convertedDepositAmount.toString(),
       20,
       await depositorAccount.getAddress(),
     );
 
     destinationDomainProposal = {
       originDomainID: destinationDomainID,
+      securityModel: securityModel,
       depositNonce: expectedDepositNonce,
       data: destinationDepositProposalData,
       resourceID: originResourceID,
+      storageProof: storageProof4[0].proof,
     };
+
+    await destinationStateRootStorageInstance.storeStateRoot(
+      originDomainID,
+      destinationSlot,
+      destinationStateRoot,
+    );
+    await originStateRootStorageInstance.storeStateRoot(
+      destinationDomainID,
+      originSlot,
+      originStateRoot,
+    );
   });
 
   it("[sanity] check token contract decimals match set decimals on handlers", async () => {
@@ -219,6 +259,7 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
       .deposit(
         destinationDomainID,
         originResourceID,
+        securityModel,
         originDepositData,
         feeData,
       );
@@ -226,16 +267,18 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
 
     const originDomainProposal = {
       originDomainID: originDomainID,
+      securityModel: securityModel,
       depositNonce: expectedDepositNonce,
       data: await getDepositEventData(originDepositTx),
       resourceID: destinationResourceID,
+      storageProof: storageProof3[0].proof,
     };
 
     // destinationRelayer1 executes the proposal
     await expect(
       destinationExecutorInstance
         .connect(destinationRelayer1)
-        .executeProposal(originDomainProposal),
+        .executeProposal(originDomainProposal, accountProof3, destinationSlot),
     ).not.to.be.reverted;
 
     // Assert ERC20 balance was transferred from depositorAccount
@@ -273,6 +316,7 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
       .deposit(
         originDomainID,
         destinationResourceID,
+        securityModel,
         destinationDepositData,
         feeData,
       );
@@ -284,6 +328,7 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
       .to.emit(destinationRouterInstance, "Deposit")
       .withArgs(
         originDomainID,
+        securityModel,
         destinationResourceID.toLowerCase(),
         expectedDepositNonce,
         await recipientAccount.getAddress(),
@@ -299,7 +344,7 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
     await expect(
       originExecutorInstance
         .connect(originRelayer1)
-        .executeProposal(destinationDomainProposal),
+        .executeProposal(destinationDomainProposal, accountProof4, originSlot),
     ).not.to.be.reverted;
 
     // Assert ERC20 balance was transferred from recipientAccount
@@ -307,7 +352,7 @@ describe("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
       await destinationERC20MintableInstance.balanceOf(recipientAccount);
     assert.strictEqual(recipientBalance.toString(), "0");
 
-    // Assert ERC20 balance was transferred to recipientAccount
+    // Assert ERC20 balance was transferred to depositorAccount
     depositorBalance =
       await originERC20MintableInstance.balanceOf(depositorAccount);
     assert.strictEqual(

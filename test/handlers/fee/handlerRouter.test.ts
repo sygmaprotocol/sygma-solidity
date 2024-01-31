@@ -20,6 +20,7 @@ describe("FeeHandlerRouter", () => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const feeData = "0x";
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let routerInstance: Router;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
@@ -45,7 +46,10 @@ describe("FeeHandlerRouter", () => {
       bridgeInstance,
     ] = await ethers.getSigners();
 
-    [, routerInstance] = await deployBridgeContracts(originDomainID);
+    [, routerInstance] = await deployBridgeContracts(
+      originDomainID,
+      routerAddress,
+    );
 
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",

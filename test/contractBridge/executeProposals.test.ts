@@ -4,33 +4,38 @@
 import { ethers } from "hardhat";
 import { assert, expect } from "chai";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
-import {
-  deployBridgeContracts,
-  createResourceID,
-  createERCDepositData,
-} from "../helpers";
+import { deployBridgeContracts, createERCDepositData } from "../helpers";
+import { accountProof1, storageProof1 } from "../testingProofs";
+
 import type {
   Bridge,
   Router,
   Executor,
   ERC20Handler,
   ERC20PresetMinterPauser,
+  StateRootStorage,
 } from "../../typechain-types";
 
 describe("Bridge - [execute proposals]", () => {
-  const destinationDomainID = 1;
-  const originDomainID = 2;
+  const originDomainID = 1;
+  const destinationDomainID = 2;
   const initialTokenAmount = 100;
   const depositAmount = 10;
   const expectedDepositNonces = [1, 2, 3];
   const feeData = "0x";
   const emptySetResourceData = "0x";
+  const securityModel = 1;
+  const slot = 5090531;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
+  const stateRoot =
+    "0xdf5a6882ccba1fd513c68a254fa729e05f769b2fa312011e1f5c38cde69964c7";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
   let executorInstance: Executor;
   let ERC20MintableInstance: ERC20PresetMinterPauser;
   let ERC20HandlerInstance: ERC20Handler;
+  let stateRootStorageInstance: StateRootStorage;
   let depositorAccount: HardhatEthersSigner;
   let recipientAccount: HardhatEthersSigner;
   let relayer1: HardhatEthersSigner;
@@ -38,20 +43,25 @@ describe("Bridge - [execute proposals]", () => {
   let erc20ResourceID: string;
   let erc20DepositData: string;
   let erc20DepositProposalData: string;
-  let erc20DataHash: string;
   let proposalsForExecution: Array<{
     originDomainID: number;
+    securityModel: number;
     depositNonce: number;
     resourceID: string;
     data: string;
+    storageProof: Array<string>;
   }>;
 
   beforeEach(async () => {
     [, depositorAccount, recipientAccount, relayer1] =
       await ethers.getSigners();
 
-    [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(destinationDomainID);
+    [
+      bridgeInstance,
+      routerInstance,
+      executorInstance,
+      stateRootStorageInstance,
+    ] = await deployBridgeContracts(destinationDomainID, routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -64,10 +74,8 @@ describe("Bridge - [execute proposals]", () => {
       await executorInstance.getAddress(),
     );
 
-    erc20ResourceID = createResourceID(
-      await ERC20MintableInstance.getAddress(),
-      destinationDomainID,
-    );
+    erc20ResourceID =
+      "0x0000000000000000000000000000000000000000000000000000000000000000";
 
     await Promise.all([
       ERC20MintableInstance.mint(depositorAccount, initialTokenAmount),
@@ -96,19 +104,23 @@ describe("Bridge - [execute proposals]", () => {
       20,
       await recipientAccount.getAddress(),
     );
-    erc20DataHash = ethers.keccak256(
-      (await ERC20HandlerInstance.getAddress()) +
-        erc20DepositProposalData.substring(2),
-    );
 
     proposalsForExecution = [
       {
         originDomainID: originDomainID,
+        securityModel: securityModel,
         depositNonce: expectedDepositNonces[0],
         resourceID: erc20ResourceID,
         data: erc20DepositProposalData,
+        storageProof: storageProof1[0].proof,
       },
     ];
+
+    await stateRootStorageInstance.storeStateRoot(
+      originDomainID,
+      slot,
+      stateRoot,
+    );
   });
 
   it("should create and execute executeProposal successfully", async () => {
@@ -117,12 +129,18 @@ describe("Bridge - [execute proposals]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(originDomainID, erc20ResourceID, erc20DepositData, feeData),
+        .deposit(
+          originDomainID,
+          erc20ResourceID,
+          securityModel,
+          erc20DepositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
 
     const executeTx = await executorInstance
       .connect(relayer1)
-      .executeProposals(proposalsForExecution);
+      .executeProposals(proposalsForExecution, accountProof1, slot);
 
     await expect(executeTx).not.to.be.reverted;
 
@@ -148,11 +166,19 @@ describe("Bridge - [execute proposals]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(originDomainID, erc20ResourceID, erc20DepositData, feeData),
+        .deposit(
+          originDomainID,
+          erc20ResourceID,
+          securityModel,
+          erc20DepositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
 
     const executeTx = await executorInstance.executeProposals(
       proposalsForExecution,
+      accountProof1,
+      slot,
     );
 
     await expect(executeTx).not.to.be.reverted;
@@ -174,7 +200,7 @@ describe("Bridge - [execute proposals]", () => {
 
     const skipExecuteTx = await executorInstance
       .connect(relayer1)
-      .executeProposals(proposalsForExecution);
+      .executeProposals(proposalsForExecution, accountProof1, slot);
 
     // check that no ProposalExecution events are emitted
     await expect(skipExecuteTx).not.to.emit(
@@ -185,7 +211,9 @@ describe("Bridge - [execute proposals]", () => {
 
   it("should fail executing proposals if empty array is passed for execution", async () => {
     await expect(
-      executorInstance.connect(relayer1).executeProposals([]),
+      executorInstance
+        .connect(relayer1)
+        .executeProposals([], accountProof1, slot),
     ).to.be.revertedWithCustomError(executorInstance, "EmptyProposalsArray()");
   });
 
@@ -195,19 +223,24 @@ describe("Bridge - [execute proposals]", () => {
     await expect(
       routerInstance
         .connect(depositorAccount)
-        .deposit(originDomainID, erc20ResourceID, erc20DepositData, feeData),
+        .deposit(
+          originDomainID,
+          erc20ResourceID,
+          securityModel,
+          erc20DepositData,
+          feeData,
+        ),
     ).not.to.be.reverted;
 
     const executeTx = await executorInstance
       .connect(relayer1)
-      .executeProposals(proposalsForExecution);
+      .executeProposals(proposalsForExecution, accountProof1, slot);
 
     await expect(executeTx)
       .to.emit(executorInstance, "ProposalExecution")
       .withArgs(
         originDomainID,
         expectedDepositNonces[0],
-        erc20DataHash,
         ethers.AbiCoder.defaultAbiCoder().encode(
           ["address", "address", "uint256"],
           [

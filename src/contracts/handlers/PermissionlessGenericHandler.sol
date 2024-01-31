@@ -98,16 +98,19 @@ contract PermissionlessGenericHandler is IHandler {
             After this, the target contract will get the following:
             executeFuncSignature(address executionDataDepositor, bytes executionData)
 
-            Another example: if the target function accepts (address depositor, uint[], address)
+            Another example: if the target function accepts (address depositor, uint256[], address)
             then a function like the following one can be used:
 
-            function prepareDepositData(uint[] calldata uintArray, address addr) view external returns (bytes memory) {
+            function prepareDepositData(
+                uint256[] calldata uintArray,
+                address addr
+            ) view external returns (bytes memory) {
                 bytes memory encoded = abi.encode(address(0), uintArray, addr);
                 return this.slice(encoded, 32);
             }
 
             After this, the target contract will get the following:
-            executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
+            executeFuncSignature(address executionDataDepositor, uint256[] uintArray, address addr)
      */
     function deposit(bytes32 resourceID, address depositor, bytes calldata data) external pure returns (bytes memory) {
         require(data.length >= 76, "Incorrect data length"); // 32 + 2 + 1 + 1 + 20 + 20
@@ -192,16 +195,19 @@ contract PermissionlessGenericHandler is IHandler {
             After this, the target contract will get the following:
             executeFuncSignature(address executionDataDepositor, bytes executionData)
 
-            Another example: if the target function accepts (address depositor, uint[], address)
+            Another example: if the target function accepts (address depositor, uint256[], address)
             then a function like the following one can be used:
 
-            function prepareDepositData(uint[] calldata uintArray, address addr) view external returns (bytes memory) {
+            function prepareDepositData(
+                uint256[] calldata uintArray,
+                address addr
+            ) view external returns (bytes memory) {
                 bytes memory encoded = abi.encode(address(0), uintArray, addr);
                 return this.slice(encoded, 32);
             }
 
             After this, the target contract will get the following:
-            executeFuncSignature(address executionDataDepositor, uint[] uintArray, address addr)
+            executeFuncSignature(address executionDataDepositor, uint256[] uintArray, address addr)
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external onlyExecutor returns (bytes memory) {
         uint256 maxFee;

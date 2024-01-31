@@ -26,6 +26,8 @@ describe("BasicFeeHandler - [collectFee]", () => {
   const feeData = "0x";
   const emptySetResourceData = "0x";
   const expectedDepositNonce = 1;
+  const securityModel = 1;
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -43,7 +45,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
     [, depositorAccount, recipientAccount] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(originDomainID);
+      await deployBridgeContracts(originDomainID, routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
@@ -108,6 +110,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
         .deposit(
           destinationDomainID,
           erc20ResourceID,
+          securityModel,
           erc20depositData,
           feeData,
         ),
@@ -131,6 +134,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
         .deposit(
           destinationDomainID,
           erc20ResourceID,
+          securityModel,
           erc20depositData,
           feeData,
           {
@@ -180,6 +184,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       .deposit(
         destinationDomainID,
         erc20ResourceID,
+        securityModel,
         erc20depositData,
         feeData,
         {
@@ -191,6 +196,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
+        securityModel,
         erc20ResourceID.toLowerCase(),
         expectedDepositNonce,
         await depositorAccount.getAddress(),
@@ -228,6 +234,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
         .deposit(
           destinationDomainID,
           erc20ResourceID,
+          securityModel,
           erc20depositData,
           feeData,
           {
@@ -244,6 +251,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
         .deposit(
           destinationDomainID,
           erc20ResourceID,
+          securityModel,
           erc20depositData,
           feeData,
         ),
@@ -399,6 +407,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       .deposit(
         destinationDomainID,
         erc20ResourceID,
+        securityModel,
         erc20depositData.toLowerCase(),
         feeData,
         {
@@ -410,6 +419,7 @@ describe("BasicFeeHandler - [collectFee]", () => {
       .to.emit(routerInstance, "Deposit")
       .withArgs(
         destinationDomainID,
+        securityModel,
         erc20ResourceID,
         expectedDepositNonce,
         await depositorAccount.getAddress(),

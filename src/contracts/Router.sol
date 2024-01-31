@@ -24,6 +24,8 @@ contract Router is Context {
     IAccessControlSegregator public _accessControl;
     uint8 public immutable _domainID;
 
+    // domainID => nonce => transferHashes
+    mapping(uint8 => mapping(uint256 => bytes32)) public transferHashes;
     // destinationDomainID => number of deposits
     mapping(uint8 => uint64) public _depositCounts;
 
@@ -34,6 +36,7 @@ contract Router is Context {
 
     event Deposit(
         uint8 destinationDomainID,
+        uint8 securityModel,
         bytes32 resourceID,
         uint64 depositNonce,
         address indexed user,
@@ -85,11 +88,11 @@ contract Router is Context {
     function deposit(
         uint8 destinationDomainID,
         bytes32 resourceID,
+        uint8 securityModel,
         bytes calldata depositData,
         bytes calldata feeData
     ) external payable whenBridgeNotPaused returns (uint64 depositNonce) {
         if (destinationDomainID == _domainID) revert DepositToCurrentDomain();
-
         address sender = _msgSender();
         IFeeHandler feeHandler = _bridge._feeHandler();
         if (address(feeHandler) == address(0)) {
@@ -107,14 +110,19 @@ contract Router is Context {
         }
         address handler = _bridge._resourceIDToHandlerAddress(resourceID);
         if (handler == address(0)) revert ResourceIDNotMappedToHandler();
-
         depositNonce = ++_depositCounts[destinationDomainID];
-
-
         IHandler depositHandler = IHandler(handler);
         bytes memory handlerDepositData = depositHandler.deposit(resourceID, sender, depositData);
-
-        emit Deposit(destinationDomainID, resourceID, depositNonce, sender, handlerDepositData);
-        return depositNonce;
+        transferHashes[destinationDomainID][depositNonce] = keccak256(
+            abi.encode(
+                _domainID,
+                destinationDomainID,
+                securityModel,
+                depositNonce,
+                resourceID,
+                keccak256(handlerDepositData)
+            )
+        );
+        emit Deposit(destinationDomainID, securityModel, resourceID, depositNonce, sender, handlerDepositData);
     }
 }

@@ -16,6 +16,7 @@ import { deployBridgeContracts } from "../../helpers";
 describe("ERC20Handler - [constructor]", function () {
   const domainID = 1;
   const emptySetResourceData = "0x";
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let initialResourceIDs: Array<string> = [];
   let initialContractAddresses: Array<string> = [];
@@ -31,7 +32,7 @@ describe("ERC20Handler - [constructor]", function () {
 
   beforeEach(async () => {
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(domainID);
+      await deployBridgeContracts(domainID, routerAddress);
 
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",

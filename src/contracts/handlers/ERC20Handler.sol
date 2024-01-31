@@ -37,7 +37,6 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable},
         deposited tokens will be burned, if not, they will be locked.
-        @return an empty data.
      */
     function deposit(
         bytes32 resourceID,
@@ -61,8 +60,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         }
 
         return abi.encodePacked(
-            convertToInternalBalance(tokenAddress, amount), 
-            destinationRecipientAddressLen, 
+            convertToInternalBalance(tokenAddress, amount),
+            destinationRecipientAddressLen,
             destinationRecipientAddress
         );
     }
@@ -86,7 +85,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         uint256 lenDestinationRecipientAddress;
         bytes memory destinationRecipientAddress;
 
-        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
+        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint256, uint256));
         destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
 
         bytes20 recipientAddress;

@@ -17,6 +17,7 @@ describe("ERC20Handler - [Deposit Burn ERC20]", () => {
   const domainID = 1;
   const depositAmount = 10;
   const emptySetResourceData = "0x";
+  const routerAddress = "0x1a60efB48c61A79515B170CA61C84DD6dCA80418";
 
   let bridgeInstance: Bridge;
   let routerInstance: Router;
@@ -34,7 +35,7 @@ describe("ERC20Handler - [Deposit Burn ERC20]", () => {
     [, depositorAccount] = await ethers.getSigners();
 
     [bridgeInstance, routerInstance, executorInstance] =
-      await deployBridgeContracts(Number(domainID));
+      await deployBridgeContracts(Number(domainID), routerAddress);
     const ERC20MintableContract = await ethers.getContractFactory(
       "ERC20PresetMinterPauser",
     );
