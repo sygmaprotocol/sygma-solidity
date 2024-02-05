@@ -143,6 +143,9 @@ export async function deployBridgeContracts(
     domainID == 1 ? 2 : 1,
     routerAddress,
   );
+  // depending on domainID value, set source domain IDs slot index to 2
+  await executorInstance.adminChangeSlotIndex(domainID == 1 ? 2 : 1, 2);
+
   return [
     bridgeInstance,
     routerInstance,

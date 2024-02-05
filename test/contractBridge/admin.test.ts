@@ -343,4 +343,25 @@ describe("Bridge - [admin]", () => {
       "AccessNotAllowed(address,bytes4)",
     );
   });
+
+  // change domin slot index
+
+  it("Should require admin role to change domain slot index", async () => {
+    await expect(
+      executorInstance
+        .connect(nonAdminAccount)
+        .adminChangeSlotIndex(3, 1),
+    ).to.be.revertedWithCustomError(
+      bridgeInstance,
+      "AccessNotAllowed(address,bytes4)",
+    );
+  });
+
+  it("Should successfully change domain slot index if called by admin", async () => {
+    await expect(
+      executorInstance
+        .connect(tokenOwnerAccount)
+        .adminChangeSlotIndex(3, 1),
+    ).not.to.be.reverted;
+  });
 });

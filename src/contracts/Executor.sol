@@ -23,9 +23,10 @@ contract Executor is Context {
 
     IBridge public immutable _bridge;
     uint8 public immutable _domainID;
-    uint8 public constant SLOT_INDEX = 2;
     IAccessControlSegregator public _accessControl;
 
+    // originDomainID => slot index number
+    mapping(uint8 => uint8) public _slotIndexes;
     // securityModel => state root storage contract address
     mapping(uint8 => address) public _securityModels;
     // origin domainID => nonces set => used deposit nonces
@@ -86,6 +87,17 @@ contract Executor is Context {
     function adminChangeRouter(uint8 originDomainID, address newRouter) external onlyAllowed {
         _originDomainIDToRouter[originDomainID] = newRouter;
         emit FeeRouterChanged(originDomainID, newRouter);
+    }
+
+    /**
+        @notice Maps the {originDomainID} to {slotIndex} in _slotIndexes.
+        @notice Only callable by address that has the right to call the specific function,
+        which is mapped in {functionAccess} in AccessControlSegregator contract.
+        @param originDomainID domain from which the proposal originated.
+        @param slotIndex Index number to be used for the belonging origin domain ID in slot key calculation.
+     */
+    function adminChangeSlotIndex(uint8 originDomainID, uint8 slotIndex) external onlyAllowed {
+        _slotIndexes[originDomainID] = slotIndex;
     }
 
     /**
@@ -193,7 +205,7 @@ contract Executor is Context {
             )
         );
         bytes32 slotKey = keccak256(abi.encode(keccak256(
-            abi.encode(proposal.depositNonce, keccak256(abi.encode(_domainID, SLOT_INDEX)))
+            abi.encode(proposal.depositNonce, keccak256(abi.encode(_domainID, _slotIndexes[proposal.originDomainID])))
         )));
 
         bytes32 slotValue = StorageProof.getStorageValue(slotKey, storageRoot, proposal.storageProof);
