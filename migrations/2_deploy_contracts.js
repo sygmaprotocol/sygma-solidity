@@ -165,8 +165,13 @@ module.exports = async function (deployer, network) {
   for(let fee of currentNetworkConfig.fee) {
     try{
       console.log(`registering resource ${fee.resourceID} for destination domain ${fee.toDomain} using feeHandler: ${basicFeeHandlerInstance.address}`)
-      await feeRouterInstance.adminSetResourceHandler(fee.toDomain, fee.resourceID, basicFeeHandlerInstance.address)
-      await basicFeeHandlerInstance.changeFee(fee.toDomain, fee.resourceID, fee.feeAmount)
+      if (fee.type == "basic") {
+        await feeRouterInstance.adminSetResourceHandler(fee.toDomain, fee.resourceID, basicFeeHandlerInstance.address)
+        await basicFeeHandlerInstance.changeFee(fee.toDomain, fee.resourceID, fee.feeAmount)
+      } else if (fee.type == "percentage") {
+        await feeRouterInstance.adminSetResourceHandler(fee.toDomain, fee.resourceID, percentageFeeHandlerInstance.address)
+        await percentageFeeHandlerInstance.changeFee(fee.toDomain, fee.resourceID, fee.feeAmount)
+      }
     }catch(err) {
       console.log(err)
     }
