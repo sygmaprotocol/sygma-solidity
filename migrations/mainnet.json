@@ -2,13 +2,7 @@
   "mainnet": {
     "domainID": "1",
     "MPCAddress": "",
-    "fee": {
-      "oracle": {},
-      "basic": {
-        "fee": "0.0001"
-      },
-      "percentage": {}
-    },
+    "fee": [],
     "access": {
       "feeRouterAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",
       "feeHandlerAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",

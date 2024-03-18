@@ -13,6 +13,9 @@ const ERC20PresetMinterPauser = artifacts.require("ERC20PresetMinterPauserDecima
 const ERC721MinterBurnerPauserContract = artifacts.require(
   "ERC721MinterBurnerPauser"
 );
+const ERC1155MinterBurnerPauserContract = artifacts.require(
+  "ERC1155PresetMinterPauser"
+);
 
 const DEFAULT_CONFIG_PATH = "./migrations/local.json";
 const emptySetResourceData = "0x";
@@ -110,6 +113,41 @@ async function setupErc721(
   await bridgeInstance.adminSetBurnable(
     erc721HandlerInstance.address,
     erc721Instance.address
+  );
+}
+
+async function setupErc1155(
+  deployer,
+  erc1155,
+  bridgeInstance,
+  erc1155HandlerInstance
+) {
+  let erc1155Instance;
+  if (!erc1155.address) {
+    erc1155Instance = await deployer.deploy(
+      ERC1155MinterBurnerPauserContract,
+      erc1155.uri
+    );
+    erc1155.address = erc1155Instance.address;
+  } else {
+    erc1155Instance = await ERC1155MinterBurnerPauserContract.at(erc1155.address);
+    erc1155Instance.contract.setProvider(deployer.provider);
+  }
+
+  await bridgeInstance.adminSetResource(
+    erc1155HandlerInstance.address,
+    erc1155.resourceID,
+    erc1155.address,
+    emptySetResourceData
+  );
+
+  await erc1155Instance.grantRole(
+    await erc1155Instance.MINTER_ROLE(),
+    erc1155HandlerInstance.address
+  );
+  await bridgeInstance.adminSetBurnable(
+    erc1155HandlerInstance.address,
+    erc1155Instance.address
   );
 }
 
@@ -225,6 +263,7 @@ async function getDeployerAddress(deployer) {
 module.exports = {
   setupErc20,
   setupErc721,
+  setupErc1155,
   setupGeneric,
   getNetworksConfig,
   migrateToNewTokenHandler,

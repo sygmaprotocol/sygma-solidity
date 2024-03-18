@@ -2,21 +2,7 @@
   "goerli": {
     "domainID": "1",
     "MPCAddress": "0x316dc2f7f6a558c733c2719ba69340e671f48815",
-    "fee": {
-      "oracle": {
-        "gasUsed": "100000",
-        "feePercentage": 300,
-        "address": "0x0c3d905C909eB5e3243b65b905c96B309266d7BB"
-      },
-      "basic": {
-        "fee": "0.001"
-      },
-      "percentage":{
-        "fee": "100000",
-        "lowerBound": "1",
-        "upperBound": "10"
-      }
-    },
+    "fee": [],
     "access": {
       "feeRouterAdmin": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
       "feeHandlerAdmin": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",

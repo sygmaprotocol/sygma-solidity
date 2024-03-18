@@ -11,6 +11,7 @@ const PausableContract = artifacts.require("Pausable");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
+
 const PermissionedGenericHandlerContract = artifacts.require(
   "PermissionedGenericHandler"
 );
@@ -161,6 +162,16 @@ module.exports = async function (deployer, network) {
     }
   }
 
+  for(let fee of currentNetworkConfig.fee) {
+    try{
+      console.log(`registering resource ${fee.resourceID} for destination domain ${fee.toDomain} using feeHandler: ${basicFeeHandlerInstance.address}`)
+      await feeRouterInstance.adminSetResourceHandler(fee.toDomain, fee.resourceID, basicFeeHandlerInstance.address)
+      await basicFeeHandlerInstance.changeFee(fee.toDomain, fee.resourceID, fee.feeAmount)
+    }catch(err) {
+      console.log(err)
+    }
+  }
+  
 
   // set MPC address
   if (currentNetworkConfig.MPCAddress)

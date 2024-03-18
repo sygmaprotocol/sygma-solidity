@@ -1,193 +1,297 @@
 {
-  "test": {
-    "domainID": "1",
-    "MPCAddress": "0x1c5541A79AcC662ab2D2647F3B141a3B7Cdb2Ae4",
-    "fee": {
-      "oracle": {
-        "gasUsed": "100000",
-        "feePercentage": 100,
-        "address": "0x70B7D7448982b15295150575541D1d3b862f7FE9"
-      },
-      "basic": {
-        "fee": "0.001"
-      },
-      "percentage":{
-        "fee": "10000",
-        "lowerBound": "10",
-        "upperBound": "30"
-      }
-    },
-    "access": {
-      "accessControl": {}
-    },
-    "erc721": [
-      {
-        "name": "ERC721Test",
-        "symbol": "ERC721TST",
-        "uri": "metadata.test",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000200",
-        "feeType": "basic"
-      }
-    ],
-    "erc20": [
-      {
-        "name": "ERC20LRTest",
-        "symbol": "ERC20LRTST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20Test",
-        "symbol": "ERC20TST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20LRTest_14Dec",
-        "symbol": "ERC20LRTST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000600",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20Test_14Dec",
-        "symbol": "ERC20TST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000700",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20LRTest_20Dec",
-        "symbol": "ERC20LRTST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000800",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 20
-      },
-      {
-        "name": "ERC20Test_20Dec",
-        "symbol": "ERC20TST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000900",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 20
-      }
-    ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
-    "permissionlessGeneric": {
-      "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
-      "feeType": "basic"
-    }
+  "test":{
+     "domainID":"1",
+     "MPCAddress":"0x1c5541A79AcC662ab2D2647F3B141a3B7Cdb2Ae4",
+     "fee":[
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000000",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000100",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000200",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000300",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000400",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000500",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000600",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000700",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000800",
+           "toDomain":"2",
+           "feeAmount":"100000000000000"
+        }
+     ],
+     "access":{
+        "accessControl":{
+           
+        }
+     },
+     "erc721":[
+        {
+           "name":"ERC721Test",
+           "symbol":"ERC721TST",
+           "uri":"metadata.test",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000200",
+           "feeType":"basic"
+        }
+     ],
+     "erc1155":[
+        {
+           "name":"ERC1155Test",
+           "symbol":"ERC1155TST",
+           "uri":"metadata.test",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000400",
+           "feeType":"basic"
+        }
+     ],
+     "erc20":[
+        {
+           "name":"ERC20LRTest",
+           "symbol":"ERC20LRTST",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000300",
+           "feeType":"basic",
+           "strategy":"lr",
+           "decimals":"18"
+        },
+        {
+           "name":"ERC20Test",
+           "symbol":"ERC20TST",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000000",
+           "feeType":"oracle",
+           "strategy":"mb",
+           "decimals":"18"
+        },
+        {
+           "name":"ERC20LRTest_14Dec",
+           "symbol":"ERC20LRTST_14D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000600",
+           "feeType":"basic",
+           "strategy":"lr",
+           "decimals":14
+        },
+        {
+           "name":"ERC20Test_14Dec",
+           "symbol":"ERC20TST_14D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000700",
+           "feeType":"oracle",
+           "strategy":"mb",
+           "decimals":14
+        },
+        {
+           "name":"ERC20LRTest_20Dec",
+           "symbol":"ERC20LRTST_20D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000800",
+           "feeType":"basic",
+           "strategy":"lr",
+           "decimals":20
+        },
+        {
+           "name":"ERC20Test_20Dec",
+           "symbol":"ERC20TST_20D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000900",
+           "feeType":"oracle",
+           "strategy":"mb",
+           "decimals":20
+        }
+     ],
+     "permissionedGeneric":[
+        {
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000100",
+           "feeType":"basic",
+           "depositFunctionSig":"0x00000000",
+           "depositorOffset":0,
+           "executeFunctionSig":"store"
+        }
+     ],
+     "permissionlessGeneric":{
+        "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000500",
+        "feeType":"basic"
+     }
   },
-  "test2": {
-    "domainID": "2",
-    "MPCAddress": "0x1c5541A79AcC662ab2D2647F3B141a3B7Cdb2Ae4",
-    "fee": {
-      "oracle": {
-        "gasUsed": "100000",
-        "feePercentage": 100,
-        "address": "0x70B7D7448982b15295150575541D1d3b862f7FE9"
-      },
-      "basic": {
-        "fee": "0.001"
-      },
-      "percentage":{
-        "fee": "10000",
-        "lowerBound": "10",
-        "upperBound": "30"
-      }
-    },
-    "access": {
-      "accessControl": {}
-    },
-    "erc721": [
-      {
-        "name": "ERC721Test",
-        "symbol": "ERC721TST",
-        "uri": "metadata.test",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000200",
-        "feeType": "basic"
-      }
-    ],
-    "erc20": [
-      {
-        "name": "ERC20LRTest",
-        "symbol": "ERC20LRTST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000300",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20Test",
-        "symbol": "ERC20TST",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": "18"
-      },
-      {
-        "name": "ERC20LRTest_14Dec",
-        "symbol": "ERC20LRTST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000600",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20Test_14Dec",
-        "symbol": "ERC20TST_14D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000700",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 14
-      },
-      {
-        "name": "ERC20LRTest_20Dec",
-        "symbol": "ERC20LRTST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000800",
-        "feeType": "basic",
-        "strategy": "lr",
-        "decimals": 20
-      },
-      {
-        "name": "ERC20Test_20Dec",
-        "symbol": "ERC20TST_20D",
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000900",
-        "feeType": "oracle",
-        "strategy": "mb",
-        "decimals": 20
-      }
-    ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
-    "permissionlessGeneric": {
-      "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
-      "feeType": "basic"
-    }
+  "test2":{
+     "domainID":"2",
+     "MPCAddress":"0x1c5541A79AcC662ab2D2647F3B141a3B7Cdb2Ae4",
+     "fee":[
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000000",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000100",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000200",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000300",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000400",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000500",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000600",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000700",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        },
+        {
+           "type":"basic",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000800",
+           "toDomain":"1",
+           "feeAmount":"100000000000000"
+        }
+     ],
+     "access":{
+        "accessControl":{
+           
+        }
+     },
+     "erc721":[
+        {
+           "name":"ERC721Test",
+           "symbol":"ERC721TST",
+           "uri":"metadata.test",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000200",
+           "feeType":"basic"
+        }
+     ],
+     "erc1155":[
+        {
+           "name":"ERC1155Test",
+           "symbol":"ERC1155TST",
+           "uri":"metadata.test",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000400",
+           "feeType":"basic"
+        }
+     ],
+     "erc20":[
+        {
+           "name":"ERC20LRTest",
+           "symbol":"ERC20LRTST",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000300",
+           "feeType":"basic",
+           "strategy":"lr",
+           "decimals":"18"
+        },
+        {
+           "name":"ERC20Test",
+           "symbol":"ERC20TST",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000000",
+           "feeType":"oracle",
+           "strategy":"mb",
+           "decimals":"18"
+        },
+        {
+           "name":"ERC20LRTest_14Dec",
+           "symbol":"ERC20LRTST_14D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000600",
+           "feeType":"basic",
+           "strategy":"lr",
+           "decimals":14
+        },
+        {
+           "name":"ERC20Test_14Dec",
+           "symbol":"ERC20TST_14D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000700",
+           "feeType":"oracle",
+           "strategy":"mb",
+           "decimals":14
+        },
+        {
+           "name":"ERC20LRTest_20Dec",
+           "symbol":"ERC20LRTST_20D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000800",
+           "feeType":"basic",
+           "strategy":"lr",
+           "decimals":20
+        },
+        {
+           "name":"ERC20Test_20Dec",
+           "symbol":"ERC20TST_20D",
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000900",
+           "feeType":"oracle",
+           "strategy":"mb",
+           "decimals":20
+        }
+     ],
+     "permissionedGeneric":[
+        {
+           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000100",
+           "feeType":"basic",
+           "depositFunctionSig":"0x00000000",
+           "depositorOffset":0,
+           "executeFunctionSig":"store"
+        }
+     ],
+     "permissionlessGeneric":{
+        "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000500",
+        "feeType":"basic"
+     }
   },
-  "test3": {
-    "domainID": "3"
+  "test3":{
+     "domainID":"3"
   }
 }
