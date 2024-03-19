@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.2](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.1...v2.5.2) (2024-03-19)
+
+
+### Miscellaneous
+
+* Implement erc1155 deployment ([#222](https://github.com/sygmaprotocol/sygma-solidity/issues/222)) ([6e16f36](https://github.com/sygmaprotocol/sygma-solidity/commit/6e16f361d8d9c784711144e05d9e00b9d54f781f))
+
 ## [2.5.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.0...v2.5.1) (2024-01-25)
 
 
