@@ -11,6 +11,7 @@ const PausableContract = artifacts.require("Pausable");
 const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
+
 const PermissionedGenericHandlerContract = artifacts.require(
   "PermissionedGenericHandler"
 );
@@ -160,7 +161,6 @@ module.exports = async function (deployer, network) {
       );
     }
   }
-
 
   // set MPC address
   if (currentNetworkConfig.MPCAddress)
