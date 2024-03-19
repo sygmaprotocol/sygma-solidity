@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.3](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.2...v2.5.3) (2024-03-19)
+
+
+### Bug Fixes
+
+* add evm -&gt; substrate route to local config ([#224](https://github.com/sygmaprotocol/sygma-solidity/issues/224)) ([5774d49](https://github.com/sygmaprotocol/sygma-solidity/commit/5774d49264ba40cf8e17055b798704660eb707e6))
+
 ## [2.5.2](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.1...v2.5.2) (2024-03-19)
 
 
