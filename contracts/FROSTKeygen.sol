@@ -7,8 +7,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract FROSTKeygen is Ownable {
 
-    constructor (address initialOwner){}
-
     event StartedFROSTKeygen(bytes32 resourceID); 
     
     /**
