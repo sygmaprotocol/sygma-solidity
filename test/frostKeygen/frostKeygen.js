@@ -6,30 +6,30 @@ const FROSTKeygen = artifacts.require("FROSTKeygen")
 const Helpers = require("../helpers");
 
 contract("FROSTKeygen", (accounts) => {
-    let FROSTKeygenInstance; 
+    let FROSTKeygenInstance;
     let resourceID;
 
     beforeEach(async () => {
         FROSTKeygenInstance = await FROSTKeygen.new(accounts[0]);
         resourceID = Helpers.createResourceID(
-          "0x", 
+          "0x",
           1
         );
     });
 
     it("should emit StartedFROSTKeygen event when startKeygen is called by the owner", async () => {
-      
-      const tx = await FROSTKeygenInstance.startKeygen(resourceID, {from: accounts[0]})
+
+      const tx = await FROSTKeygenInstance.startFROSTKeygen(resourceID, {from: accounts[0]})
 
       TruffleAssert.eventEmitted(tx, "StartedFROSTKeygen", (event) => {
         return event.resourceID === resourceID
-      }, "StartedFROSTKeygen event should be emitted with correct resourceID"); 
+      }, "StartedFROSTKeygen event should be emitted with correct resourceID");
 
-    }); 
+    });
 
     it("should revert when it's not called by the owner", async () => {
       await TruffleAssert.reverts(
-        FROSTKeygenInstance.startKeygen(resourceID, {from: accounts[1]}),
+        FROSTKeygenInstance.startFROSTKeygen(resourceID, {from: accounts[1]}),
       )
     });
 })
