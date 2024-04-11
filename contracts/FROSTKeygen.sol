@@ -12,7 +12,7 @@ contract FROSTKeygen is Ownable {
     /**
         @param resourceID ResourceID for which the keygen is initiated. 
      */
-    function startKeygen(bytes32 resourceID) public onlyOwner { 
+    function startFROSTKeygen(bytes32 resourceID) public onlyOwner { 
         emit StartedFROSTKeygen(resourceID); 
     }
 
