@@ -15,10 +15,15 @@ contract TwapOracle is AccessControl {
     uint24[] internal _knownFeeTiers;
 
     uint32 internal _timeWindow;
+    mapping(address => mapping(address => uint24)) public feeTiers;
 
     event TimeWindowUpdated(uint32 timeWindow);
+    event FeeTierAdded(uint24 feeTier);
+    event FeeTierSet(address tokenA, address tokenB, uint24 feeTier);
 
     error PairNotSupported();
+    error FeeTierNotSupported();
+    error FeeTierAlreadySupported();
 
     modifier onlyAdmin() {
         _onlyAdmin();
@@ -50,9 +55,17 @@ contract TwapOracle is AccessControl {
         return false;
     }
 
+    function isFeeTierSupported(uint24 feeTier) public view returns (bool) {
+        uint256 length = _knownFeeTiers.length;
+        for (uint256 i; i < length; i++) {
+            if (_knownFeeTiers[i] == feeTier) return true;
+        }
+        return false; 
+    }
+
     function getPrice(address quoteToken) external view returns (uint256 quotePrice) {
         if (!isPairSupported(WETH, quoteToken)) revert PairNotSupported();
-        address _pool = PoolAddress.computeAddress(address(UNISWAP_V3_FACTORY), PoolAddress.getPoolKey(WETH, quoteToken, 500));
+        address _pool = PoolAddress.computeAddress(address(UNISWAP_V3_FACTORY), PoolAddress.getPoolKey(WETH, quoteToken, feeTiers[WETH][quoteToken]));
 
         uint32 secondsAgo = _timeWindow;
         uint32[] memory secondsAgos = new uint32[](2);
@@ -85,5 +98,21 @@ contract TwapOracle is AccessControl {
     function updateTimeWindow(uint32 timeWindow) external onlyAdmin {
         _timeWindow = timeWindow;
         emit TimeWindowUpdated(timeWindow);
+    }
+
+    function addNewFeeTier(uint24 feeTier) external onlyAdmin {
+        uint256 length = _knownFeeTiers.length;
+        for (uint256 i; i < length; i++) {
+            if (_knownFeeTiers[i] == feeTier) revert FeeTierAlreadySupported();
+        }
+        _knownFeeTiers.push(feeTier);
+        emit FeeTierAdded(feeTier);
+    }
+
+    function setFeeTier(address tokenA, address tokenB, uint24 feeTier) external onlyAdmin {
+        if (!isFeeTierSupported(feeTier)) revert FeeTierNotSupported();
+        feeTiers[tokenA][tokenB] = feeTier;
+        feeTiers[tokenB][tokenA] = feeTier;
+        emit FeeTierSet(tokenA, tokenB, feeTier);
     }
 }
