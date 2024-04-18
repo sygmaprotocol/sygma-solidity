@@ -7,13 +7,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract FROSTKeygen is Ownable {
 
-    bool private functionCalled; 
+    bool private keygenStarted; 
     event StartedFROSTKeygen(); 
 
     modifier onlyOnce(){
-        require (!functionCalled, "Function can be called only once");
+        require (!keygenStarted, "FROST keygen can be called only once");
         _; 
-        functionCalled = true; 
+        keygenStarted = true; 
     }
     
     /**
