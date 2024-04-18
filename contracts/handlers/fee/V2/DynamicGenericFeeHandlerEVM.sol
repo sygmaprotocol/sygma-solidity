@@ -9,7 +9,7 @@ import "./DynamicFeeHandlerV2.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract DynamicGenericFeeHandlerEVM is DynamicFeeHandlerV2 {
+contract DynamicGenericFeeHandlerEVMV2 is DynamicFeeHandlerV2 {
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
