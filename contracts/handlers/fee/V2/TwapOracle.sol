@@ -24,6 +24,7 @@ contract TwapOracle is AccessControl {
     error PairNotSupported();
     error FeeTierNotSupported();
     error FeeTierAlreadySupported();
+    error InvalidTimeWindow();
 
     modifier onlyAdmin() {
         _onlyAdmin();
@@ -35,6 +36,7 @@ contract TwapOracle is AccessControl {
     }
 
     constructor(IUniswapV3Factory _uniswapFactory, address _weth, uint32 timeWindow) {
+        if (timeWindow == 0) revert InvalidTimeWindow();
         UNISWAP_V3_FACTORY = _uniswapFactory;
         WETH = _weth;
         _timeWindow = timeWindow;
@@ -42,17 +44,6 @@ contract TwapOracle is AccessControl {
         _knownFeeTiers.push(3000);
         _knownFeeTiers.push(10000);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    }
-
-    function isPairSupported(address tokenA, address tokenB) public view returns (bool) {
-        uint256 length = _knownFeeTiers.length;
-        for (uint256 i; i < length; i++) {
-            address _pool = PoolAddress.computeAddress(address(UNISWAP_V3_FACTORY), PoolAddress.getPoolKey(tokenA, tokenB, _knownFeeTiers[i]));
-            if (Address.isContract(_pool)) {
-                return true;
-            } 
-        }
-        return false;
     }
 
     function isFeeTierSupported(uint24 feeTier) public view returns (bool) {
@@ -64,8 +55,8 @@ contract TwapOracle is AccessControl {
     }
 
     function getPrice(address quoteToken) external view returns (uint256 quotePrice) {
-        if (!isPairSupported(WETH, quoteToken)) revert PairNotSupported();
         address _pool = PoolAddress.computeAddress(address(UNISWAP_V3_FACTORY), PoolAddress.getPoolKey(WETH, quoteToken, feeTiers[WETH][quoteToken]));
+        if (!Address.isContract(_pool)) revert PairNotSupported();
 
         uint32 secondsAgo = _timeWindow;
         uint32[] memory secondsAgos = new uint32[](2);
@@ -96,6 +87,7 @@ contract TwapOracle is AccessControl {
     }
 
     function updateTimeWindow(uint32 timeWindow) external onlyAdmin {
+        if (timeWindow == 0) revert InvalidTimeWindow();
         _timeWindow = timeWindow;
         emit TimeWindowUpdated(timeWindow);
     }
@@ -111,6 +103,8 @@ contract TwapOracle is AccessControl {
 
     function setFeeTier(address tokenA, address tokenB, uint24 feeTier) external onlyAdmin {
         if (!isFeeTierSupported(feeTier)) revert FeeTierNotSupported();
+        address _pool = PoolAddress.computeAddress(address(UNISWAP_V3_FACTORY), PoolAddress.getPoolKey(tokenA, tokenB, feeTier));
+        if (!Address.isContract(_pool)) revert PairNotSupported();
         feeTiers[tokenA][tokenB] = feeTier;
         feeTiers[tokenB][tokenA] = feeTier;
         emit FeeTierSet(tokenA, tokenB, feeTier);

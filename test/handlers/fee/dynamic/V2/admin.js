@@ -98,12 +98,29 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
     );
   });
 
-  it("should set fee properties and emit 'FeeOraclePropertiesSet' event", async () => {
+  it("should set time window and emit 'TimeWindowUpdated' event", async () => {
+    const setTimeWindowTx = await TwapOracleInstance.updateTimeWindow(200);
+
+    TruffleAssert.eventEmitted(setTimeWindowTx, "TimeWindowUpdated", (event) => {
+      return (
+        event.timeWindow.toNumber() === 200
+      );
+    });
+  });
+  
+  it("should require admin role to change time window", async () => {
+    await assertOnlyAdmin(
+      TwapOracleInstance.updateTimeWindow,
+      200
+    );
+  });
+
+  it("should set fee properties and emit 'FeePropertySet' event", async () => {
     assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), "0");
     const setFeeOraclePropertiesTx = await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
     assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), gasUsed);
 
-    TruffleAssert.eventEmitted(setFeeOraclePropertiesTx, "FeeOraclePropertiesSet", (event) => {
+    TruffleAssert.eventEmitted(setFeeOraclePropertiesTx, "FeePropertySet", (event) => {
       return (
         event.gasUsed.toNumber() === gasUsed
       );
@@ -114,6 +131,40 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
     await assertOnlyAdmin(
       DynamicFeeHandlerInstance.setFeeProperties,
       gasUsed
+    );
+  });
+
+  it("should set fee tier and emit 'FeeTierSet' event", async () => {
+    const setFeeTierTx = await TwapOracleInstance.setFeeTier(WETH_ADDRESS, MATIC_ADDRESS, 3000);
+    const feeTier = await TwapOracleInstance.feeTiers(WETH_ADDRESS, MATIC_ADDRESS);
+    assert.equal(feeTier.toNumber(), 3000);
+
+    TruffleAssert.eventEmitted(setFeeTierTx, "FeeTierSet", (event) => {
+      return (
+        event.tokenA === WETH_ADDRESS,
+        event.tokenB === MATIC_ADDRESS,
+        event.feeTier.toNumber() === 3000
+      );
+    });
+  });
+
+  it("should require admin role to set fee tier", async () => {
+    await assertOnlyAdmin(
+      TwapOracleInstance.setFeeTier,
+      WETH_ADDRESS,
+      MATIC_ADDRESS,
+      3000
+    );
+  });
+
+  it("should revert if new fee tier is not supported", async () => {
+    const errorValues = await Helpers.expectToRevertWithCustomError(
+      TwapOracleInstance.setFeeTier(
+        WETH_ADDRESS,
+        MATIC_ADDRESS,
+        4000
+      ),
+      "FeeTierNotSupported()"
     );
   });
 

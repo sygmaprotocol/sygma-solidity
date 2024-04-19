@@ -24,18 +24,14 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
     uint32 public _gasUsed;
 
     mapping(uint8 => address) public destinationNativeCoinWrap;
-    mapping(uint8 => uint256) public desitnationGasPrice;
+    mapping(uint8 => uint256) public destinationGasPrice;
 
     event FeeOracleAddressSet(TwapOracle feeOracleAddress);
-    event FeeOraclePropertiesSet(uint32 gasUsed);
+    event FeePropertySet(uint32 gasUsed);
     event GasPriceSet(uint8 destinationDomainID, uint256 gasPrice);
     event WrapTokenAddressSet(uint8 destinationDomainID, address wrapTokenAddress);
 
-    error InvalidSignature();
-    error IncorrectFeeDataLength(uint256);
     error IncorrectFeeSupplied(uint256);
-    error ObsoleteOracleData();
-    error IncorrectDepositParams(uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
@@ -93,7 +89,7 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
         @param gasPrice Gas price of destination chain.
      */
     function setGasPrice(uint8 destinationDomainID, uint256 gasPrice) external onlyAdmin {
-        desitnationGasPrice[destinationDomainID] = gasPrice;
+        destinationGasPrice[destinationDomainID] = gasPrice;
         emit GasPriceSet(destinationDomainID, gasPrice);
     }
 
@@ -113,7 +109,7 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
      */
     function setFeeProperties(uint32 gasUsed) external onlyAdmin {
         _gasUsed = gasUsed;
-        emit FeeOraclePropertiesSet(gasUsed);
+        emit FeePropertySet(gasUsed);
     }
 
     /**
