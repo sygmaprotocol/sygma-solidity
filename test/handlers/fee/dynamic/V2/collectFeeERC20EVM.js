@@ -94,7 +94,7 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
     pool_10000 = await poolFactory.attach(pool_10000);
 
     TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS, 1);
-    await TwapOracleInstance.setFeeTier(WETH_ADDRESS, MATIC_ADDRESS, 500);
+    await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
 
     await FeeHandlerRouterInstance.adminSetResourceHandler(
       destinationDomainID,

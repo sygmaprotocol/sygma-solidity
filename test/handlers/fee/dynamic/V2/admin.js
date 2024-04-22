@@ -63,7 +63,7 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
     pool_10000 = await poolFactory.attach(pool_10000);
 
     TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS, 1);
-    await TwapOracleInstance.setFeeTier(WETH_ADDRESS, MATIC_ADDRESS, 500);
+    await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
 
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
@@ -134,23 +134,24 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
     );
   });
 
-  it("should set fee tier and emit 'FeeTierSet' event", async () => {
-    const setFeeTierTx = await TwapOracleInstance.setFeeTier(WETH_ADDRESS, MATIC_ADDRESS, 3000);
-    const feeTier = await TwapOracleInstance.feeTiers(WETH_ADDRESS, MATIC_ADDRESS);
-    assert.equal(feeTier.toNumber(), 3000);
+  it("should set pool and emit 'PoolSet' event", async () => {
+    const setPoolTx = await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 3000);
+    const pool = await TwapOracleInstance.pools(WETH_ADDRESS, MATIC_ADDRESS);
+    assert.equal(pool, pool_3000.address);
 
-    TruffleAssert.eventEmitted(setFeeTierTx, "FeeTierSet", (event) => {
+    TruffleAssert.eventEmitted(setPoolTx, "PoolSet", (event) => {
       return (
         event.tokenA === WETH_ADDRESS,
         event.tokenB === MATIC_ADDRESS,
-        event.feeTier.toNumber() === 3000
+        event.feeTier.toNumber() === 3000,
+        event.pool === pool
       );
     });
   });
 
-  it("should require admin role to set fee tier", async () => {
+  it("should require admin role to set pool", async () => {
     await assertOnlyAdmin(
-      TwapOracleInstance.setFeeTier,
+      TwapOracleInstance.setPool,
       WETH_ADDRESS,
       MATIC_ADDRESS,
       3000
@@ -159,7 +160,7 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
 
   it("should revert if new fee tier is not supported", async () => {
     const errorValues = await Helpers.expectToRevertWithCustomError(
-      TwapOracleInstance.setFeeTier(
+      TwapOracleInstance.setPool(
         WETH_ADDRESS,
         MATIC_ADDRESS,
         4000

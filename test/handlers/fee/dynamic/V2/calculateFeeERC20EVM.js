@@ -67,7 +67,7 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
     pool_10000 = await poolFactory.attach(pool_10000);
 
     TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS, 1);
-    await TwapOracleInstance.setFeeTier(WETH_ADDRESS, MATIC_ADDRESS, 500);
+    await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
 
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
@@ -98,13 +98,8 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
       "0x00"
     );
 
-    console.log(res.fee.toString());
-    console.log(Ethers.utils.formatEther(res.fee.toString()));
-
     const input = new Ethers.ethers.BigNumber.from(feeInDestinationToken.toString());
     const out = await QuoterInstance.callStatic.quoteExactInputSingle(MATIC_ADDRESS, WETH_ADDRESS, 500, input, 0);
-    console.log(out.toString());
-    console.log(Ethers.utils.formatEther(out.toString()));
     expect(res.fee.toNumber()).to.be.within(out*0.99, out*1.01);
   });
 });

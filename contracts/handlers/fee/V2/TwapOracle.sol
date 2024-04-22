@@ -6,7 +6,6 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import "../../../utils/TickMath.sol";
 import "../../../utils/FullMath.sol";
-import "../../../utils/PoolAddress.sol";
 import "../../../utils/AccessControl.sol";
 
 contract TwapOracle is AccessControl {
@@ -15,11 +14,11 @@ contract TwapOracle is AccessControl {
     uint24[] internal _knownFeeTiers;
 
     uint32 internal _timeWindow;
-    mapping(address => mapping(address => uint24)) public feeTiers;
+    mapping(address => mapping(address => address)) public pools;
 
     event TimeWindowUpdated(uint32 timeWindow);
     event FeeTierAdded(uint24 feeTier);
-    event FeeTierSet(address tokenA, address tokenB, uint24 feeTier);
+    event PoolSet(address tokenA, address tokenB, uint24 feeTier, address pool);
 
     error PairNotSupported();
     error FeeTierNotSupported();
@@ -55,15 +54,12 @@ contract TwapOracle is AccessControl {
     }
 
     function getPrice(address quoteToken) external view returns (uint256 quotePrice) {
-        address _pool = PoolAddress.computeAddress(address(UNISWAP_V3_FACTORY), PoolAddress.getPoolKey(WETH, quoteToken, feeTiers[WETH][quoteToken]));
-        if (!Address.isContract(_pool)) revert PairNotSupported();
-
         uint32 secondsAgo = _timeWindow;
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = secondsAgo;
         secondsAgos[1] = 0;
 
-        (int56[] memory tickCumulatives, ) = IUniswapV3Pool(_pool).observe(secondsAgos);
+        (int56[] memory tickCumulatives, ) = IUniswapV3Pool(pools[WETH][quoteToken]).observe(secondsAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
         int24 arithmeticMeanTick = int24(tickCumulativesDelta / int56(uint56(secondsAgo)));
         // Always round to negative infinity
@@ -101,12 +97,12 @@ contract TwapOracle is AccessControl {
         emit FeeTierAdded(feeTier);
     }
 
-    function setFeeTier(address tokenA, address tokenB, uint24 feeTier) external onlyAdmin {
+    function setPool(address tokenA, address tokenB, uint24 feeTier) external onlyAdmin {
         if (!isFeeTierSupported(feeTier)) revert FeeTierNotSupported();
-        address _pool = PoolAddress.computeAddress(address(UNISWAP_V3_FACTORY), PoolAddress.getPoolKey(tokenA, tokenB, feeTier));
+        address _pool = UNISWAP_V3_FACTORY.getPool(tokenA, tokenB, feeTier);
         if (!Address.isContract(_pool)) revert PairNotSupported();
-        feeTiers[tokenA][tokenB] = feeTier;
-        feeTiers[tokenB][tokenA] = feeTier;
-        emit FeeTierSet(tokenA, tokenB, feeTier);
+        pools[tokenA][tokenB] = _pool;
+        pools[tokenB][tokenA] = _pool;
+        emit PoolSet(tokenA, tokenB, feeTier, _pool);
     }
 }
