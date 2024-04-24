@@ -62,8 +62,8 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
     pool_10000 = await UniswapFactoryInstance.getPool(WETH_ADDRESS, MATIC_ADDRESS, 10000);
     pool_10000 = await poolFactory.attach(pool_10000);
 
-    TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS, 1);
-    await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
+    TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS);
+    await TwapOracleInstance.setPool(MATIC_ADDRESS, 500, 100);
 
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
@@ -98,23 +98,6 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
     );
   });
 
-  it("should set time window and emit 'TimeWindowUpdated' event", async () => {
-    const setTimeWindowTx = await TwapOracleInstance.updateTimeWindow(200);
-
-    TruffleAssert.eventEmitted(setTimeWindowTx, "TimeWindowUpdated", (event) => {
-      return (
-        event.timeWindow.toNumber() === 200
-      );
-    });
-  });
-  
-  it("should require admin role to change time window", async () => {
-    await assertOnlyAdmin(
-      TwapOracleInstance.updateTimeWindow,
-      200
-    );
-  });
-
   it("should set fee properties and emit 'FeePropertySet' event", async () => {
     assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), "0");
     const setFeeOraclePropertiesTx = await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
@@ -135,16 +118,17 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
   });
 
   it("should set pool and emit 'PoolSet' event", async () => {
-    const setPoolTx = await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 3000);
-    const pool = await TwapOracleInstance.pools(WETH_ADDRESS, MATIC_ADDRESS);
-    assert.equal(pool, pool_3000.address);
+    const setPoolTx = await TwapOracleInstance.setPool(MATIC_ADDRESS, 3000, 100);
+    const pool = await TwapOracleInstance.pools(MATIC_ADDRESS);
+    assert.equal(pool.poolAddress, pool_3000.address);
+    assert.equal(pool.timeWindow, 100);
 
     TruffleAssert.eventEmitted(setPoolTx, "PoolSet", (event) => {
       return (
-        event.tokenA === WETH_ADDRESS,
-        event.tokenB === MATIC_ADDRESS,
+        event.token === MATIC_ADDRESS,
         event.feeTier.toNumber() === 3000,
-        event.pool === pool
+        event.timeWindow === 100,
+        event.pool === pool.poolAddress
       );
     });
   });
@@ -152,20 +136,34 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
   it("should require admin role to set pool", async () => {
     await assertOnlyAdmin(
       TwapOracleInstance.setPool,
-      WETH_ADDRESS,
       MATIC_ADDRESS,
-      3000
+      3000,
+      100
     );
   });
 
-  it("should revert if new fee tier is not supported", async () => {
-    const errorValues = await Helpers.expectToRevertWithCustomError(
-      TwapOracleInstance.setPool(
-        WETH_ADDRESS,
-        MATIC_ADDRESS,
-        4000
-      ),
-      "FeeTierNotSupported()"
+  it("should set price manually and emit 'PriceSet' event", async () => {
+    const new_price = Ethers.utils.parseEther("0.018");
+    const setPriceTx = await TwapOracleInstance.setPrice(MATIC_ADDRESS, new_price);
+    const priceOnOracle = await TwapOracleInstance.prices(MATIC_ADDRESS); 
+    const pool = await TwapOracleInstance.pools(MATIC_ADDRESS);
+    assert.equal(pool.poolAddress, Ethers.constants.AddressZero);
+    assert.equal(pool.timeWindow, 0);
+    assert.equal(priceOnOracle.toString(), new_price.toString());
+    TruffleAssert.eventEmitted(setPriceTx, "PriceSet", (event) => {
+      return (
+        event.token === MATIC_ADDRESS,
+        event.price.toString() === new_price.toString()
+      );
+    });
+  });
+
+  it("should require admin role to set price", async () => {
+    const new_price = Ethers.utils.parseEther("0.018");
+    await assertOnlyAdmin(
+      TwapOracleInstance.setPrice,
+      MATIC_ADDRESS,
+      new_price
     );
   });
 

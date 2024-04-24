@@ -23,6 +23,7 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
   const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
   const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
   const MATIC_ADDRESS = "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0";
+  const BNB_ADDRESS = "0xB8c77482e45F1F44dE1745F52C74426C631bDD52";
 
   let UniswapFactoryInstance;
   let TwapOracleInstance;
@@ -66,8 +67,8 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
     pool_10000 = await UniswapFactoryInstance.getPool(WETH_ADDRESS, MATIC_ADDRESS, 10000);
     pool_10000 = await poolFactory.attach(pool_10000);
 
-    TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS, 1);
-    await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
+    TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS);
+    await TwapOracleInstance.setPool(MATIC_ADDRESS, 500, 100);
 
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
@@ -87,7 +88,7 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
     await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
   });
 
-  it("should set the correct values", async () => {
+  it("should get the correct values", async () => {
     const feeInDestinationToken = gasPrice * gasUsed;
     const res = await FeeHandlerRouterInstance.calculateFee.call(
       sender,
@@ -101,5 +102,12 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
     const input = new Ethers.ethers.BigNumber.from(feeInDestinationToken.toString());
     const out = await QuoterInstance.callStatic.quoteExactInputSingle(MATIC_ADDRESS, WETH_ADDRESS, 500, input, 0);
     expect(res.fee.toNumber()).to.be.within(out*0.99, out*1.01);
+  });
+
+  it("should get the correct price for the tokens with no available pool", async () => {
+     const bnb_price = Ethers.utils.parseEther("0.18");
+     await TwapOracleInstance.setPrice(BNB_ADDRESS, bnb_price);
+     const priceOnOracle = await TwapOracleInstance.getPrice(BNB_ADDRESS);
+     assert.equal(priceOnOracle.toString(), bnb_price.toString());
   });
 });

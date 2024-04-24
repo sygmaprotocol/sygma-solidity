@@ -142,8 +142,7 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
         return _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
     }
 
-    function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view virtual returns(uint256 fee, address tokenAddress) {
-    }
+    function _calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) internal view virtual returns(uint256 fee, address tokenAddress);
 
     /**
         @notice Transfers eth in the contract to the specified addresses. The parameters addrs and amounts are mapped 1-1.

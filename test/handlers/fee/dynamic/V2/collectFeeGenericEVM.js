@@ -100,8 +100,8 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
     pool_10000 = await UniswapFactoryInstance.getPool(WETH_ADDRESS, MATIC_ADDRESS, 10000);
     pool_10000 = await poolFactory.attach(pool_10000);
 
-    TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS, 1);
-    await TwapOracleInstance.setPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
+    TwapOracleInstance = await TwapOracleContract.new(UniswapFactoryInstance.address, WETH_ADDRESS);
+    await TwapOracleInstance.setPool(MATIC_ADDRESS, 500, 100);
 
     await FeeHandlerRouterInstance.adminSetResourceHandler(
       destinationDomainID,

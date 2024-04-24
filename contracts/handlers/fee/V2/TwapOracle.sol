@@ -11,19 +11,22 @@ import "../../../utils/AccessControl.sol";
 contract TwapOracle is AccessControl {
     IUniswapV3Factory public immutable UNISWAP_V3_FACTORY;
     address public immutable WETH;
-    uint24[] internal _knownFeeTiers;
 
-    uint32 internal _timeWindow;
-    mapping(address => mapping(address => address)) public pools;
+    mapping(address => Pool) public pools;
+    mapping(address => uint256) public prices;
 
-    event TimeWindowUpdated(uint32 timeWindow);
-    event FeeTierAdded(uint24 feeTier);
-    event PoolSet(address tokenA, address tokenB, uint24 feeTier, address pool);
+    struct Pool {
+        address poolAddress;
+        uint32 timeWindow;
+    }
+
+    event PoolSet(address token, uint24 feeTier, uint32 timeWindow, address pool);
+    event PriceSet(address token, uint256 price);
 
     error PairNotSupported();
-    error FeeTierNotSupported();
-    error FeeTierAlreadySupported();
     error InvalidTimeWindow();
+    error InvalidPrice();
+    error UniswapPoolAvailable();
 
     modifier onlyAdmin() {
         _onlyAdmin();
@@ -34,32 +37,22 @@ contract TwapOracle is AccessControl {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "sender doesn't have admin role");
     }
 
-    constructor(IUniswapV3Factory _uniswapFactory, address _weth, uint32 timeWindow) {
-        if (timeWindow == 0) revert InvalidTimeWindow();
+    constructor(IUniswapV3Factory _uniswapFactory, address _weth) {
         UNISWAP_V3_FACTORY = _uniswapFactory;
         WETH = _weth;
-        _timeWindow = timeWindow;
-        _knownFeeTiers.push(500);
-        _knownFeeTiers.push(3000);
-        _knownFeeTiers.push(10000);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function isFeeTierSupported(uint24 feeTier) public view returns (bool) {
-        uint256 length = _knownFeeTiers.length;
-        for (uint256 i; i < length; i++) {
-            if (_knownFeeTiers[i] == feeTier) return true;
-        }
-        return false; 
-    }
-
     function getPrice(address quoteToken) external view returns (uint256 quotePrice) {
-        uint32 secondsAgo = _timeWindow;
+        Pool memory pool = pools[quoteToken];
+        if (pool.poolAddress == address(0)) return prices[quoteToken];
+
+        uint32 secondsAgo = pool.timeWindow;
         uint32[] memory secondsAgos = new uint32[](2);
         secondsAgos[0] = secondsAgo;
         secondsAgos[1] = 0;
 
-        (int56[] memory tickCumulatives, ) = IUniswapV3Pool(pools[WETH][quoteToken]).observe(secondsAgos);
+        (int56[] memory tickCumulatives, ) = IUniswapV3Pool(pool.poolAddress).observe(secondsAgos);
         int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
         int24 arithmeticMeanTick = int24(tickCumulativesDelta / int56(uint56(secondsAgo)));
         // Always round to negative infinity
@@ -82,27 +75,18 @@ contract TwapOracle is AccessControl {
         return quotePrice;
     }
 
-    function updateTimeWindow(uint32 timeWindow) external onlyAdmin {
+    function setPool(address token, uint24 feeTier, uint32 timeWindow) external onlyAdmin {
         if (timeWindow == 0) revert InvalidTimeWindow();
-        _timeWindow = timeWindow;
-        emit TimeWindowUpdated(timeWindow);
-    }
-
-    function addNewFeeTier(uint24 feeTier) external onlyAdmin {
-        uint256 length = _knownFeeTiers.length;
-        for (uint256 i; i < length; i++) {
-            if (_knownFeeTiers[i] == feeTier) revert FeeTierAlreadySupported();
-        }
-        _knownFeeTiers.push(feeTier);
-        emit FeeTierAdded(feeTier);
-    }
-
-    function setPool(address tokenA, address tokenB, uint24 feeTier) external onlyAdmin {
-        if (!isFeeTierSupported(feeTier)) revert FeeTierNotSupported();
-        address _pool = UNISWAP_V3_FACTORY.getPool(tokenA, tokenB, feeTier);
+        address _pool = UNISWAP_V3_FACTORY.getPool(WETH, token, feeTier);
         if (!Address.isContract(_pool)) revert PairNotSupported();
-        pools[tokenA][tokenB] = _pool;
-        pools[tokenB][tokenA] = _pool;
-        emit PoolSet(tokenA, tokenB, feeTier, _pool);
+        pools[token].poolAddress = _pool;
+        pools[token].timeWindow = timeWindow;
+        emit PoolSet(token, feeTier, timeWindow, _pool);
+    }
+
+    function setPrice(address token, uint256 price) external onlyAdmin {
+        prices[token] = price;
+        delete pools[token];
+        emit PriceSet(token, price);
     }
 }
