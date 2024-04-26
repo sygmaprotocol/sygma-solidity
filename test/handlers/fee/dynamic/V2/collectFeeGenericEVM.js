@@ -191,7 +191,17 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
   });
 
   it("deposit should revert if invalid fee (msg.value) amount supplied", async () => {
-    const incorrectFee = Ethers.utils.parseEther("1.0");
+    const res = await FeeHandlerRouterInstance.calculateFee.call(
+      sender,
+      originDomainID,
+      destinationDomainID,
+      resourceID,
+      depositData,
+      "0x00"
+    );
+
+    const expectedFee = res.fee;
+    const fee = Ethers.BigNumber.from(expectedFee.toString()).div(2);
 
     const errorValues = await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(
@@ -201,13 +211,34 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
         "0x00",
         {
           from: depositorAddress,
-          value: incorrectFee,
+          value: fee,
         }
       ),
       "IncorrectFeeSupplied(uint256)"
     );
 
-    assert.equal(errorValues[0].toString(), incorrectFee.toString());
+    assert.equal(errorValues[0].toString(), fee.toString());
+  });
+
+  it("deposit should not revert if exceed fee (msg.value) amount supplied", async () => {
+    const exceedFee = Ethers.utils.parseEther("1.0");
+
+    const depositTx = await BridgeInstance.deposit(
+      destinationDomainID,
+      resourceID,
+      depositData,
+      "0x00",
+      {
+        from: depositorAddress,
+        value: exceedFee,
+      }
+    );
+    TruffleAssert.eventEmitted(depositTx, "Deposit", (event) => {
+      return (
+        event.destinationDomainID.toNumber() === destinationDomainID &&
+        event.resourceID === resourceID.toLowerCase()
+      );
+    });
   });
 
   it("should successfully change fee handler from FeeRouter to DynamicFeeHandler and collect fee", async () => {

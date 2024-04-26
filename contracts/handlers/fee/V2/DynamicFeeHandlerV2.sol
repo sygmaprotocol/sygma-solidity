@@ -123,7 +123,12 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) payable external onlyBridgeOrRouter {
         (uint256 fee, ) = _calculateFee(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
-        if (msg.value != fee) revert IncorrectFeeSupplied(msg.value);
+        if (msg.value < fee) revert IncorrectFeeSupplied(msg.value);
+        uint256 remaining = msg.value - fee;
+        if (remaining != 0) {
+            (bool sent, ) = sender.call{value: remaining}("");
+            require(sent, "Failed to send remaining Ether");
+        }
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, fee, address(0));
     }
 
