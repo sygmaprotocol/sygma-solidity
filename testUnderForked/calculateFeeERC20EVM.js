@@ -1,7 +1,7 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 const Ethers = require("ethers");
-const Helpers = require("../../test/helpers");
+const Helpers = require("../test/helpers");
 const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVMV2");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");

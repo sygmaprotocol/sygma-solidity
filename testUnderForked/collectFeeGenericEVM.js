@@ -3,7 +3,7 @@
 
 const TruffleAssert = require("truffle-assertions");
 const Ethers = require("ethers");
-const Helpers = require("../../test/helpers");
+const Helpers = require("../test/helpers");
 
 const DynamicFeeHandlerContract = artifacts.require("DynamicGenericFeeHandlerEVMV2");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
