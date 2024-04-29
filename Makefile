@@ -17,6 +17,11 @@ start-ganache:
 	@echo " > \033[32mStarting ganache... \033[0m "
 	./scripts/start_ganache.sh
 
+start-forkedMainnet:
+	@echo " > \033[32mStarting forked environment... \033[0m "
+	ganache-cli -f https://eth-mainnet.g.alchemy.com/v2/34NZ4AoqM8OSolHSol6jh5xZSPq1rcL-
+	sleep 3
+
 start-geth:
 	@echo " > \033[32mStarting geth... \033[0m "
 	./scripts/geth/start_geth.sh

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 const Ethers = require("ethers");
 const TruffleAssert = require("truffle-assertions");
-const Helpers = require("../../../../helpers");
+const Helpers = require("../../test/helpers");
 const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVMV2");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const TwapOracleContract = artifacts.require("TwapOracle");
