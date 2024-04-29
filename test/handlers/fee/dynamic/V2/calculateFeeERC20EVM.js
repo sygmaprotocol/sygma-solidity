@@ -7,12 +7,24 @@ const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const TwapOracleContract = artifacts.require("TwapOracle");
 
-const FACTORY_ABI = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json').abi;
-const FACTORY_BYTECODE = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json').bytecode;
-const POOL_ABI = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json').abi;
-const POOL_BYTECODE = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json').bytecode;
-const QUOTER_ABI = require('@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json').abi;
-const QUOTER_BYTECODE = require('@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json').bytecode;
+const FACTORY_ABI = require(
+  "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"
+).abi;
+const FACTORY_BYTECODE = require(
+  "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"
+).bytecode;
+const POOL_ABI = require(
+  "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"
+).abi;
+const POOL_BYTECODE = require(
+  "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"
+).bytecode;
+const QUOTER_ABI = require(
+  "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json"
+).abi;
+const QUOTER_BYTECODE = require(
+  "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json"
+).bytecode;
 
 contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
   const originDomainID = 1;
@@ -53,13 +65,19 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
     );
     const provider = new Ethers.providers.JsonRpcProvider();
     const signer = provider.getSigner();
-    UniswapFactoryInstance = new Ethers.ethers.ContractFactory(new Ethers.ethers.utils.Interface(FACTORY_ABI), FACTORY_BYTECODE, signer);
+    UniswapFactoryInstance = new Ethers.ethers.ContractFactory(
+      new Ethers.ethers.utils.Interface(FACTORY_ABI), FACTORY_BYTECODE, signer
+    );
     UniswapFactoryInstance = await UniswapFactoryInstance.attach(UNISWAP_V3_FACTORY_ADDRESS);
 
-    QuoterInstance = new Ethers.ethers.ContractFactory(new Ethers.ethers.utils.Interface(QUOTER_ABI), QUOTER_BYTECODE, signer);
+    QuoterInstance = new Ethers.ethers.ContractFactory(
+      new Ethers.ethers.utils.Interface(QUOTER_ABI), QUOTER_BYTECODE, signer
+    );
     QuoterInstance = await QuoterInstance.deploy(UniswapFactoryInstance.address, WETH_ADDRESS);
 
-    const poolFactory = new Ethers.ethers.ContractFactory(new Ethers.ethers.utils.Interface(POOL_ABI), POOL_BYTECODE, signer);
+    const poolFactory = new Ethers.ethers.ContractFactory(
+      new Ethers.ethers.utils.Interface(POOL_ABI), POOL_BYTECODE, signer
+    );
     pool_500 = await UniswapFactoryInstance.getPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
     pool_500 = await poolFactory.attach(pool_500);
     pool_3000 = await UniswapFactoryInstance.getPool(WETH_ADDRESS, MATIC_ADDRESS, 3000);

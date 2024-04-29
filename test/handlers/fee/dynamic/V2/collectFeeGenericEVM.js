@@ -11,25 +11,23 @@ const TwapOracleContract = artifacts.require("TwapOracle");
 const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
 const TestStoreContract = artifacts.require("TestStore");
 
-const FACTORY_ABI = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json').abi;
-const FACTORY_BYTECODE = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json').bytecode;
-const POOL_ABI = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json').abi;
-const POOL_BYTECODE = require('@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json').bytecode;
-const QUOTER_ABI = require('@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json').abi;
-const QUOTER_BYTECODE = require('@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json').bytecode;
+const FACTORY_ABI = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json").abi;
+const FACTORY_BYTECODE = require(
+  "@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json"
+).bytecode;
+const POOL_ABI = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json").abi;
+const POOL_BYTECODE = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json").bytecode;
+const QUOTER_ABI = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json").abi;
+const QUOTER_BYTECODE = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json").bytecode;
 
 contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
-  const recipientAddress = accounts[2];
-  const tokenAmount = Ethers.utils.parseEther("1");
   // const fee = Ethers.utils.parseEther("0.05");
   const depositorAddress = accounts[1];
   const emptySetResourceData = "0x";
   const destinationMaxFee = 900000;
   const hashOfTestStore = Ethers.utils.keccak256("0xc0ffee");
-  const msgGasLimit = 0;
   const originDomainID = 1;
   const destinationDomainID = 3;
-  const gasUsed = 100000;
   const gasPrice = 200000000000;
   const sender = accounts[0];
   const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
@@ -86,13 +84,19 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
 
     const provider = new Ethers.providers.JsonRpcProvider();
     const signer = provider.getSigner();
-    UniswapFactoryInstance = new Ethers.ethers.ContractFactory(new Ethers.ethers.utils.Interface(FACTORY_ABI), FACTORY_BYTECODE, signer);
+    UniswapFactoryInstance = new Ethers.ethers.ContractFactory(
+      new Ethers.ethers.utils.Interface(FACTORY_ABI), FACTORY_BYTECODE, signer
+    );
     UniswapFactoryInstance = await UniswapFactoryInstance.attach(UNISWAP_V3_FACTORY_ADDRESS);
 
-    QuoterInstance = new Ethers.ethers.ContractFactory(new Ethers.ethers.utils.Interface(QUOTER_ABI), QUOTER_BYTECODE, signer);
+    QuoterInstance = new Ethers.ethers.ContractFactory(
+      new Ethers.ethers.utils.Interface(QUOTER_ABI), QUOTER_BYTECODE, signer
+    );
     QuoterInstance = await QuoterInstance.deploy(UniswapFactoryInstance.address, WETH_ADDRESS);
 
-    const poolFactory = new Ethers.ethers.ContractFactory(new Ethers.ethers.utils.Interface(POOL_ABI), POOL_BYTECODE, signer);
+    const poolFactory = new Ethers.ethers.ContractFactory(
+      new Ethers.ethers.utils.Interface(POOL_ABI), POOL_BYTECODE, signer
+    );
     pool_500 = await UniswapFactoryInstance.getPool(WETH_ADDRESS, MATIC_ADDRESS, 500);
     pool_500 = await poolFactory.attach(pool_500);
     pool_3000 = await UniswapFactoryInstance.getPool(WETH_ADDRESS, MATIC_ADDRESS, 3000);
