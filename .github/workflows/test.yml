@@ -37,6 +37,11 @@ jobs:
         run: |
           SILENT=true make start-ganache
           make test
+      - name: Forked Mainnet Tests
+        run: |
+          fuser -k 8545/tcp
+          make start-forkedMainnet
+          npx truffle test testUnderForked/*
 
   coverage:
     needs: test
