@@ -7,13 +7,20 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract FROSTKeygen is Ownable {
 
-    event StartedFROSTKeygen(bytes32 resourceID); 
+    bool private keygenStarted; 
+    event StartedFROSTKeygen(); 
+
+    modifier onlyOnce(){
+        require (!keygenStarted, "FROST keygen can be called only once");
+        _; 
+        keygenStarted = true; 
+    }
     
     /**
-        @param resourceID ResourceID for which the keygen is initiated. 
+       @notice Emits {StartedFROSTKeygen} event
      */
-    function startFROSTKeygen(bytes32 resourceID) public onlyOwner { 
-        emit StartedFROSTKeygen(resourceID); 
+    function startFROSTKeygen() public onlyOwner onlyOnce { 
+        emit StartedFROSTKeygen(); 
     }
 
 }
