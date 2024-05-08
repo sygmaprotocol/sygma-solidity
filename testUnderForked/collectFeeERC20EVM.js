@@ -223,6 +223,25 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
     assert.equal(errorValues[0].toString(), fee.toString());
   });
 
+  it("deposit should revert if the destination coin's price is 0", async () => {
+    const fee = Ethers.utils.parseEther("1.0");
+    await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0); 
+
+    const errorValues = await Helpers.expectToRevertWithCustomError(
+      BridgeInstance.deposit(
+        destinationDomainID,
+        resourceID,
+        depositData,
+        "0x00",
+        {
+          from: depositorAddress,
+          value: fee,
+        }
+      ),
+      "IncorrectPrice()"
+    );
+  });
+
   it("deposit should not revert if exceed fee (msg.value) amount supplied", async () => {
     const exceedFee = Ethers.utils.parseEther("1.0");
 

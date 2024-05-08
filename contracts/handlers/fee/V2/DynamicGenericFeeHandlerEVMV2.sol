@@ -27,8 +27,9 @@ contract DynamicGenericFeeHandlerEVMV2 is DynamicFeeHandlerV2 {
      */
     function _calculateFee(address, uint8, uint8 destinationDomainID, bytes32, bytes calldata depositData, bytes calldata) internal view override returns (uint256 fee, address tokenAddress) {
         uint256 maxFee = uint256(bytes32(depositData[:32]));
-        address desintationCoin = destinationNativeCoinWrap[destinationDomainID];
-        uint256 txCost = destinationGasPrice[destinationDomainID] * maxFee * twapOracle.getPrice(desintationCoin) / 1e18;
+        uint256 desintationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
+        if (desintationCoinPrice == 0) revert IncorrectPrice();
+        uint256 txCost = destinationGasPrice[destinationDomainID] * maxFee * desintationCoinPrice / 1e18;
         return (txCost, address(0));
     }
 }
