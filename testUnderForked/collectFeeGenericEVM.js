@@ -228,7 +228,7 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
     const fee = Ethers.utils.parseEther("1.0");
     await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0); 
 
-    const errorValues = await Helpers.expectToRevertWithCustomError(
+    await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
