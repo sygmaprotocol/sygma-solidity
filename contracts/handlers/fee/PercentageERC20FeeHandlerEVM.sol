@@ -37,6 +37,13 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
         address feeHandlerRouterAddress
     ) BasicFeeHandler(bridgeAddress, feeHandlerRouterAddress) {}
 
+    /**
+        @notice Exposes getter function for fee handler type
+     */
+    function feeHandlerType() override public returns (string memory) {
+        return "percentage";
+    }
+
     // Admin functions
 
     /**

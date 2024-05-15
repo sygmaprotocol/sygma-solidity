@@ -49,6 +49,10 @@ contract("BasicFeeHandler - [admin]", async (accounts) => {
     )
   });
 
+  it("should return fee handler type", async () => {
+    assert.equal(await BasicFeeHandlerInstance.feeHandlerType.call(), "basic");
+  });
+
   it("should set fee property", async () => {
     const fee = 3;
     assert.equal(await BasicFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID), "0");

@@ -60,6 +60,13 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    /**
+        @notice Exposes getter function for fee handler type
+     */
+    function feeHandlerType() virtual public returns (string memory) {
+        return "twap";
+    }
+
     // Admin functions
 
     /**

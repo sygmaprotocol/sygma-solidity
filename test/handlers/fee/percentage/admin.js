@@ -53,6 +53,10 @@ contract("PercentageFeeHandler - [admin]", async (accounts) => {
     resourceID = Helpers.createResourceID(ERC20MintableInstance.address, originDomainID);
   });
 
+  it("should return fee handler type", async () => {
+    assert.equal(await PercentageFeeHandlerInstance.feeHandlerType.call(), "percentage");
+  });
+
   it("should set fee property", async () => {
     const fee = 60000;
     assert.equal(await PercentageFeeHandlerInstance._domainResourceIDToFee(destinationDomainID, resourceID), "0");
