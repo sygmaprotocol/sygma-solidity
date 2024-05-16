@@ -91,6 +91,10 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
     ADMIN_ROLE = await DynamicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
   });
 
+  it("should return fee handler type", async () => {
+    assert.equal(await DynamicFeeHandlerInstance.feeHandlerType.call(), "twap");
+  });
+
   it("should set fee oracle and emit 'FeeOracleAddressSet' event", async () => {
     assert.equal(
       await DynamicFeeHandlerInstance.twapOracle.call(),
@@ -161,7 +165,7 @@ contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
   it("should set price manually and emit 'PriceSet' event", async () => {
     const new_price = Ethers.utils.parseEther("0.018");
     const setPriceTx = await TwapOracleInstance.setPrice(MATIC_ADDRESS, new_price);
-    const priceOnOracle = await TwapOracleInstance.prices(MATIC_ADDRESS); 
+    const priceOnOracle = await TwapOracleInstance.prices(MATIC_ADDRESS);
     const pool = await TwapOracleInstance.pools(MATIC_ADDRESS);
     assert.equal(pool.poolAddress, Ethers.constants.AddressZero);
     assert.equal(pool.timeWindow, 0);

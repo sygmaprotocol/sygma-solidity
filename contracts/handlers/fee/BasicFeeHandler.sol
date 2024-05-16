@@ -51,6 +51,13 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
+        @notice Exposes getter function for fee handler type
+     */
+    function feeHandlerType() virtual public returns (string memory) {
+        return "basic";
+    }
+
+    /**
         @notice Removes admin role from {_msgSender()} and grants it to {newAdmin}.
         @notice Only callable by an address that currently has the admin role.
         @param newAdmin Address that admin role will be granted to.
