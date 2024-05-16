@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.6.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.3...v2.6.0) (2024-05-16)
+
+
+### Features
+
+* add fee handler type prop ([#239](https://github.com/sygmaprotocol/sygma-solidity/issues/239)) ([531e5f1](https://github.com/sygmaprotocol/sygma-solidity/commit/531e5f178f93ef2fd8c4cd984d856ff6ade8786d))
+* Add FROSTKeygen contract and tests ([#227](https://github.com/sygmaprotocol/sygma-solidity/issues/227)) ([824151a](https://github.com/sygmaprotocol/sygma-solidity/commit/824151aa409d67b5f718b8904b121ac9ac052b04))
+* Modified Dynamic Fee Handlers with twap oracle ([#236](https://github.com/sygmaprotocol/sygma-solidity/issues/236)) ([45ad376](https://github.com/sygmaprotocol/sygma-solidity/commit/45ad3768ed26c260f7550948e3291d4d8ab55e82))
+
+
+### Miscellaneous
+
+* Remove resourceID from FROSTKeygen contract ([#235](https://github.com/sygmaprotocol/sygma-solidity/issues/235)) ([0a1b56e](https://github.com/sygmaprotocol/sygma-solidity/commit/0a1b56ee9f89724b23955fea89e4b6cf0f275da3))
+
 ## [2.5.3](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.2...v2.5.3) (2024-03-19)
 
 
