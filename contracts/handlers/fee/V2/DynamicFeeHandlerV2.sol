@@ -63,7 +63,7 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
     /**
         @notice Exposes getter function for fee handler type
      */
-    function feeHandlerType() virtual public returns (string memory) {
+    function feeHandlerType() virtual public pure returns (string memory) {
         return "twap";
     }
 

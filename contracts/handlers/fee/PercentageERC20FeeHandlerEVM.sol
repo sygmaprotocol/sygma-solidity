@@ -40,7 +40,7 @@ contract PercentageERC20FeeHandlerEVM is BasicFeeHandler, ERC20Safe {
     /**
         @notice Exposes getter function for fee handler type
      */
-    function feeHandlerType() override public returns (string memory) {
+    function feeHandlerType() override public pure returns (string memory) {
         return "percentage";
     }
 
