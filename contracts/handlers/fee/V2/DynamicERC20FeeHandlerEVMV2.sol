@@ -25,8 +25,9 @@ contract DynamicERC20FeeHandlerEVMV2 is DynamicFeeHandlerV2 {
         @return tokenAddress Returns the address of the token to be used for fee.
      */
     function _calculateFee(address, uint8, uint8 destinationDomainID, bytes32, bytes calldata, bytes calldata) internal view override returns (uint256 fee, address tokenAddress) {
-        address desintationCoin = destinationNativeCoinWrap[destinationDomainID];
-        uint256 txCost = destinationGasPrice[destinationDomainID] * _gasUsed * twapOracle.getPrice(desintationCoin) / 1e18;
+        uint256 desintationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
+        if (desintationCoinPrice == 0) revert IncorrectPrice();
+        uint256 txCost = destinationGasPrice[destinationDomainID] * _gasUsed * desintationCoinPrice / 1e18;
         return (txCost, address(0));
     }
 }

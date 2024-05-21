@@ -32,6 +32,7 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
     event WrapTokenAddressSet(uint8 destinationDomainID, address wrapTokenAddress);
 
     error IncorrectFeeSupplied(uint256);
+    error IncorrectPrice();
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "sender doesn't have admin role");
