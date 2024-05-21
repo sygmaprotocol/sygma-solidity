@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.6.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.6.0...v2.6.1) (2024-05-21)
+
+
+### Bug Fixes
+
+* add zero check for price ([#237](https://github.com/sygmaprotocol/sygma-solidity/issues/237)) ([f1fc767](https://github.com/sygmaprotocol/sygma-solidity/commit/f1fc767fa1fc872f27b7d34bd49ff2fe259e6182))
+
+
+### Miscellaneous
+
+* minor visibility fix ([#240](https://github.com/sygmaprotocol/sygma-solidity/issues/240)) ([4b46129](https://github.com/sygmaprotocol/sygma-solidity/commit/4b461298b2c237e398e87579e66c21d579af380f))
+
 ## [2.6.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.5.3...v2.6.0) (2024-05-16)
 
 
