@@ -24,7 +24,14 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
     uint32 public _gasUsed;
 
     mapping(uint8 => address) public destinationNativeCoinWrap;
-    mapping(uint8 => uint256) public destinationGasPrice;
+    mapping(uint8 => Fee) public destinationFee;
+    mapping(uint8 => mapping(bytes32 => Fee)) public _domainResourceIDToFee;
+
+    struct Fee {
+        uint256 gasPrice;
+        bytes1 feeType;
+        uint248 amount;
+    }
 
     event FeeOracleAddressSet(TwapOracle feeOracleAddress);
     event FeePropertySet(uint32 gasUsed);
@@ -95,9 +102,16 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
         @notice Sets the gas price for destination chain.
         @param destinationDomainID ID of destination chain.
         @param gasPrice Gas price of destination chain.
+        @param feeType Type of fee that can be set (fixed/percentage).
+                "0x01" => fixed fee
+                "0x02" => percentage fee
+        @param amount Fee amount that should be additional charged on top of
+        execution cost (fixed native token amount/percentage of execution cost).
      */
-    function setGasPrice(uint8 destinationDomainID, uint256 gasPrice) external onlyAdmin {
-        destinationGasPrice[destinationDomainID] = gasPrice;
+    function setGasPrice(uint8 destinationDomainID, uint256 gasPrice, bytes1 feeType, uint248 amount) external onlyAdmin {
+        destinationFee[destinationDomainID].gasPrice = gasPrice;
+        destinationFee[destinationDomainID].feeType = feeType;
+        destinationFee[destinationDomainID].amount = amount;
         emit GasPriceSet(destinationDomainID, gasPrice);
     }
 
@@ -140,7 +154,7 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, fee, address(0));
     }
 
-     /**
+    /**
         @notice Calculates fee for deposit.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.

@@ -18,7 +18,7 @@ contract DynamicERC20FeeHandlerEVMV2 is DynamicFeeHandlerV2 {
     constructor(address bridgeAddress, address feeHandlerRouterAddress) DynamicFeeHandlerV2(bridgeAddress, feeHandlerRouterAddress) {
     }
 
-     /**
+    /**
         @notice Calculates fee for transaction cost.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @return fee Returns the fee amount.
@@ -27,7 +27,16 @@ contract DynamicERC20FeeHandlerEVMV2 is DynamicFeeHandlerV2 {
     function _calculateFee(address, uint8, uint8 destinationDomainID, bytes32, bytes calldata, bytes calldata) internal view override returns (uint256 fee, address tokenAddress) {
         uint256 desintationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
         if (desintationCoinPrice == 0) revert IncorrectPrice();
-        uint256 txCost = destinationGasPrice[destinationDomainID] * _gasUsed * desintationCoinPrice / 1e18;
+        Fee memory destFeeConfig = destinationFee[destinationDomainID];
+
+        uint256 txCost = destFeeConfig.gasPrice * _gasUsed * desintationCoinPrice / 1e18;
+        if(destFeeConfig.feeType == 0x01) {
+            txCost += destFeeConfig.amount;
+        }
+        if(destFeeConfig.feeType == 0x02) {
+            txCost += txCost * destFeeConfig.amount / 1e4; // 100 for percent and 100 to avoid precision loss;
+        }
+
         return (txCost, address(0));
     }
 }
