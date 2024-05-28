@@ -12,12 +12,9 @@ const BridgeContract = artifacts.require("Bridge");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
-const PermissionedGenericHandlerContract = artifacts.require(
-  "PermissionedGenericHandler"
-);
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
+const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandler");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();
@@ -123,43 +120,6 @@ module.exports = async function (deployer, network) {
     console.log(
       "-------------------------------------------------------------------------------"
     );
-  }
-
-  // check if permissioned generic handler should be deployed
-  if (currentNetworkConfig.permissionedGeneric.length > 0) {
-    const permissionedGenericHandlerInstance = await deployer.deploy(
-      PermissionedGenericHandlerContract,
-      bridgeInstance.address
-    );
-
-    for (const generic of currentNetworkConfig.permissionedGeneric) {
-      await Utils.setupGeneric(
-        deployer,
-        generic,
-        bridgeInstance,
-        permissionedGenericHandlerInstance
-      );
-
-      console.log(
-        "-------------------------------------------------------------------------------"
-      );
-      console.log(
-        "Permissioned generic handler address:",
-        "\t",
-        permissionedGenericHandlerInstance.address
-      );
-      console.log(
-        "Generic contract address:",
-        "\t", generic.address
-      );
-      console.log(
-        "ResourceID:",
-        "\t", generic.resourceID
-      );
-      console.log(
-        "-------------------------------------------------------------------------------"
-      );
-    }
   }
 
   // set MPC address

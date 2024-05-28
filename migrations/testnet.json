@@ -41,8 +41,7 @@
         "decimals": "18"
       }
     ],
-    "permissionedGeneric": [],
-    "permissionlessGeneric": {
+    "gmp": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
       "feeType": "oracle"
     }
@@ -86,8 +85,7 @@
     },
     "erc721": [],
     "erc20": [],
-    "permissionedGeneric": [],
-    "permissionlessGeneric": {
+    "gmp": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
       "feeType": "oracle"
     }

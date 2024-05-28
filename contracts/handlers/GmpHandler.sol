@@ -9,7 +9,7 @@ import "../interfaces/IHandler.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract PermissionlessGenericHandler is IHandler {
+contract GmpHandler is IHandler {
     uint256 public constant MAX_FEE = 1000000;
 
     address public immutable _bridgeAddress;

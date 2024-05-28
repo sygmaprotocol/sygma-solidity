@@ -15,7 +15,7 @@ import "./TwapOracle.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
+abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
     address public immutable _bridgeAddress;
     address public immutable _feeHandlerRouterAddress;
 

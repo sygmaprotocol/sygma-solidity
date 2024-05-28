@@ -6,14 +6,6 @@ const ERC721HandlerContract = artifacts.require("ERC721Handler");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
-const PermissionedGenericHandlerContract = artifacts.require(
-  "PermissionedGenericHandler"
-);
-const TestStoreContract = artifacts.require("TestStore");
-const NoArgumentContract = artifacts.require("NoArgument");
-const OneArgumentContract = artifacts.require("OneArgument");
-const TwoArgumentsContract = artifacts.require("TwoArguments");
-const ThreeArgumentsContract = artifacts.require("ThreeArguments");
 
 const Helpers = require("../helpers");
 
@@ -41,20 +33,10 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
   let ERC721HandlerInstance;
   let ERC1155MintableInstance;
   let ERC1155HandlerInstance;
-  let TestStoreInstance;
-  let NoArgumentInstance;
-  let OneArgumentInstance;
-  let TwoArgumentsInstance;
-  let ThreeArgumentsInstance;
 
   let erc20ResourceID;
   let erc721ResourceID;
   let erc1155ResourceID;
-  let TestStoreResourceID;
-  let noArgumentResourceID;
-  let oneArgumentResourceID;
-  let twoArgumentsResourceID;
-  let threeArgumentsResourceID;
 
   before(async () => {
     await Promise.all([
@@ -71,21 +53,6 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
       ERC1155MintableContract.new("TOK").then(
         (instance) => (ERC1155MintableInstance = instance)
       ),
-      TestStoreContract.new().then(
-        (instance) => (TestStoreInstance = instance)
-      ),
-      NoArgumentContract.new().then(
-        (instance) => (NoArgumentInstance = instance)
-      ),
-      OneArgumentContract.new().then(
-        (instance) => (OneArgumentInstance = instance)
-      ),
-      TwoArgumentsContract.new().then(
-        (instance) => (TwoArgumentsInstance = instance)
-      ),
-      ThreeArgumentsContract.new().then(
-        (instance) => (ThreeArgumentsInstance = instance)
-      ),
     ]);
 
     erc20ResourceID = Helpers.createResourceID(
@@ -100,62 +67,6 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
       ERC1155MintableInstance.address,
       originDomainID
     );
-    TestStoreResourceID = Helpers.createResourceID(
-      TestStoreInstance.address,
-      originDomainID
-    );
-    noArgumentResourceID = Helpers.createResourceID(
-      NoArgumentInstance.address,
-      originDomainID
-    );
-    oneArgumentResourceID = Helpers.createResourceID(
-      OneArgumentInstance.address,
-      originDomainID
-    );
-    twoArgumentsResourceID = Helpers.createResourceID(
-      TwoArgumentsInstance.address,
-      originDomainID
-    );
-    threeArgumentsResourceID = Helpers.createResourceID(
-      ThreeArgumentsInstance.address,
-      originDomainID
-    );
-
-    const genericInitialContractAddresses = (initialContractAddresses = [
-      TestStoreInstance.address,
-      NoArgumentInstance.address,
-      OneArgumentInstance.address,
-      TwoArgumentsInstance.address,
-      ThreeArgumentsInstance.address,
-    ]);
-
-    const permissionedGenericHandlerSetResourceData = [
-      Helpers.constructGenericHandlerSetResourceData(
-        Helpers.blankFunctionSig,
-        Helpers.blankFunctionDepositorOffset,
-        Helpers.getFunctionSignature(TestStoreInstance, "store")
-      ),
-      Helpers.constructGenericHandlerSetResourceData(
-        Helpers.getFunctionSignature(NoArgumentInstance, "noArgument"),
-        Helpers.blankFunctionDepositorOffset,
-        Helpers.blankFunctionSig
-      ),
-      Helpers.constructGenericHandlerSetResourceData(
-        Helpers.getFunctionSignature(OneArgumentInstance, "oneArgument"),
-        Helpers.blankFunctionDepositorOffset,
-        Helpers.blankFunctionSig
-      ),
-      Helpers.constructGenericHandlerSetResourceData(
-        Helpers.getFunctionSignature(TwoArgumentsInstance, "twoArguments"),
-        Helpers.blankFunctionDepositorOffset,
-        Helpers.blankFunctionSig
-      ),
-      Helpers.constructGenericHandlerSetResourceData(
-        Helpers.getFunctionSignature(ThreeArgumentsInstance, "threeArguments"),
-        Helpers.blankFunctionDepositorOffset,
-        Helpers.blankFunctionSig
-      ),
-    ];
 
     await Promise.all([
       ERC20HandlerContract.new(BridgeInstance.address).then(
@@ -175,8 +86,6 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
         [erc1155TokenAmount],
         "0x0"
       ),
-      (PermissionedGenericHandlerInstance =
-        await PermissionedGenericHandlerContract.new(BridgeInstance.address)),
     ]);
 
     await Promise.all([
@@ -212,36 +121,6 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
         erc1155ResourceID,
         ERC1155MintableInstance.address,
         emptySetResourceData
-      ),
-      BridgeInstance.adminSetResource(
-        PermissionedGenericHandlerInstance.address,
-        TestStoreResourceID,
-        genericInitialContractAddresses[0],
-        permissionedGenericHandlerSetResourceData[0]
-      ),
-      BridgeInstance.adminSetResource(
-        PermissionedGenericHandlerInstance.address,
-        noArgumentResourceID,
-        genericInitialContractAddresses[1],
-        permissionedGenericHandlerSetResourceData[1]
-      ),
-      BridgeInstance.adminSetResource(
-        PermissionedGenericHandlerInstance.address,
-        oneArgumentResourceID,
-        genericInitialContractAddresses[2],
-        permissionedGenericHandlerSetResourceData[2]
-      ),
-      BridgeInstance.adminSetResource(
-        PermissionedGenericHandlerInstance.address,
-        twoArgumentsResourceID,
-        genericInitialContractAddresses[3],
-        permissionedGenericHandlerSetResourceData[3]
-      ),
-      BridgeInstance.adminSetResource(
-        PermissionedGenericHandlerInstance.address,
-        threeArgumentsResourceID,
-        genericInitialContractAddresses[4],
-        permissionedGenericHandlerSetResourceData[4]
       ),
     ]);
 
@@ -298,101 +177,6 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
 
     gasBenchmarks.push({
       type: "ERC1155",
-      gasUsed: depositTx.receipt.gasUsed,
-    });
-  });
-
-  it("Should make Generic deposit - TestStore asset", async () => {
-    const depositTx = await BridgeInstance.deposit(
-      destinationDomainID,
-      TestStoreResourceID,
-      Helpers.createPermissionedGenericDepositData("0xc0ff33"),
-      feeData,
-      {from: depositorAddress}
-    );
-
-    gasBenchmarks.push({
-      type: "Generic - TestStore asset",
-      gasUsed: depositTx.receipt.gasUsed,
-    });
-  });
-
-  it("Should make Generic deposit - No Argument", async () => {
-    const depositTx = await BridgeInstance.deposit(
-      destinationDomainID,
-      noArgumentResourceID,
-      Helpers.createPermissionedGenericDepositData(null),
-      feeData,
-      {from: depositorAddress}
-    );
-
-    gasBenchmarks.push({
-      type: "Generic - No Argument",
-      gasUsed: depositTx.receipt.gasUsed,
-    });
-  });
-
-  it("Should make Generic deposit - One Argument", async () => {
-    const depositTx = await BridgeInstance.deposit(
-      destinationDomainID,
-      oneArgumentResourceID,
-      Helpers.createPermissionedGenericDepositData(Helpers.toHex(42, 32)),
-      feeData,
-      {from: depositorAddress}
-    );
-
-    gasBenchmarks.push({
-      type: "Generic - One Argument",
-      gasUsed: depositTx.receipt.gasUsed,
-    });
-  });
-
-  it("Should make Generic deposit - Two Arguments", async () => {
-    const argumentOne = [
-      NoArgumentInstance.address,
-      OneArgumentInstance.address,
-      TwoArgumentsInstance.address,
-    ];
-    const argumentTwo = Helpers.getFunctionSignature(
-      TestStoreInstance,
-      "store"
-    );
-    const encodedMetaData = Helpers.abiEncode(
-      ["address[]", "bytes4"],
-      [argumentOne, argumentTwo]
-    );
-    const depositTx = await BridgeInstance.deposit(
-      destinationDomainID,
-      twoArgumentsResourceID,
-      Helpers.createPermissionedGenericDepositData(encodedMetaData),
-      feeData,
-      {from: depositorAddress}
-    );
-
-    gasBenchmarks.push({
-      type: "Generic - Two Arguments",
-      gasUsed: depositTx.receipt.gasUsed,
-    });
-  });
-
-  it("Should make Generic deposit - Three Arguments", async () => {
-    const argumentOne = "soylentGreenIsPeople";
-    const argumentTwo = -42;
-    const argumentThree = true;
-    const encodedMetaData = Helpers.abiEncode(
-      ["string", "int8", "bool"],
-      [argumentOne, argumentTwo, argumentThree]
-    );
-    const depositTx = await BridgeInstance.deposit(
-      destinationDomainID,
-      threeArgumentsResourceID,
-      Helpers.createPermissionedGenericDepositData(encodedMetaData),
-      feeData,
-      {from: depositorAddress}
-    );
-
-    gasBenchmarks.push({
-      type: "Generic - Three Arguments",
       gasUsed: depositTx.receipt.gasUsed,
     });
   });

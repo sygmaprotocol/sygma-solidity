@@ -8,7 +8,7 @@ const Helpers = require("../test/helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
-const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVMV2");
+const DynamicFeeHandlerContract = artifacts.require("TwapNativeTokenFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const TwapOracleContract = artifacts.require("TwapOracle");
 
@@ -21,7 +21,7 @@ const POOL_BYTECODE = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Poo
 const QUOTER_ABI = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json").abi;
 const QUOTER_BYTECODE = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json").bytecode;
 
-contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
+contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
   const recipientAddress = accounts[2];
   const tokenAmount = Ethers.utils.parseEther("1");
   // const fee = Ethers.utils.parseEther("0.05");
@@ -225,7 +225,7 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
 
   it("deposit should revert if the destination coin's price is 0", async () => {
     const fee = Ethers.utils.parseEther("1.0");
-    await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0); 
+    await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0);
 
     await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(

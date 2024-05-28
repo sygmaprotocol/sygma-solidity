@@ -8,7 +8,7 @@ const AccessControlSegregatorContract = artifacts.require(
 );
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const PercentageFeeHandlerContract = artifacts.require("PercentageERC20FeeHandlerEVM");
+const PercentageFeeHandlerContract = artifacts.require("PercentageERC20FeeHandler");
 
 module.exports = async function (deployer, network) {
   const networksConfig = Utils.getNetworksConfig();

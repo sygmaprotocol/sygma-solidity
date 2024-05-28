@@ -207,10 +207,10 @@ contract TestDeposit {
 
     /**
         This helper can be used to prepare execution data for Bridge.deposit() on the source chain
-        if PermissionlessGenericHandler is used
+        if GmpHandler is used
         and if the target function accepts (address depositor, bytes executionData).
         The execution data (packed as bytes) will be packed together with depositorAddress
-        in PermissionlessGenericHandler before execution on the target chain.
+        in GmpHandler before execution on the target chain.
         This function packs the bytes parameter together with a fake address and removes the address.
         After repacking in the handler together with depositorAddress, the offsets will be correct.
         Usage: pack all parameters as bytes, then use this function, then pack the result of this function

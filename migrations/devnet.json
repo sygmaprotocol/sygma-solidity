@@ -75,16 +75,7 @@
         "decimals": 20
       }
     ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
-    "permissionlessGeneric": {
+    "gmp": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
       "feeType": "basic"
     }
@@ -165,16 +156,7 @@
         "decimals": 20
       }
     ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
-    "permissionlessGeneric": {
+    "gmp": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
       "feeType": "basic"
     }
@@ -183,18 +165,6 @@
     "domainID": "100",
     "MPCAddress": "0xB01137123EF02fAeF251a39108c6ef513AAaC485",
     "fee": {
-      "oracle": [
-        {
-          "gasUsed": "100000",
-          "feePercentage": 300,
-          "address": "0x124226016fc76a6bf501b4aedbed6a4a0472644f"
-        },
-        {
-          "gasUsed": "500000",
-          "feePercentage": 300,
-          "address": "0x124226016fc76a6bf501b4aedbed6a4a0472644f"
-        }
-      ],
       "basic": [
         "0.0001",
         "0.1"
@@ -263,16 +233,7 @@
         "decimals": 20
       }
     ],
-    "permissionedGeneric": [
-      {
-        "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000100",
-        "feeType": "basic",
-        "depositFunctionSig": "0x00000000",
-        "depositorOffset": 0,
-        "executeFunctionSig": "store"
-      }
-    ],
-    "permissionlessGeneric": {
+    "gmp": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
       "feeType": "basic"
     }
@@ -281,11 +242,6 @@
     "domainID": "101",
     "MPCAddress": "0xB01137123EF02fAeF251a39108c6ef513AAaC485",
     "fee": {
-      "oracle": {
-        "gasUsed": "100000",
-        "feePercentage": 300,
-        "address": "0x124226016fc76a6bf501b4aedbed6a4a0472644f"
-      },
       "basic": {
         "fee": "0.0001"
       },
@@ -296,8 +252,7 @@
     },
     "erc721": [],
     "erc20": [],
-    "permissionedGeneric": [],
-    "permissionlessGeneric": {
+    "gmp": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000500",
       "feeType": "basic"
     }

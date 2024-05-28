@@ -66,7 +66,7 @@
      ],
      "access":{
         "accessControl":{
-           
+
         }
      },
      "erc721":[
@@ -137,16 +137,7 @@
            "decimals":20
         }
      ],
-     "permissionedGeneric":[
-        {
-           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000100",
-           "feeType":"basic",
-           "depositFunctionSig":"0x00000000",
-           "depositorOffset":0,
-           "executeFunctionSig":"store"
-        }
-     ],
-     "permissionlessGeneric":{
+     "gmp":{
         "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000500",
         "feeType":"basic"
      }
@@ -212,7 +203,7 @@
      ],
      "access":{
         "accessControl":{
-           
+
         }
      },
      "erc721":[
@@ -283,16 +274,7 @@
            "decimals":20
         }
      ],
-     "permissionedGeneric":[
-        {
-           "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000100",
-           "feeType":"basic",
-           "depositFunctionSig":"0x00000000",
-           "depositorOffset":0,
-           "executeFunctionSig":"store"
-        }
-     ],
-     "permissionlessGeneric":{
+     "gmp":{
         "resourceID":"0x0000000000000000000000000000000000000000000000000000000000000500",
         "feeType":"basic"
      }

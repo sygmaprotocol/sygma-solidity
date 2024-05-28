@@ -5,7 +5,7 @@ const TruffleAssert = require("truffle-assertions");
 
 const Helpers = require("../../../helpers");
 
-const PercentageFeeHandlerContract = artifacts.require("PercentageERC20FeeHandlerEVM");
+const PercentageFeeHandlerContract = artifacts.require("PercentageERC20FeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 

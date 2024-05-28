@@ -2,20 +2,20 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
-import "./DynamicFeeHandlerV2.sol";
+import "./TwapFeeHandler.sol";
 
 /**
     @title Handles deposit fees based on the destination chain's native coin price provided by Twap oracle.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract DynamicERC20FeeHandlerEVMV2 is DynamicFeeHandlerV2 {
+contract TwapNativeTokenFeeHandler is TwapFeeHandler {
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
      */
-    constructor(address bridgeAddress, address feeHandlerRouterAddress) DynamicFeeHandlerV2(bridgeAddress, feeHandlerRouterAddress) {
+    constructor(address bridgeAddress, address feeHandlerRouterAddress) TwapFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
     }
 
      /**

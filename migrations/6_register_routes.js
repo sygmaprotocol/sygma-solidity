@@ -4,7 +4,7 @@
 const Utils = require("./utils");
 
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
-const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandlerEVM");
+const PercentageFeeHandler = artifacts.require("PercentageERC20FeeHandler");
 const FeeRouterContract = artifacts.require("FeeHandlerRouter");
 
 module.exports = async function (deployer, network) {
@@ -20,7 +20,7 @@ module.exports = async function (deployer, network) {
   const feeRouterInstance = await FeeRouterContract.deployed()
 
   for(const fee of currentNetworkConfig.fee) {
-    console.log(`registering resource ${fee.resourceID} for destination domain 
+    console.log(`registering resource ${fee.resourceID} for destination domain
     ${fee.toDomain} using feeHandler: ${basicFeeHandlerInstance.address}`)
     if (fee.type == "basic") {
       await feeRouterInstance.adminSetResourceHandler(fee.toDomain, fee.resourceID, basicFeeHandlerInstance.address)

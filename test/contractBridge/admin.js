@@ -7,9 +7,6 @@ const Helpers = require("../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
-const PermissionedGenericHandlerContract = artifacts.require(
-  "PermissionedGenericHandler"
-);
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
@@ -35,7 +32,6 @@ contract("Bridge - [admin]", async (accounts) => {
   let ERC1155HandlerInstance;
   let ERC1155MintableInstance;
   let ERC721MintableInstance;
-  let TestStoreInstance;
   let genericHandlerSetResourceData;
 
   let withdrawData = "";
@@ -291,49 +287,6 @@ contract("Bridge - [admin]", async (accounts) => {
         emptySetResourceData
       )
     )
-  });
-
-  // Set Generic Resource
-
-  it("Should set a Generic Resource ID and contract address", async () => {
-    const resourceID = Helpers.createResourceID(
-      TestStoreInstance.address,
-      domainID
-    );
-    const PermissionedGenericHandlerInstance =
-      await PermissionedGenericHandlerContract.new(BridgeInstance.address);
-
-    await TruffleAssert.passes(
-      BridgeInstance.adminSetResource(
-        PermissionedGenericHandlerInstance.address,
-        resourceID,
-        TestStoreInstance.address,
-        genericHandlerSetResourceData
-      )
-    );
-    assert.equal(
-      await PermissionedGenericHandlerInstance._resourceIDToContractAddress.call(
-        resourceID
-      ),
-      TestStoreInstance.address
-    );
-    const retrievedResourceID = (await PermissionedGenericHandlerInstance._tokenContractAddressToTokenProperties.call(
-      TestStoreInstance.address
-    )).resourceID;
-
-    assert.equal(retrievedResourceID, resourceID.toLowerCase());
-  });
-
-  it("Should require admin role to set a Generic Resource ID and contract address", async () => {
-    await assertOnlyAdmin(() =>
-        BridgeInstance.adminSetResource(
-        someAddress,
-        bytes32,
-        someAddress,
-        genericHandlerSetResourceData,
-        {from: nonAdminAddress}
-      )
-    );
   });
 
   // Set burnable

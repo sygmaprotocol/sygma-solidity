@@ -5,10 +5,10 @@ const TruffleAssert = require("truffle-assertions");
 const Ethers = require("ethers");
 const Helpers = require("../test/helpers");
 
-const DynamicFeeHandlerContract = artifacts.require("DynamicGenericFeeHandlerEVMV2");
+const DynamicFeeHandlerContract = artifacts.require("TwapGenericFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const TwapOracleContract = artifacts.require("TwapOracle");
-const PermissionlessGenericHandlerContract = artifacts.require("PermissionlessGenericHandler");
+const GmpHandlerContract = artifacts.require("GmpHandler");
 const TestStoreContract = artifacts.require("TestStore");
 
 const FACTORY_ABI = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Factory.sol/UniswapV3Factory.json").abi;
@@ -20,7 +20,7 @@ const POOL_BYTECODE = require("@uniswap/v3-core/artifacts/contracts/UniswapV3Poo
 const QUOTER_ABI = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json").abi;
 const QUOTER_BYTECODE = require("@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json").bytecode;
 
-contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
+contract("TwapGenericFeeHandler - [collectFee]", async (accounts) => {
   // const fee = Ethers.utils.parseEther("0.05");
   const depositorAddress = accounts[1];
   const emptySetResourceData = "0x";
@@ -38,7 +38,7 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
   let TwapOracleInstance;
   let BridgeInstance;
   let FeeHandlerRouterInstance;
-  let PermissionlessGenericHandlerInstance;
+  let GmpHandlerInstance;
   let TestStoreInstance;
   let pool_500;
   let pool_3000;
@@ -66,7 +66,7 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
       FeeHandlerRouterInstance.address
     );
 
-    PermissionlessGenericHandlerInstance = await PermissionlessGenericHandlerContract.new(
+    GmpHandlerInstance = await GmpHandlerContract.new(
         BridgeInstance.address
     );
 
@@ -118,7 +118,7 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
 
     await Promise.all([
         BridgeInstance.adminSetResource(
-          PermissionlessGenericHandlerInstance.address,
+          GmpHandlerInstance.address,
           resourceID,
           TestStoreInstance.address,
           emptySetResourceData
@@ -131,7 +131,7 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
         ),
     ]);
 
-    depositData = Helpers.createPermissionlessGenericDepositData(
+    depositData = Helpers.createGmpDepositData(
         depositFunctionSignature,
         TestStoreInstance.address,
         destinationMaxFee,
@@ -226,7 +226,7 @@ contract("DynamicGenericFeeHandlerEVMV2 - [collectFee]", async (accounts) => {
 
   it("deposit should revert if the destination coin's price is 0", async () => {
     const fee = Ethers.utils.parseEther("1.0");
-    await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0); 
+    await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0);
 
     await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(

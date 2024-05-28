@@ -3,7 +3,7 @@
 const Ethers = require("ethers");
 const TruffleAssert = require("truffle-assertions");
 const Helpers = require("../test/helpers");
-const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVMV2");
+const DynamicFeeHandlerContract = artifacts.require("TwapNativeTokenFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const TwapOracleContract = artifacts.require("TwapOracle");
 
@@ -26,7 +26,7 @@ const QUOTER_BYTECODE = require(
   "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json"
 ).bytecode;
 
-contract("DynamicFeeHandlerV2 - [admin]", async (accounts) => {
+contract("TwapFeeHandler - [admin]", async (accounts) => {
   const initialRelayers = accounts.slice(0, 3);
   const currentFeeHandlerAdmin = accounts[0];
 
