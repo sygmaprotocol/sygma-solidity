@@ -18,7 +18,7 @@ contract TwapGenericFeeHandler is TwapFeeHandler {
     constructor(address bridgeAddress, address feeHandlerRouterAddress) TwapFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
     }
 
-     /**
+    /**
         @notice Calculates fee for transaction cost.
         @param destinationDomainID ID of chain deposit will be bridged to.
         @param depositData Additional data to be passed to specified handler.
@@ -29,7 +29,15 @@ contract TwapGenericFeeHandler is TwapFeeHandler {
         uint256 maxFee = uint256(bytes32(depositData[:32]));
         uint256 desintationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
         if (desintationCoinPrice == 0) revert IncorrectPrice();
-        uint256 txCost = destinationGasPrice[destinationDomainID] * maxFee * desintationCoinPrice / 1e18;
+        Fee memory destFeeConfig = destinationFee[destinationDomainID];
+
+        uint256 txCost = destFeeConfig.gasPrice * maxFee * desintationCoinPrice / 1e18;
+        if(destFeeConfig.feeType == ProtocolFeeType.Fixed) {
+            txCost += destFeeConfig.amount;
+        } else if (destFeeConfig.feeType == ProtocolFeeType.Percentage) {
+            txCost += txCost * destFeeConfig.amount / 1e4; // 100 for percent and 100 to avoid precision loss;
+        }
+
         return (txCost, address(0));
     }
 }
