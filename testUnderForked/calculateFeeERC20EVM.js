@@ -31,6 +31,13 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
   const destinationDomainID = 3;
   const gasUsed = 100000;
   const gasPrice = 200000000000;
+  const ProtocolFeeType = {
+    None: "0",
+    Fixed: "1",
+    Percentage: "2"
+  }
+  const fixedProtocolFee = Ethers.utils.parseEther("0.001");
+  const feePercentage = 1000; // 10%
   const sender = accounts[0];
   const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
   const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -101,12 +108,17 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
       DynamicFeeHandlerInstance.address
     ),
     await DynamicFeeHandlerInstance.setFeeOracle(TwapOracleInstance.address);
-    await DynamicFeeHandlerInstance.setGasPrice(destinationDomainID, gasPrice); // Polygon gas price is 200 Gwei
+    await DynamicFeeHandlerInstance.setGasPrice(
+      destinationDomainID,
+      gasPrice,  // Polygon gas price is 200 Gwei
+      ProtocolFeeType.Fixed,
+      fixedProtocolFee
+    );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
     await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
   });
 
-  it("should get the correct values", async () => {
+  it("[fixed protocol fee] should get the correct values", async () => {
     const feeInDestinationToken = gasPrice * gasUsed;
     const res = await FeeHandlerRouterInstance.calculateFee.call(
       sender,
@@ -119,13 +131,48 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
 
     const input = new Ethers.ethers.BigNumber.from(feeInDestinationToken.toString());
     const out = await QuoterInstance.callStatic.quoteExactInputSingle(MATIC_ADDRESS, WETH_ADDRESS, 500, input, 0);
-    expect(res.fee.toNumber()).to.be.within(out*0.99, out*1.01);
+    expect(
+      (await DynamicFeeHandlerInstance.destinationFee(destinationDomainID)).feeType.toString()
+    ).to.be.equal(ProtocolFeeType.Fixed);
+    expect(res.fee.toNumber()).to.be.within(
+      out*0.99 + Number(fixedProtocolFee),
+      out*1.01 + Number(fixedProtocolFee)
+    );
   });
 
   it("should get the correct price for the tokens with no available pool", async () => {
-     const bnb_price = Ethers.utils.parseEther("0.18");
-     await TwapOracleInstance.setPrice(BNB_ADDRESS, bnb_price);
-     const priceOnOracle = await TwapOracleInstance.getPrice(BNB_ADDRESS);
-     assert.equal(priceOnOracle.toString(), bnb_price.toString());
+      const bnb_price = Ethers.utils.parseEther("0.18");
+      await TwapOracleInstance.setPrice(BNB_ADDRESS, bnb_price);
+      const priceOnOracle = await TwapOracleInstance.getPrice(BNB_ADDRESS);
+      assert.equal(priceOnOracle.toString(), bnb_price.toString());
+  });
+
+  it("[percentage protocol fee] should get the correct values", async () => {
+    await DynamicFeeHandlerInstance.setGasPrice(
+      destinationDomainID,
+      gasPrice,  // Polygon gas price is 200 Gwei
+      ProtocolFeeType.Percentage,
+      feePercentage
+    );
+
+    const feeInDestinationToken = gasPrice * gasUsed;
+    const res = await FeeHandlerRouterInstance.calculateFee.call(
+      sender,
+      originDomainID,
+      destinationDomainID,
+      resourceID,
+      "0x00",
+      "0x00"
+    );
+
+    const input = new Ethers.ethers.BigNumber.from(feeInDestinationToken.toString());
+    const out = await QuoterInstance.callStatic.quoteExactInputSingle(MATIC_ADDRESS, WETH_ADDRESS, 500, input, 0);
+    expect(
+      (await DynamicFeeHandlerInstance.destinationFee(destinationDomainID)).feeType.toString()
+    ).to.be.equal(ProtocolFeeType.Percentage);
+    expect(res.fee.toNumber()).to.be.within(
+      out*1.09,
+      out*1.11
+    );
   });
 });

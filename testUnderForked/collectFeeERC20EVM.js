@@ -31,6 +31,12 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
   const destinationDomainID = 3;
   const gasUsed = 100000;
   const gasPrice = 200000000000;
+  const ProtocolFeeType = {
+    None: "0",
+    Fixed: "1",
+    Percentage: "2"
+  }
+  const fixedProtocolFee = Ethers.utils.parseEther("0.001");
   const sender = accounts[0];
   const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
   const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
@@ -109,7 +115,12 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
       DynamicFeeHandlerInstance.address
     );
     await DynamicFeeHandlerInstance.setFeeOracle(TwapOracleInstance.address);
-    await DynamicFeeHandlerInstance.setGasPrice(destinationDomainID, gasPrice); // Polygon gas price is 200 Gwei
+    await DynamicFeeHandlerInstance.setGasPrice(
+      destinationDomainID,
+      gasPrice,  // Polygon gas price is 200 Gwei
+      ProtocolFeeType.Fixed,
+      fixedProtocolFee
+    );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
     await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
 
@@ -225,7 +236,7 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
 
   it("deposit should revert if the destination coin's price is 0", async () => {
     const fee = Ethers.utils.parseEther("1.0");
-    await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0); 
+    await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0);
 
     await Helpers.expectToRevertWithCustomError(
       BridgeInstance.deposit(

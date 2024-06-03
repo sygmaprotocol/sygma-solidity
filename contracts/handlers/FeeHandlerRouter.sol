@@ -91,7 +91,7 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
         feeHandler.collectFee{value: msg.value}(sender, fromDomainID, destinationDomainID, resourceID, depositData, feeData);
     }
 
-     /**
+    /**
         @notice Initiates calculating fee with corresponding fee handler contract using IFeeHandler interface.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.
