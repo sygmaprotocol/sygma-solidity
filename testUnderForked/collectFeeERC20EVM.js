@@ -31,7 +31,11 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
   const destinationDomainID = 3;
   const gasUsed = 100000;
   const gasPrice = 200000000000;
-  const fixedFeeType = "0x01";
+  const ProtocolFeeType = {
+    None: "0",
+    Fixed: "1",
+    Percentage: "2"
+  }
   const fixedProtocolFee = Ethers.utils.parseEther("0.001");
   const sender = accounts[0];
   const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
@@ -114,7 +118,7 @@ contract("DynamicERC20FeeHandlerEVMV2 - [collectFee]", async (accounts) => {
     await DynamicFeeHandlerInstance.setGasPrice(
       destinationDomainID,
       gasPrice,  // Polygon gas price is 200 Gwei
-      fixedFeeType,
+      ProtocolFeeType.Fixed,
       fixedProtocolFee
     );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);

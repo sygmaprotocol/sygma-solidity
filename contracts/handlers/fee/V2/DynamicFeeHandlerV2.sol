@@ -20,16 +20,22 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
     address public immutable _feeHandlerRouterAddress;
 
     TwapOracle public twapOracle;
+    ProtocolFeeType public protocolFeeType;
 
     uint32 public _gasUsed;
 
     mapping(uint8 => address) public destinationNativeCoinWrap;
     mapping(uint8 => Fee) public destinationFee;
-    mapping(uint8 => mapping(bytes32 => Fee)) public _domainResourceIDToFee;
+
+    enum ProtocolFeeType {
+        None,
+        Fixed,
+        Percentage
+    }
 
     struct Fee {
         uint256 gasPrice;
-        bytes1 feeType;
+        ProtocolFeeType feeType;
         uint248 amount;
     }
 
@@ -103,12 +109,13 @@ abstract contract DynamicFeeHandlerV2 is IFeeHandler, AccessControl {
         @param destinationDomainID ID of destination chain.
         @param gasPrice Gas price of destination chain.
         @param feeType Type of fee that can be set (fixed/percentage).
-                "0x01" => fixed fee
-                "0x02" => percentage fee
+                "0" => execution cost
+                "1" => execution cost + protocol fee (fixed fee)
+                "2" => execution cost + protocol fee (percentage fee)
         @param amount Fee amount that should be additional charged on top of
         execution cost (fixed native token amount/percentage of execution cost).
      */
-    function setGasPrice(uint8 destinationDomainID, uint256 gasPrice, bytes1 feeType, uint248 amount) external onlyAdmin {
+    function setGasPrice(uint8 destinationDomainID, uint256 gasPrice, ProtocolFeeType feeType, uint248 amount) external onlyAdmin {
         destinationFee[destinationDomainID].gasPrice = gasPrice;
         destinationFee[destinationDomainID].feeType = feeType;
         destinationFee[destinationDomainID].amount = amount;

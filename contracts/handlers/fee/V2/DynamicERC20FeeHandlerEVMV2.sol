@@ -30,10 +30,9 @@ contract DynamicERC20FeeHandlerEVMV2 is DynamicFeeHandlerV2 {
         Fee memory destFeeConfig = destinationFee[destinationDomainID];
 
         uint256 txCost = destFeeConfig.gasPrice * _gasUsed * desintationCoinPrice / 1e18;
-        if(destFeeConfig.feeType == 0x01) {
+        if(destFeeConfig.feeType == ProtocolFeeType.Fixed) {
             txCost += destFeeConfig.amount;
-        }
-        if(destFeeConfig.feeType == 0x02) {
+        } else if (destFeeConfig.feeType == ProtocolFeeType.Percentage) {
             txCost += txCost * destFeeConfig.amount / 1e4; // 100 for percent and 100 to avoid precision loss;
         }
 

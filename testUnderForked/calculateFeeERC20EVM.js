@@ -31,9 +31,12 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
   const destinationDomainID = 3;
   const gasUsed = 100000;
   const gasPrice = 200000000000;
-  const fixedFeeType = "0x01";
+  const ProtocolFeeType = {
+    None: "0",
+    Fixed: "1",
+    Percentage: "2"
+  }
   const fixedProtocolFee = Ethers.utils.parseEther("0.001");
-  const feePercentageType = "0x02";
   const feePercentage = 1000; // 10%
   const sender = accounts[0];
   const UNISWAP_V3_FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
@@ -108,7 +111,7 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
     await DynamicFeeHandlerInstance.setGasPrice(
       destinationDomainID,
       gasPrice,  // Polygon gas price is 200 Gwei
-      fixedFeeType,
+      ProtocolFeeType.Fixed,
       fixedProtocolFee
     );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
@@ -128,7 +131,9 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
 
     const input = new Ethers.ethers.BigNumber.from(feeInDestinationToken.toString());
     const out = await QuoterInstance.callStatic.quoteExactInputSingle(MATIC_ADDRESS, WETH_ADDRESS, 500, input, 0);
-    expect((await DynamicFeeHandlerInstance.destinationFee(destinationDomainID)).feeType).to.be.equal(fixedFeeType)
+    expect(
+      (await DynamicFeeHandlerInstance.destinationFee(destinationDomainID)).feeType.toString()
+    ).to.be.equal(ProtocolFeeType.Fixed);
     expect(res.fee.toNumber()).to.be.within(
       out*0.99 + Number(fixedProtocolFee),
       out*1.01 + Number(fixedProtocolFee)
@@ -146,7 +151,7 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
     await DynamicFeeHandlerInstance.setGasPrice(
       destinationDomainID,
       gasPrice,  // Polygon gas price is 200 Gwei
-      feePercentageType,
+      ProtocolFeeType.Percentage,
       feePercentage
     );
 
@@ -162,7 +167,9 @@ contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
 
     const input = new Ethers.ethers.BigNumber.from(feeInDestinationToken.toString());
     const out = await QuoterInstance.callStatic.quoteExactInputSingle(MATIC_ADDRESS, WETH_ADDRESS, 500, input, 0);
-    expect((await DynamicFeeHandlerInstance.destinationFee(destinationDomainID)).feeType).to.be.equal(feePercentageType)
+    expect(
+      (await DynamicFeeHandlerInstance.destinationFee(destinationDomainID)).feeType.toString()
+    ).to.be.equal(ProtocolFeeType.Percentage);
     expect(res.fee.toNumber()).to.be.within(
       out*1.09,
       out*1.11
