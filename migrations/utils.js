@@ -54,7 +54,7 @@ async function setupErc20(
     erc20HandlerInstance.address,
     erc20.resourceID,
     erc20Instance.address,
-    emptySetResourceData
+    Ethers.utils.hexlify(Number(erc20.decimals))
   );
 
   // strategy can be either mb (mint/burn) or lr (lock/release)
