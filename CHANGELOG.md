@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.7.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.6.1...v2.7.0) (2024-06-05)
+
+
+### Features
+
+* extend fee calculation formula ([#244](https://github.com/sygmaprotocol/sygma-solidity/issues/244)) ([cfc09d8](https://github.com/sygmaprotocol/sygma-solidity/commit/cfc09d8aef438da5164f96a6ef8029da472c89cc))
+
+
+### Miscellaneous
+
+* add btc to e2e test data ([#249](https://github.com/sygmaprotocol/sygma-solidity/issues/249)) ([f2d6e81](https://github.com/sygmaprotocol/sygma-solidity/commit/f2d6e81896ce36db743f5d23a8eb297776859de1))
+* refactor decoding in permissionless handler ([#210](https://github.com/sygmaprotocol/sygma-solidity/issues/210)) ([ee0954f](https://github.com/sygmaprotocol/sygma-solidity/commit/ee0954f52afcd4caa7ce0fb89c61007afa67b69f))
+
 ## [2.6.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.6.0...v2.6.1) (2024-05-21)
 
 
