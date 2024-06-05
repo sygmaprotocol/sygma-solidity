@@ -51,9 +51,9 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
-        @notice Exposes getter function for fee handler type
+        @notice Getter function for fee handler type
      */
-    function feeHandlerType() virtual public pure returns (string memory) {
+    function feeHandlerType() public virtual override pure returns (string memory) {
         return "basic";
     }
 
@@ -84,7 +84,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, currentFee, address(0));
     }
 
-     /**
+    /**
         @notice Calculates fee for deposit.
         @param sender Sender of the deposit.
         @param fromDomainID ID of the source chain.

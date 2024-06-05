@@ -37,6 +37,15 @@ contract("DynamicFeeHandler - [admin]", async (accounts) => {
     ADMIN_ROLE = await DynamicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
   });
 
+  it("[sanity] should return fee handler type from fee handler", async () => {
+    assert.equal(await DynamicFeeHandlerInstance.feeHandlerType.call(), "dynamic");
+  });
+
+  it("[sanity] should return fee handler from fee handler router", async () => {
+    const feeRouterInstance = await FeeHandlerRouterContract.at(DynamicFeeHandlerInstance.address)
+    assert.equal(await feeRouterInstance.feeHandlerType.call(), "dynamic");
+  });
+
   it("should set fee oracle and emit 'FeeOracleAddressSet' event", async () => {
     const oracleAddress = accounts[1];
     assert.equal(

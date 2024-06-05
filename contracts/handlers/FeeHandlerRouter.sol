@@ -44,6 +44,13 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
     }
 
     /**
+        @notice Getter function for fee handler type
+     */
+    function feeHandlerType() public override pure returns (string memory) {
+        return "router";
+    }
+
+    /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(address bridgeAddress) {
