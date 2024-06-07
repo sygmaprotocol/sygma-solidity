@@ -519,13 +519,6 @@ contract("Bridge - [execute - FailedHandlerExecution]", async (accounts) => {
       {from: relayer1Address}
     );
 
-    // // check that "FailedHandlerExecution" event was emitted on the handler
-    // const handlerPastEvents =
-    //   await GmpHandlerInstance.getPastEvents(
-    //     "FailedHandlerExecution"
-    //   );
-    // assert(handlerPastEvents[0].event === "FailedHandlerExecution");
-
     TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
       return (
         event.originDomainID.toNumber() === originDomainID &&
