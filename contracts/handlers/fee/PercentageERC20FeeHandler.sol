@@ -38,9 +38,9 @@ contract PercentageERC20FeeHandler is BasicFeeHandler, ERC20Safe {
     ) BasicFeeHandler(bridgeAddress, feeHandlerRouterAddress) {}
 
     /**
-        @notice Exposes getter function for fee handler type
+        @notice Getter function for fee handler type
      */
-    function feeHandlerType() override public pure returns (string memory) {
+    function feeHandlerType() public override pure returns (string memory) {
         return "percentage";
     }
 

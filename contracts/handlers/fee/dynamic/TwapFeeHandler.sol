@@ -75,9 +75,9 @@ abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
-        @notice Exposes getter function for fee handler type
+        @notice Getter function for fee handler type
      */
-    function feeHandlerType() virtual public pure returns (string memory) {
+    function feeHandlerType() public override pure returns (string memory) {
         return "twap";
     }
 

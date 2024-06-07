@@ -61,4 +61,9 @@ interface IFeeHandler {
         @return Returns the address of the token to be used for fee.
      */
     function calculateFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) external view returns(uint256, address);
+
+    /**
+        @notice Exposes getter function for fee handler type
+     */
+    function feeHandlerType() pure external returns (string memory);
 }
