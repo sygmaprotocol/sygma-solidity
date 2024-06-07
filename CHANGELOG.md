@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.8.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.7.0...v2.8.0) (2024-06-07)
+
+
+### Features
+
+* GMP decoding, remove deprecated contracts, naming improvements ([#246](https://github.com/sygmaprotocol/sygma-solidity/issues/246)) ([415bfb2](https://github.com/sygmaprotocol/sygma-solidity/commit/415bfb25713491f69db6835e10b3bafc587037f1))
+
+
+### Miscellaneous
+
+* extend IFeeHandler with feeHandlerType getter ([#248](https://github.com/sygmaprotocol/sygma-solidity/issues/248)) ([e4bb75f](https://github.com/sygmaprotocol/sygma-solidity/commit/e4bb75f373bf23bbddda47bb8f215a24b0ec1797))
+
 ## [2.7.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.6.1...v2.7.0) (2024-06-05)
 
 
