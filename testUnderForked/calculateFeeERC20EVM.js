@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 const Ethers = require("ethers");
 const Helpers = require("../test/helpers");
-const DynamicFeeHandlerContract = artifacts.require("DynamicERC20FeeHandlerEVMV2");
+const DynamicFeeHandlerContract = artifacts.require("TwapNativeTokenFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const TwapOracleContract = artifacts.require("TwapOracle");
@@ -26,7 +26,7 @@ const QUOTER_BYTECODE = require(
   "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json"
 ).bytecode;
 
-contract("DynamicFeeHandlerV2 - [calculateFee]", async (accounts) => {
+contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 3;
   const gasUsed = 100000;

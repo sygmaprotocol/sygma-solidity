@@ -5,8 +5,8 @@ const Helpers = require("../test/helpers");
 const Utils = require("./utils");
 
 const BridgeContract = artifacts.require("Bridge");
-const PermissionlessGenericHandlerContract = artifacts.require(
-  "PermissionlessGenericHandler"
+const GmpHandlerContract = artifacts.require(
+  "GmpHandler"
 );
 
 module.exports = async function (deployer, network) {
@@ -16,15 +16,15 @@ module.exports = async function (deployer, network) {
   const currentNetworkConfig = networksConfig[currentNetworkName];
   delete networksConfig[currentNetworkName];
   if (
-    currentNetworkConfig.permissionlessGeneric &&
-    currentNetworkConfig.permissionlessGeneric.resourceID
+    currentNetworkConfig.gmp &&
+    currentNetworkConfig.gmp.resourceID
   ) {
   // fetch deployed contracts addresses
   const bridgeInstance = await BridgeContract.deployed();
 
   // deploy generic handler
-  const permissionlessGenericHandlerInstance = await deployer.deploy(
-    PermissionlessGenericHandlerContract,
+  const GmpHandlerInstance = await deployer.deploy(
+    GmpHandlerContract,
     bridgeInstance.address
   );
 
@@ -32,20 +32,20 @@ module.exports = async function (deployer, network) {
     "-------------------------------------------------------------------------------"
   );
   console.log(
-    "Permissionless generic handler address:",
+    "Gmp handler address:",
     "\t",
-    permissionlessGenericHandlerInstance.address
+    GmpHandlerInstance.address
   );
   console.log(
-    "Permissionless generic handler resourceID:",
+    "Gmp handler resourceID:",
     "\t",
-    currentNetworkConfig.permissionlessGeneric.resourceID
+    currentNetworkConfig.gmp.resourceID
   );
   console.log(
     "-------------------------------------------------------------------------------"
   );
 
-  // setup permissionless generic handler
+  // setup Gmp  handler
     const genericHandlerSetResourceData =
       Helpers.constructGenericHandlerSetResourceData(
         Helpers.blankFunctionSig,
@@ -53,8 +53,8 @@ module.exports = async function (deployer, network) {
         Helpers.blankFunctionSig
       );
     await bridgeInstance.adminSetResource(
-      permissionlessGenericHandlerInstance.address,
-      currentNetworkConfig.permissionlessGeneric.resourceID,
+      GmpHandlerInstance.address,
+      currentNetworkConfig.gmp.resourceID,
       bridgeInstance.address,
       genericHandlerSetResourceData
     );

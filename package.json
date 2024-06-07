@@ -7,16 +7,15 @@
   "files": [
     "dist",
     "build/contracts/Bridge.json",
-    "build/contracts/Forwarder.json",
     "build/contracts/ERC20Handler.json",
     "build/contracts/ERC721Handler.json",
     "build/contracts/ERC1155Handler.json",
-    "build/contracts/PermissionedGenericHandler.json",
-    "build/contracts/PermissionlessGenericHandler.json",
-    "build/contracts/BasicFeeHandler.json",
-    "build/contracts/DynamicERC20FeeHandlerEVM.json",
-    "build/contracts/PercentageERC20FeeHandlerEVM.json",
+    "build/contracts/GmpHandler.json",
     "build/contract/FeeHandlerRouter.json",
+    "build/contracts/BasicFeeHandler.json",
+    "build/contracts/PercentageERC20FeeHandler.json",
+    "build/contracts/DynamicGenericFeeHandler.json",
+    "build/contracts/DynamicERC20FeeHandler.json",
     "contracts/interfaces"
   ],
   "directories": {

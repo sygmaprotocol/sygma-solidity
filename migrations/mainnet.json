@@ -35,8 +35,7 @@
         "decimals": "18"
       }
     ],
-    "permissionedGeneric": [],
-    "permissionlessGeneric": {
+    "gmp": {
       "resourceID": "0x0000000000000000000000000000000000000000000000000000000000000000",
       "feeType": ""
     }

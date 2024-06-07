@@ -120,15 +120,7 @@ const advanceTime = (seconds) => {
   return provider.send("evm_mine", [time]);
 };
 
-const createPermissionedGenericDepositData = (hexMetaData) => {
-  if (hexMetaData === null) {
-    return "0x" + toHex(0, 32).substr(2); // len(metaData) (32 bytes)
-  }
-  const hexMetaDataLength = hexMetaData.substr(2).length / 2;
-  return "0x" + toHex(hexMetaDataLength, 32).substr(2) + hexMetaData.substr(2);
-};
-
-const createPermissionlessGenericDepositData = (
+const createGmpDepositData = (
   executeFunctionSignature,
   executeContractAddress,
   maxFee,
@@ -341,16 +333,16 @@ const createDepositProposalDataFromHandlerResponse = (
 };
 
 
-// This helper can be used to prepare execution data for PermissionlessGenericHandler
+// This helper can be used to prepare execution data for GmpHandler
 // The execution data will be packed together with depositorAddress before execution.
 // If the target function parameters include reference types then the offsets should be kept consistent.
 // This function packs the parameters together with a fake address and removes the address.
 // After repacking the data in the handler together with depositorAddress, the offsets will be correct.
 // Usage: use this function to prepare execution data,
 // then pack the result together with executeFunctionSignature, maxFee etc
-// (using the createPermissionlessGenericDepositData() helper)
+// (using the createGmpDepositData() helper)
 // and then pass the data to Bridge.deposit().
-const createPermissionlessGenericExecutionData = (
+const createGmpExecutionData = (
   types,
   values
 ) => {
@@ -408,8 +400,7 @@ module.exports = {
   createERC1155DepositData,
   createERC1155DepositProposalData,
   createERC1155WithdrawData,
-  createPermissionedGenericDepositData,
-  createPermissionlessGenericDepositData,
+  createGmpDepositData,
   constructGenericHandlerSetResourceData,
   createERC721DepositProposalData,
   createResourceID,
@@ -421,6 +412,6 @@ module.exports = {
   signTypedProposal,
   mockSignTypedProposalWithInvalidChainID,
   createDepositProposalDataFromHandlerResponse,
-  createPermissionlessGenericExecutionData,
+  createGmpExecutionData,
   expectToRevertWithCustomError
 };

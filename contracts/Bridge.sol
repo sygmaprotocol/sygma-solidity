@@ -252,8 +252,7 @@ contract Bridge is Pausable, Context, EIP712 {
         @return handlerResponse a handler response:
         - ERC20Handler: responds with an empty data.
         - ERC721Handler: responds with the deposited token metadata acquired by calling a tokenURI method in the token contract.
-        - PermissionedGenericHandler: responds with the raw bytes returned from the call to the target contract.
-        - PermissionlessGenericHandler: responds with an empty data.
+        - GmpHandler: responds with an empty data.
      */
     function deposit(uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData)
         external payable whenNotPaused
@@ -289,9 +288,7 @@ contract Bridge is Pausable, Context, EIP712 {
         - data Data originally provided when deposit was made.
         @param signature bytes memory signature composed of MPC key shares
         @notice Emits {ProposalExecution} event.
-        @notice Behaviour of this function is different for {PermissionedGenericHandler} and other specific ERC handlers.
-        In the case of ERC handler, when execution fails, the handler will terminate the function with revert.
-        In the case of {PermissionedGenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
+        @notice For ERC handlers, when execution fails, the handler will terminate the function with revert.
      */
     function executeProposal(Proposal memory proposal, bytes calldata signature) public {
         Proposal[] memory proposalArray = new Proposal[](1);
@@ -310,9 +307,7 @@ contract Bridge is Pausable, Context, EIP712 {
         - data Data originally provided when deposit was made.
         @param signature bytes memory signature for the whole array composed of MPC key shares
         @notice Emits {ProposalExecution} event for each proposal in the batch.
-        @notice Behaviour of this function is different for {PermissionedGenericHandler} and other specific handlers.
-        In the case of ERC handler, when execution fails, the handler will terminate the function with revert.
-        In the case of {PermissionedGenericHandler}, when execution fails, the handler will emit a failure event and terminate the function normally.
+        @notice For ERC handlers, when execution fails, the handler will terminate the function with revert.
      */
     function executeProposals(Proposal[] memory proposals, bytes calldata signature) public whenNotPaused {
         if (proposals.length == 0) revert EmptyProposalsArray();
@@ -382,7 +377,6 @@ contract Bridge is Pausable, Context, EIP712 {
         @notice Only callable by address that has the right to call the specific function,
         which is mapped in {functionAccess} in AccessControlSegregator contract.
         @param txHash Transaction hash which contains deposit that should be retried
-        @notice This is not applicable for failed executions on {PermissionedGenericHandler}
      */
     function retry(string memory txHash) external onlyAllowed {
         emit Retry(txHash);

@@ -7,12 +7,12 @@ const Helpers = require("../../helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
 const TestDepositContract = artifacts.require("TestDeposit");
-const PermissionlessGenericHandlerContract = artifacts.require(
-  "PermissionlessGenericHandler"
+const GmpHandlerContract = artifacts.require(
+  "GmpHandler"
 );
 
 contract(
-  "PermissionlessGenericHandler - [Execute Proposal]",
+  "GmpHandler - [Execute Proposal]",
   async (accounts) => {
     const originDomainID = 1;
     const destinationDomainID = 2;
@@ -36,7 +36,7 @@ contract(
 
     let resourceID;
     let depositFunctionSignature;
-    let PermissionlessGenericHandlerInstance;
+    let GmpHandlerInstance;
     let depositData;
     let proposal;
 
@@ -59,28 +59,28 @@ contract(
         originDomainID
       );
 
-      PermissionlessGenericHandlerInstance =
-        await PermissionlessGenericHandlerContract.new(BridgeInstance.address);
+      GmpHandlerInstance =
+        await GmpHandlerContract.new(BridgeInstance.address);
 
       depositFunctionSignature = Helpers.getFunctionSignature(
         TestStoreInstance,
         "storeWithDepositor"
       );
 
-      const PermissionlessGenericHandlerSetResourceData =
+      const GmpHandlerSetResourceData =
         Helpers.constructGenericHandlerSetResourceData(
           depositFunctionSignature,
           Helpers.blankFunctionDepositorOffset,
           Helpers.blankFunctionSig
         );
       await BridgeInstance.adminSetResource(
-        PermissionlessGenericHandlerInstance.address,
+        GmpHandlerInstance.address,
         resourceID,
         TestStoreInstance.address,
-        PermissionlessGenericHandlerSetResourceData
+        GmpHandlerSetResourceData
       );
 
-      depositData = Helpers.createPermissionlessGenericDepositData(
+      depositData = Helpers.createGmpDepositData(
         depositFunctionSignature,
         TestStoreInstance.address,
         destinationMaxFee,
@@ -170,7 +170,7 @@ contract(
         [proposal]
       );
       // execution contract address
-      const invalidDepositData = Helpers.createPermissionlessGenericDepositData(
+      const invalidDepositData = Helpers.createGmpDepositData(
         depositFunctionSignature,
         invalidExecutionContractAddress,
         destinationMaxFee,
@@ -179,7 +179,7 @@ contract(
       );
 
       const depositDataHash = Ethers.utils.keccak256(
-        PermissionlessGenericHandlerInstance.address + depositData.substr(2)
+        GmpHandlerInstance.address + depositData.substr(2)
       );
 
       await TruffleAssert.passes(
@@ -240,7 +240,7 @@ contract(
         "executePacked"
       );
       const tooSmallGas = 500;
-      const depositData = Helpers.createPermissionlessGenericDepositData(
+      const depositData = Helpers.createGmpDepositData(
         depositFunctionSignature,
         TestDepositInstance.address,
         tooSmallGas,
@@ -268,7 +268,7 @@ contract(
       TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
         return (
           event.originDomainID.toNumber() === originDomainID &&
-          event.depositNonce.toNumber() === expectedDepositNonce 
+          event.depositNonce.toNumber() === expectedDepositNonce
         );
       });
 
@@ -307,7 +307,7 @@ contract(
         TestDepositInstance,
         "executePacked"
       );
-      const depositData = Helpers.createPermissionlessGenericDepositData(
+      const depositData = Helpers.createGmpDepositData(
         depositFunctionSignature,
         TestDepositInstance.address,
         destinationMaxFee,
@@ -368,7 +368,7 @@ contract(
       const addresses = [BridgeInstance.address, TestStoreInstance.address];
       const message = Ethers.utils.hexlify(Ethers.utils.toUtf8Bytes("message"));
 
-      const executionData = Helpers.createPermissionlessGenericExecutionData(
+      const executionData = Helpers.createGmpExecutionData(
         ["uint", "address[]", "bytes"], [num, addresses, message]
       );
 
@@ -376,7 +376,7 @@ contract(
         TestDepositInstance,
         "executeUnpacked"
       );
-      const depositData = Helpers.createPermissionlessGenericDepositData(
+      const depositData = Helpers.createGmpDepositData(
         depositFunctionSignature,
         TestDepositInstance.address,
         destinationMaxFee,

@@ -5,7 +5,7 @@ const Helpers = require("../../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
-const PercentageFeeHandlerContract = artifacts.require("PercentageERC20FeeHandlerEVM");
+const PercentageFeeHandlerContract = artifacts.require("PercentageERC20FeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
 contract("PercentageFeeHandler - [calculateFee]", async (accounts) => {

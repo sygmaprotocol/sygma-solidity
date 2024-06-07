@@ -6,13 +6,13 @@ const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
 const TestStoreContract = artifacts.require("TestStore");
-const PermissionlessGenericHandlerContract = artifacts.require(
-  "PermissionlessGenericHandler"
+const GmpHandlerContract = artifacts.require(
+  "GmpHandler"
 );
 const WithDepositorContract = artifacts.require("WithDepositor");
 const ReturnDataContract = artifacts.require("ReturnData");
 
-contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
+contract("GmpHandler - [deposit]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const expectedDepositNonce = 1;
@@ -29,7 +29,7 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
 
   let resourceID;
   let depositFunctionSignature;
-  let PermissionlessGenericHandlerInstance;
+  let GmpHandlerInstance;
   let depositData;
 
   beforeEach(async () => {
@@ -54,11 +54,11 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
       originDomainID
     );
 
-    PermissionlessGenericHandlerInstance =
-      await PermissionlessGenericHandlerContract.new(BridgeInstance.address);
+    GmpHandlerInstance =
+      await GmpHandlerContract.new(BridgeInstance.address);
 
     await BridgeInstance.adminSetResource(
-      PermissionlessGenericHandlerInstance.address,
+      GmpHandlerInstance.address,
       resourceID,
       TestStoreInstance.address,
       emptySetResourceData
@@ -69,7 +69,7 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
       "storeWithDepositor"
     );
 
-    depositData = Helpers.createPermissionlessGenericDepositData(
+    depositData = Helpers.createGmpDepositData(
       depositFunctionSignature,
       TestStoreInstance.address,
       destinationMaxFee,
@@ -133,7 +133,7 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
   it("should revert if metadata encoded depositor does not match deposit depositor", async () => {
     const invalidDepositorAddress = accounts[2];
 
-    const invalidDepositData = Helpers.createPermissionlessGenericDepositData(
+    const invalidDepositData = Helpers.createGmpDepositData(
       depositFunctionSignature,
       TestStoreInstance.address,
       destinationMaxFee,
@@ -156,7 +156,7 @@ contract("PermissionlessGenericHandler - [deposit]", async (accounts) => {
 
   it("should revert if max fee exceeds 1000000", async () => {
     const invalidMaxFee = 1000001;
-    const invalidDepositData = Helpers.createPermissionlessGenericDepositData(
+    const invalidDepositData = Helpers.createGmpDepositData(
       depositFunctionSignature,
       TestStoreInstance.address,
       invalidMaxFee ,
