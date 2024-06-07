@@ -54,6 +54,10 @@ contract("FeeHandlerRouter", async (accounts) => {
     );
   });
 
+  it("[sanity] should return fee handler router type", async () => {
+    assert.equal(await FeeHandlerRouterInstance.feeHandlerType.call(), "router");
+  });
+
   it("should successfully set handler to resourceID", async () => {
     const feeHandlerAddress = accounts[1];
     assert.equal(

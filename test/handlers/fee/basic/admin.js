@@ -49,8 +49,13 @@ contract("BasicFeeHandler - [admin]", async (accounts) => {
     )
   });
 
-  it("should return fee handler type", async () => {
+  it("[sanity] should return fee handler type from fee handler", async () => {
     assert.equal(await BasicFeeHandlerInstance.feeHandlerType.call(), "basic");
+  });
+
+  it("[sanity] should return fee handler from fee handler router", async () => {
+    const feeRouterInstance = await FeeHandlerRouterContract.at(BasicFeeHandlerInstance.address)
+    assert.equal(await feeRouterInstance.feeHandlerType.call(), "basic");
   });
 
   it("should set fee property", async () => {

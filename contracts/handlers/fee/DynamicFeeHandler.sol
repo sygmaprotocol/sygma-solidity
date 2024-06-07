@@ -84,6 +84,10 @@ abstract contract DynamicFeeHandler is IFeeHandler, AccessControl, ERC20Safe {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    function feeHandlerType() public override pure returns (string memory) {
+        return "dynamic";
+    }
+
     // Admin functions
 
     /**
