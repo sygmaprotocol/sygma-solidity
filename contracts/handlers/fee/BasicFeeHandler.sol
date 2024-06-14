@@ -80,7 +80,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
      */
     function collectFee(address sender, uint8 fromDomainID, uint8 destinationDomainID, bytes32 resourceID, bytes calldata depositData, bytes calldata feeData) virtual payable external onlyBridgeOrRouter {
         uint256 currentFee = _domainResourceIDToFee[destinationDomainID][resourceID];
-        if (msg.value != currentFee) revert IncorrectFeeSupplied(msg.value);
+        // if (msg.value != currentFee) revert IncorrectFeeSupplied(msg.value);
         emit FeeCollected(sender, fromDomainID, destinationDomainID, resourceID, currentFee, address(0));
     }
 
