@@ -24,7 +24,7 @@ contract FROSTKeygen is Ownable {
     /**
        @notice Blocks further calls for starting keygen.
      */
-    function endFROSTKEygen() public onlyOwner { 
+    function endFROSTKeygen() public onlyOwner { 
         keygenEnded = true;
 
         emit EndedFROSTKeygen();
