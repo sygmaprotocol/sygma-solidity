@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.8.0...v2.8.1) (2024-06-20)
+
+
+### Bug Fixes
+
+* make frost keygen retryable ([#251](https://github.com/sygmaprotocol/sygma-solidity/issues/251)) ([88fd294](https://github.com/sygmaprotocol/sygma-solidity/commit/88fd29458afe10ae2ee8994e992570b7d668c946))
+
 ## [2.8.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.7.0...v2.8.0) (2024-06-07)
 
 
