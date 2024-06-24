@@ -108,12 +108,12 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
   });
 
   it("should successfully transfer native tokens to recipient", async () => {
-    const executionData = Helpers.abiEncode(
-      ["address", "uint256"],
-      [recipientAddress, transferredAmount]
-    );
+    // const executionData = Helpers.abiEncode(
+    //   ["address", "uint256"],
+    //   [recipientAddress, transferredAmount]
+    // );
 
-    const preparedExecutionData = await DestinationAdapterInstance.prepareDepositData(executionData);
+    const preparedExecutionData = await OriginAdapterInstance.prepareDepositData(recipientAddress, transferredAmount);
     const depositData = Helpers.createGmpDepositData(
       depositFunctionSignature,
       DestinationAdapterInstance.address,
