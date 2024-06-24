@@ -13,20 +13,17 @@ const OriginAdapterContract = artifacts.require("OriginAdapter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
-contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accounts) => {
+contract("Native token adapter - Gmp handler - [Deposit]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const expectedDepositNonce = 1;
 
   const depositorAddress = accounts[1];
-  const relayer1Address = accounts[2];
   const recipientAddress = accounts[3];
 
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000500";
-  const destinationMaxFee = 900000;
   const depositAmount = Ethers.utils.parseEther("1");
   const fee = Ethers.utils.parseEther("0.1");
-  const transferredAmount = depositAmount.sub(fee);
 
 
   let BridgeInstance;
@@ -35,7 +32,6 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
   let FeeHandlerRouterInstance;
   let depositFunctionSignature;
   let GmpHandlerInstance;
-  let depositData;
 
   beforeEach(async () => {
     await Promise.all([
@@ -89,13 +85,6 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
       GmpHandlerSetResourceData
     );
 
-    proposal = {
-      originDomainID: originDomainID,
-      depositNonce: expectedDepositNonce,
-      data: depositData,
-      resourceID: resourceID,
-    };
-
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
 
@@ -107,31 +96,7 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
     })
   });
 
-  it("should successfully transfer native tokens to recipient", async () => {
-    const executionData = Helpers.abiEncode(
-      ["address", "uint256"],
-      [recipientAddress, transferredAmount]
-    );
-
-    const preparedExecutionData = await DestinationAdapterInstance.prepareDepositData(executionData);
-    const depositData = Helpers.createGmpDepositData(
-      depositFunctionSignature,
-      DestinationAdapterInstance.address,
-      destinationMaxFee,
-      OriginAdapterInstance.address,
-      preparedExecutionData
-    );
-
-    const proposal = {
-      originDomainID: originDomainID,
-      depositNonce: expectedDepositNonce,
-      data: depositData,
-      resourceID: resourceID,
-    };
-    const proposalSignedData = await Helpers.signTypedProposal(
-      BridgeInstance.address,
-      [proposal]
-    );
+  it("deposit can be made successfully", async () => {
     await TruffleAssert.passes(
       OriginAdapterInstance.deposit(
         originDomainID,
@@ -143,35 +108,31 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
         }
       )
     );
+  });
 
-    const recipientBalanceBefore = await web3.eth.getBalance(recipientAddress);
-
-    // relayer1 executes the proposal
-    const executeTx = await BridgeInstance.executeProposal(proposal, proposalSignedData, {
-      from: relayer1Address,
-    });
-
-    const internalTx = await TruffleAssert.createTransactionResult(
-      DestinationAdapterInstance,
-      executeTx.tx
+  it("depositEvent is emitted with expected values", async () => {
+    const depositTx = await OriginAdapterInstance.deposit(
+      originDomainID,
+      DestinationAdapterInstance.address,
+      recipientAddress,
+      {
+        from: depositorAddress,
+        value: depositAmount,
+      }
     );
 
-    // check that ProposalExecution event is emitted
-    TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
+    const internalTx = await TruffleAssert.createTransactionResult(
+      BridgeInstance,
+      depositTx.tx
+    );
+
+    TruffleAssert.eventEmitted(internalTx, "Deposit", (event) => {
       return (
-        event.originDomainID.toNumber() === originDomainID &&
-        event.depositNonce.toNumber() === expectedDepositNonce
+        event.destinationDomainID.toNumber() === originDomainID &&
+        event.resourceID === resourceID.toLowerCase() &&
+        event.depositNonce.toNumber() === expectedDepositNonce &&
+        event.user === OriginAdapterInstance.address
       );
     });
-
-    TruffleAssert.eventEmitted(internalTx, "FundsTransferred", (event) => {
-      return (
-        event.recipient === recipientAddress &&
-        event.amount.toString() === transferredAmount.toString()
-      );
-    });
-
-    const recipientBalanceAfter = await web3.eth.getBalance(recipientAddress);
-    expect(transferredAmount.add(recipientBalanceBefore).toString()).to.be.equal(recipientBalanceAfter);
   });
 });
