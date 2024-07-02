@@ -99,11 +99,11 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
-        @notice Maps the {newFee} to {destinantionDomainID} to {resourceID} in {_domainResourceIDToFee}.
+        @notice Maps the {newFee} to {destinationDomainID} to {resourceID} in {_domainResourceIDToFee}.
         @notice Only callable by admin.
         @param destinationDomainID ID of chain fee will be set.
         @param resourceID ResourceID for which fee will be set.
-        @param newFee Value to which fee will be updated to for the provided {destinantionDomainID} and {resourceID}.
+        @param newFee Value to which fee will be updated to for the provided {destinationDomainID} and {resourceID}.
      */
     function changeFee(uint8 destinationDomainID, bytes32 resourceID, uint256 newFee) external onlyAdmin {
         uint256 currentFee = _domainResourceIDToFee[destinationDomainID][resourceID];
