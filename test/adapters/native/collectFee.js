@@ -48,7 +48,6 @@ contract("Bridge - [collect fee - native token]", async (accounts) => {
     );
     NativeTokenAdapterInstance = await NativeTokenAdapterContract.new(
       BridgeInstance.address,
-      BasicFeeHandlerInstance.address,
       resourceID
     );
     NativeTokenHandlerInstance = await NativeTokenHandlerContract.new(

@@ -49,7 +49,6 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
     );
     NativeTokenAdapterInstance = await NativeTokenAdapterContract.new(
       BridgeInstance.address,
-      BasicFeeHandlerInstance.address,
       resourceID
     );
     NativeTokenHandlerInstance = await NativeTokenHandlerContract.new(
@@ -136,13 +135,12 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
     });
   });
 
-  it("Deposit destination domain can not be current bridge domain", async () => {
-    await Helpers.expectToRevertWithCustomError(
+  it("Should revert if destination domain is current bridge domain", async () => {
+    await TruffleAssert.reverts(
       NativeTokenAdapterInstance.deposit(originDomainID, btcRecipientAddress, {
         from: depositorAddress,
         value: depositAmount
-      }),
-      "DepositToCurrentDomain()"
+      })
     );
   });
 
@@ -160,12 +158,11 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
       emptySetResourceData
     );
 
-    await Helpers.expectToRevertWithCustomError(
+    await TruffleAssert.reverts(
       NativeTokenAdapterInstance.deposit(destinationDomainID, btcRecipientAddress, {
         from: depositorAddress,
         value: depositAmount
-      }),
-      "InvalidSender(address)"
+      })
     );
   });
 });

@@ -3,13 +3,12 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../../interfaces/IBridge.sol";
-import "../../interfaces/IBasicFeeHandler.sol";
+import "../../interfaces/IFeeHandler.sol";
 
 
 contract NativeTokenAdapter is AccessControl {
     IBridge public immutable _bridge;
     bytes32 public immutable _resourceID;
-    IBasicFeeHandler public _feeHandler;
 
     event Withdrawal(address recipient, uint amount);
 
@@ -24,16 +23,24 @@ contract NativeTokenAdapter is AccessControl {
         _;
     }
 
-    constructor(address bridge, IBasicFeeHandler feeHandler, bytes32 resourceID) {
+    constructor(address bridge, bytes32 resourceID) {
         _bridge = IBridge(bridge);
         _resourceID = resourceID;
-        _feeHandler = feeHandler;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function deposit(uint8 destinationDomainID, string calldata recipientAddress) external payable {
         if (msg.value <= 0) revert InsufficientMsgValueAmount(msg.value);
-        uint256 fee = _feeHandler._domainResourceIDToFee(destinationDomainID, _resourceID);
+        address feeHandlerRouter = _bridge._feeHandler();
+        (uint256 fee, ) = IFeeHandler(feeHandlerRouter).calculateFee(
+            address(this),
+            _bridge._domainID(),
+            destinationDomainID,
+            _resourceID,
+            "", // depositData - not parsed
+            ""  // feeData - not parsed
+        );
+
         if (msg.value < fee) revert MsgValueLowerThanFee(msg.value);
         uint256 transferAmount = msg.value - fee;
 
@@ -44,10 +51,6 @@ contract NativeTokenAdapter is AccessControl {
         );
 
         _bridge.deposit{value: fee}(destinationDomainID, _resourceID, depositData, "");
-    }
-
-    function changeFeeHandler(address newFeeHandler) external onlyAdmin {
-        _feeHandler = IBasicFeeHandler(newFeeHandler);
     }
 
     function withdraw(uint amount) external onlyAdmin {
