@@ -12,17 +12,17 @@ const GmpHandlerContract = artifacts.require(
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
-contract("Native token adapter - Gmp handler - [Deposit]", async (accounts) => {
+contract("Native token adapter - Gmp handler - [Withdraw]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
-  const expectedDepositNonce = 1;
 
+  const adminAddress = accounts[0];
   const depositorAddress = accounts[1];
-  const recipientAddress = accounts[3];
+  const nonAdminAddress = accounts[3];
 
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000500";
-  const depositAmount = Ethers.utils.parseEther("1");
   const fee = Ethers.utils.parseEther("0.1");
+  const withdrawAmount = Ethers.utils.parseEther("0.01")
 
 
   let BridgeInstance;
@@ -93,41 +93,41 @@ contract("Native token adapter - Gmp handler - [Deposit]", async (accounts) => {
     })
   });
 
-  it("deposit can be made successfully", async () => {
+  it("should successfully withdraw if called by admin", async () => {
+    const adminBalanceBefore = await web3.eth.getBalance(
+      adminAddress
+    );
+
     await TruffleAssert.passes(
-      NativeTokenGmpAdapterInstance.deposit(
-        originDomainID,
-        recipientAddress,
+      NativeTokenGmpAdapterInstance.withdraw(
+        withdrawAmount,
         {
-          from: depositorAddress,
-          value: depositAmount,
+          from: adminAddress,
         }
       )
     );
+
+    const adminBalanceAfter = await web3.eth.getBalance(
+      adminAddress
+    );
+
+    expect(
+      Number(Ethers.utils.formatEther(new Ethers.BigNumber.from(adminBalanceBefore).add(withdrawAmount)))
+    ).to.be.within(
+      Number(Ethers.utils.formatEther(adminBalanceAfter))*0.99,
+      Number(Ethers.utils.formatEther(adminBalanceAfter))*1.01
+    )
   });
 
-  it("depositEvent is emitted with expected values", async () => {
-    const depositTx = await NativeTokenGmpAdapterInstance.deposit(
-      originDomainID,
-      recipientAddress,
-      {
-        from: depositorAddress,
-        value: depositAmount,
-      }
+  it("should revert if withdraw is called by non admin", async () => {
+    await Helpers.expectToRevertWithCustomError(
+      NativeTokenGmpAdapterInstance.withdraw(
+        withdrawAmount,
+        {
+          from: nonAdminAddress,
+        }
+      ),
+      "SenderNotAdmin()"
     );
-
-    const internalTx = await TruffleAssert.createTransactionResult(
-      BridgeInstance,
-      depositTx.tx
-    );
-
-    TruffleAssert.eventEmitted(internalTx, "Deposit", (event) => {
-      return (
-        event.destinationDomainID.toNumber() === originDomainID &&
-        event.resourceID === resourceID.toLowerCase() &&
-        event.depositNonce.toNumber() === expectedDepositNonce &&
-        event.user === NativeTokenGmpAdapterInstance.address
-      );
-    });
   });
 });

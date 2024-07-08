@@ -5,11 +5,10 @@ const TruffleAssert = require("truffle-assertions");
 const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
-const DestinationAdapterContract = artifacts.require("DestinationAdapter");
+const NativeTokenGmpAdapterContract = artifacts.require("NativeTokenGmpAdapter");
 const GmpHandlerContract = artifacts.require(
   "GmpHandler"
 );
-const OriginAdapterContract = artifacts.require("OriginAdapter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 
@@ -20,6 +19,7 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
 
   const depositorAddress = accounts[1];
   const relayer1Address = accounts[2];
+  const invalidDepositorAddress = accounts[2];
   const recipientAddress = accounts[3];
 
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000500";
@@ -30,7 +30,7 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
 
 
   let BridgeInstance;
-  let DestinationAdapterInstance;
+  let NativeTokenGmpAdapterInstance;
   let BasicFeeHandlerInstance;
   let FeeHandlerRouterInstance;
   let depositFunctionSignature;
@@ -54,13 +54,12 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
       FeeHandlerRouterInstance.address
     );
 
-    OriginAdapterInstance = await OriginAdapterContract.new(
+    GmpHandlerInstance = await GmpHandlerContract.new(BridgeInstance.address);
+    NativeTokenGmpAdapterInstance = await NativeTokenGmpAdapterContract.new(
       BridgeInstance.address,
-      BasicFeeHandlerInstance.address,
+      GmpHandlerInstance.address,
       resourceID
     );
-    GmpHandlerInstance = await GmpHandlerContract.new(BridgeInstance.address);
-    DestinationAdapterInstance = await DestinationAdapterContract.new(GmpHandlerInstance.address);
 
     await BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
     await FeeHandlerRouterInstance.adminSetResourceHandler(
@@ -69,10 +68,9 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
       BasicFeeHandlerInstance.address
     ),
     await BasicFeeHandlerInstance.changeFee(originDomainID, resourceID, fee);
-    await DestinationAdapterInstance.setOriginAdapter(OriginAdapterInstance.address);
 
     depositFunctionSignature = Helpers.getFunctionSignature(
-      DestinationAdapterInstance,
+      NativeTokenGmpAdapterInstance,
       "transferFunds"
     );
 
@@ -102,23 +100,21 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
     // send ETH to destination adapter for transfers
     await web3.eth.sendTransaction({
       from: depositorAddress,
-      to: DestinationAdapterInstance.address,
+      to: NativeTokenGmpAdapterInstance.address,
       value: "1000000000000000000"
     })
   });
 
   it("should successfully transfer native tokens to recipient", async () => {
-    // const executionData = Helpers.abiEncode(
-    //   ["address", "uint256"],
-    //   [recipientAddress, transferredAmount]
-    // );
-
-    const preparedExecutionData = await OriginAdapterInstance.prepareDepositData(recipientAddress, transferredAmount);
+    const preparedExecutionData = await NativeTokenGmpAdapterInstance.prepareDepositData(
+      recipientAddress,
+      transferredAmount
+    );
     const depositData = Helpers.createGmpDepositData(
       depositFunctionSignature,
-      DestinationAdapterInstance.address,
+      NativeTokenGmpAdapterInstance.address,
       destinationMaxFee,
-      OriginAdapterInstance.address,
+      NativeTokenGmpAdapterInstance.address,
       preparedExecutionData
     );
 
@@ -133,9 +129,8 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
       [proposal]
     );
     await TruffleAssert.passes(
-      OriginAdapterInstance.deposit(
+      NativeTokenGmpAdapterInstance.deposit(
         originDomainID,
-        DestinationAdapterInstance.address,
         recipientAddress,
         {
           from: depositorAddress,
@@ -152,7 +147,7 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
     });
 
     const internalTx = await TruffleAssert.createTransactionResult(
-      DestinationAdapterInstance,
+      NativeTokenGmpAdapterInstance,
       executeTx.tx
     );
 
@@ -173,5 +168,68 @@ contract("Native token adapter - Gmp handler - [Execute Proposal]", async (accou
 
     const recipientBalanceAfter = await web3.eth.getBalance(recipientAddress);
     expect(transferredAmount.add(recipientBalanceBefore).toString()).to.be.equal(recipientBalanceAfter);
+  });
+
+  it(`should not revert if encoded depositor is not origin adapter address and
+      return InvalidOriginAdapter error in handler response`, async () => {
+    const preparedExecutionData = await NativeTokenGmpAdapterInstance.prepareDepositData(
+      recipientAddress,
+      transferredAmount
+    );
+    const depositData = Helpers.createGmpDepositData(
+      depositFunctionSignature,
+      NativeTokenGmpAdapterInstance.address,
+      destinationMaxFee,
+      invalidDepositorAddress,
+      preparedExecutionData
+    );
+
+    const proposal = {
+      originDomainID: originDomainID,
+      depositNonce: expectedDepositNonce,
+      data: depositData,
+      resourceID: resourceID,
+    };
+    const proposalSignedData = await Helpers.signTypedProposal(
+      BridgeInstance.address,
+      [proposal]
+    );
+
+    await TruffleAssert.passes(
+      NativeTokenGmpAdapterInstance.deposit(
+        originDomainID,
+        recipientAddress,
+        {
+          from: depositorAddress,
+          value: depositAmount,
+        }
+      )
+    );
+
+    // relayer1 executes the proposal
+    const executeTx = await BridgeInstance.executeProposal(proposal, proposalSignedData, {
+      from: relayer1Address,
+    });
+
+    const iface = new Ethers.utils.Interface(["function InvalidOriginAdapter(address)"])
+    const expectedError = iface.encodeFunctionData("InvalidOriginAdapter", [invalidDepositorAddress])
+    const expectedHandlerResponse = Ethers.utils.defaultAbiCoder.encode(
+      ["bool", "bytes"],
+      [false, expectedError]
+    );
+
+    const dataHash = Ethers.utils.keccak256(
+      GmpHandlerInstance.address + depositData.substr(2)
+    );
+
+
+    TruffleAssert.eventEmitted(executeTx, "ProposalExecution", (event) => {
+      return (
+        event.originDomainID.toNumber() === originDomainID &&
+        event.depositNonce.toNumber() === expectedDepositNonce &&
+        event.dataHash === dataHash &&
+        event.handlerResponse === expectedHandlerResponse
+      )
+    })
   });
 });

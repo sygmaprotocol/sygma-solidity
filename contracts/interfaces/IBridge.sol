@@ -14,6 +14,12 @@ interface IBridge {
     function _domainID() external returns (uint8);
 
     /**
+        @notice Exposing getter for {_feeHandler} instead of forcing the use of call.
+        @return address The {_feeHandler} that is currently set for the Bridge contract.
+     */
+    function _feeHandler() external returns (address);
+
+    /**
         @notice Exposing getter for {_resourceIDToHandlerAddress}.
         @param resourceID ResourceID to be used when making deposits.
         @return address The {handlerAddress} that is currently set for the resourceID.
