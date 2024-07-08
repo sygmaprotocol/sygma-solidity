@@ -118,10 +118,7 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
       depositTx.tx
     );
 
-    const depositData = Ethers.utils.solidityPack(
-      ["uint256", "uint256", "string"],
-      [transferredAmount, btcRecipientAddress.length, btcRecipientAddress]
-    );
+    const depositData = Helpers.createBtcDepositData(transferredAmount, btcRecipientAddress);
 
     TruffleAssert.eventEmitted(internalTx, "Deposit", (event) => {
       return (
