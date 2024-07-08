@@ -27,7 +27,7 @@ contract("Bridge - [decimal conversion - native token]", async (accounts) => {
   const convertedTransferAmount = Ethers.utils.parseEther("0.9");
 
   const AbiCoder = new Ethers.utils.AbiCoder();
-  const expectedDepositData = AbiCoder.encode(
+  const expectedDepositData = Ethers.utils.solidityPack(
     ["uint256", "uint256", "string"],
     [transferredAmount, btcRecipientAddress.length, btcRecipientAddress]
   );

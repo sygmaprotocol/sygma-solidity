@@ -44,7 +44,7 @@ contract NativeTokenAdapter is AccessControl {
         if (msg.value < fee) revert MsgValueLowerThanFee(msg.value);
         uint256 transferAmount = msg.value - fee;
 
-        bytes memory depositData = abi.encode(
+        bytes memory depositData = abi.encodePacked(
             transferAmount,
             bytes(recipientAddress).length,
             recipientAddress

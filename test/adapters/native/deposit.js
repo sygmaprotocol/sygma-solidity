@@ -118,7 +118,7 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
       depositTx.tx
     );
 
-    const depositData = Helpers.abiEncode(
+    const depositData = Ethers.utils.solidityPack(
       ["uint256", "uint256", "string"],
       [transferredAmount, btcRecipientAddress.length, btcRecipientAddress]
     );

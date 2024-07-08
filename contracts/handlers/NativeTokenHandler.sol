@@ -69,24 +69,13 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         and {destinationRecipientAddress} all padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
         amount                                 uint256     bytes  0 - 32
-        destinationRecipientAddress length     uint256     bytes  32 - 64
-        destinationRecipientAddress            bytes       bytes  64 - END
+        destinationRecipientAddress length     uint256     bytes  32 - 64 // not used
+        destinationRecipientAddress            bytes       bytes  64 - 84
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        uint256       amount;
-        uint256       lenDestinationRecipientAddress;
-        bytes  memory destinationRecipientAddress;
-
-        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
-        destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
-
-        bytes20 recipient;
+        (uint256 amount) = abi.decode(data, (uint256));
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-
-        assembly {
-            recipient := mload(add(destinationRecipientAddress, 0x20))
-        }
-        address recipientAddress = address(recipient);
+        address recipientAddress = address(bytes20(bytes(data[64:84])));
 
         (bool success, ) = address(recipientAddress).call{value: amount}("");
         if(!success) revert FailedFundsTransfer();
