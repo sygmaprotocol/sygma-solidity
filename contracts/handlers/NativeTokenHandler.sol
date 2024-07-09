@@ -32,7 +32,8 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
     error InvalidSender(address sender);
 
     /**
-        @notice A deposit is initiated by making a deposit in the Bridge contract.
+        @notice A deposit is initiated by making a deposit to the NativeTokenAdapter which constructs the required
+        deposit data and propagates it to the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
         @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of {amount} padded to 32 bytes.
@@ -40,9 +41,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         amount                                      uint256     bytes   0 - 32
         destinationRecipientAddress     length      uint256     bytes  32 - 64
         destinationRecipientAddress                 bytes       bytes  64 - END
-        @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
-        marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
-        @return an empty data.
+        @return deposit amount internal representation.
      */
     function deposit(
         bytes32 resourceID,
@@ -55,18 +54,16 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         if(depositor != _nativeTokenAdapterAddress) revert InvalidSender(depositor);
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
         return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
     }
 
     /**
-        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
-        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
+        @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract
         by a relayer on the deposit's destination chain.
         @param resourceID ResourceID to be used when making deposits.
-        @param data Consists of {resourceID}, {amount}, {lenDestinationRecipientAddress},
-        and {destinationRecipientAddress} all padded to 32 bytes.
+        @param data Consists of {amount}, {lenDestinationRecipientAddress}
+        and {destinationRecipientAddress}.
         @notice Data passed into the function should be constructed as follows:
         amount                                 uint256     bytes  0 - 32
         destinationRecipientAddress length     uint256     bytes  32 - 64 // not used
@@ -93,7 +90,6 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         amount                                 uint        bytes  64 - 96
      */
     function withdraw(bytes memory data) external override onlyBridge {
-        address tokenAddress;
         address recipient;
         uint amount;
 
@@ -112,7 +108,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         Sets decimals value for contractAddress if value is provided in args.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param args Additional data to be passed to specified handler.
+        @param args Additional data passed to the handler - this should be 1 byte containing number of decimals places.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
         _setResource(resourceID, contractAddress);
