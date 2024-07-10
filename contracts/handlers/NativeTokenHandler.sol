@@ -73,12 +73,13 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         (uint256 amount) = abi.decode(data, (uint256));
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         address recipientAddress = address(bytes20(bytes(data[64:84])));
+        uint256 convertedAmount = convertToExternalBalance(tokenAddress, amount);
 
-        (bool success, ) = address(recipientAddress).call{value: amount}("");
+        (bool success, ) = address(recipientAddress).call{value: convertedAmount}("");
         if(!success) revert FailedFundsTransfer();
         emit FundsTransferred(recipientAddress, amount);
 
-        return abi.encode(tokenAddress, address(recipientAddress), amount);
+        return abi.encode(tokenAddress, address(recipientAddress), convertedAmount);
     }
 
     /**

@@ -16,6 +16,8 @@ contract("Bridge - [decimal conversion - native token]", async (accounts) => {
   const destinationDomainID = 2;
   const adminAddress = accounts[0];
   const depositorAddress = accounts[1];
+  const evmRecipientAddress = accounts[2];
+  const relayer1Address = accounts[3];
 
   const expectedDepositNonce = 1;
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000650";
@@ -136,5 +138,62 @@ contract("Bridge - [decimal conversion - native token]", async (accounts) => {
         event.handlerResponse === expectedHandlerResponse
       );
     });
+  });
+
+  it("Proposal execution converts sent token amount with 18 decimals to 8 decimal places", async () => {
+    const expectedRecipientTransferAmount = Ethers.utils.parseUnits("0.9", originDecimalPlaces);
+    const proposalData = Helpers.createERCDepositData(
+      convertedTransferAmount, // 18 decimals
+      20,
+      evmRecipientAddress
+    );
+
+    const dataHash = Ethers.utils.keccak256(
+      NativeTokenHandlerInstance.address + proposalData.substr(2)
+    );
+
+    const proposal = {
+      originDomainID: originDomainID,
+      depositNonce: expectedDepositNonce,
+      resourceID: resourceID,
+      data: proposalData,
+    };
+
+    const proposalSignedData = await Helpers.signTypedProposal(
+      BridgeInstance.address,
+      [proposal]
+    );
+
+    const recipientBalanceBefore = await web3.eth.getBalance(evmRecipientAddress);
+
+    const proposalTx = await BridgeInstance.executeProposal(
+      proposal,
+      proposalSignedData,
+      {from: relayer1Address}
+    );
+
+    TruffleAssert.eventEmitted(proposalTx, "ProposalExecution", (event) => {
+      return (
+        event.originDomainID.toNumber() === originDomainID &&
+        event.depositNonce.toNumber() === expectedDepositNonce &&
+        event.dataHash === dataHash &&
+        event.handlerResponse === Ethers.utils.defaultAbiCoder.encode(
+          ["address", "address", "uint256"],
+          [NativeTokenHandlerInstance.address, evmRecipientAddress, expectedRecipientTransferAmount]
+        )
+      );
+    });
+
+    // check that deposit nonce has been marked as used in bitmap
+    assert.isTrue(
+      await BridgeInstance.isProposalExecuted(
+        originDomainID,
+        expectedDepositNonce
+      )
+    );
+
+    // check that tokens are transferred to recipient address
+    const recipientBalanceAfter = await web3.eth.getBalance(evmRecipientAddress);
+    assert.strictEqual(transferredAmount.add(recipientBalanceBefore).toString(), recipientBalanceAfter);
   });
 });
