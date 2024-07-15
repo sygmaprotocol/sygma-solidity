@@ -17,6 +17,7 @@ contract NativeTokenAdapter is AccessControl {
     error MsgValueLowerThanFee(uint256 amount);
     error TokenWithdrawalFailed();
     error InsufficientBalance();
+    error FailedFundsTransfer();
 
     modifier onlyAdmin() {
         if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert SenderNotAdmin();
@@ -51,13 +52,10 @@ contract NativeTokenAdapter is AccessControl {
         );
 
         _bridge.deposit{value: fee}(destinationDomainID, _resourceID, depositData, "");
-    }
 
-    function withdraw(uint amount) external onlyAdmin {
-        if (address(this).balance <= amount) revert InsufficientBalance();
-        (bool success, ) = msg.sender.call{value: amount}("");
-        if (!success) revert TokenWithdrawalFailed();
-        emit Withdrawal(msg.sender, amount);
+        address nativeHandlerAddress = _bridge._resourceIDToHandlerAddress(_resourceID);
+        (bool success, ) = nativeHandlerAddress.call{value: transferAmount}("");
+        if(!success) revert FailedFundsTransfer();
     }
 
     receive() external payable {}

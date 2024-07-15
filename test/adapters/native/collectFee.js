@@ -76,11 +76,12 @@ contract("Bridge - [collect fee - native token]", async (accounts) => {
   it("Native token fee should be successfully deducted", async () => {
     const depositorBalanceBefore = await web3.eth.getBalance(depositorAddress);
     const adapterBalanceBefore = await web3.eth.getBalance(NativeTokenAdapterInstance.address);
+    const handlerBalanceBefore = await web3.eth.getBalance(NativeTokenHandlerInstance.address);
 
     await TruffleAssert.passes(
       NativeTokenAdapterInstance.deposit(
-      destinationDomainID,
-      btcRecipientAddress,
+        destinationDomainID,
+        btcRecipientAddress,
         {
           from: depositorAddress,
           value: depositAmount,
@@ -89,8 +90,15 @@ contract("Bridge - [collect fee - native token]", async (accounts) => {
 
     // check that correct ETH amount is successfully transferred to the adapter
     const adapterBalanceAfter = await web3.eth.getBalance(NativeTokenAdapterInstance.address);
+    const handlerBalanceAfter = await web3.eth.getBalance(NativeTokenHandlerInstance.address);
     assert.strictEqual(
-      new Ethers.BigNumber.from(transferredAmount).add(adapterBalanceBefore).toString(), adapterBalanceAfter
+      new Ethers.BigNumber.from(transferredAmount).add(handlerBalanceBefore).toString(), handlerBalanceAfter
+    );
+
+    // check that adapter funds are transferred to the native handler contracts
+    assert.strictEqual(
+      adapterBalanceBefore,
+      adapterBalanceAfter
     );
 
     // check that depositor before and after balances align

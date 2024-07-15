@@ -126,6 +126,13 @@ contract("Native token adapter - [distributeFee]", async (accounts) => {
         await web3.eth.getBalance(NativeTokenAdapterInstance.address),
         "ether"
       ),
+      "0"
+    );
+    assert.equal(
+      web3.utils.fromWei(
+        await web3.eth.getBalance(NativeTokenHandlerInstance.address),
+        "ether"
+      ),
       Ethers.utils.formatUnits(transferredAmount)
     );
 
@@ -176,6 +183,13 @@ contract("Native token adapter - [distributeFee]", async (accounts) => {
         await web3.eth.getBalance(NativeTokenAdapterInstance.address),
         "ether"
       ),
+      "0"
+    );
+    assert.equal(
+      web3.utils.fromWei(
+        await web3.eth.getBalance(NativeTokenHandlerInstance.address),
+        "ether"
+      ),
       Ethers.utils.formatUnits(transferredAmount)
     );
 
@@ -203,6 +217,13 @@ contract("Native token adapter - [distributeFee]", async (accounts) => {
     assert.equal(
       web3.utils.fromWei(
         await web3.eth.getBalance(NativeTokenAdapterInstance.address),
+        "ether"
+      ),
+      "0"
+    );
+    assert.equal(
+      web3.utils.fromWei(
+        await web3.eth.getBalance(NativeTokenHandlerInstance.address),
         "ether"
       ),
       Ethers.utils.formatUnits(transferredAmount)
