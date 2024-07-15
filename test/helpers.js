@@ -108,6 +108,16 @@ const createERC721DepositProposalData = (
   ); // metaData                      (?? bytes)
 };
 
+const createBtcDepositData = (
+  transferAmount,
+  btcRecipientAddress
+) => {
+  return Ethers.utils.solidityPack(
+    ["uint256", "uint256", "string"],
+    [transferAmount, btcRecipientAddress.length, btcRecipientAddress]
+  )
+}
+
 const advanceBlock = () => {
   const provider = new Ethers.providers.JsonRpcProvider();
   const time = Math.floor(Date.now() / 1000);
@@ -401,6 +411,7 @@ module.exports = {
   createERC1155DepositProposalData,
   createERC1155WithdrawData,
   createGmpDepositData,
+  createBtcDepositData,
   constructGenericHandlerSetResourceData,
   createERC721DepositProposalData,
   createResourceID,

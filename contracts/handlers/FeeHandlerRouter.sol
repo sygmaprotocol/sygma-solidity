@@ -58,7 +58,7 @@ contract FeeHandlerRouter is IFeeHandler, AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
     /**
-        @notice Maps the {handlerAddress} to {resourceID} to {destinantionDomainID} in {_domainResourceIDToFeeHandlerAddress}.
+        @notice Maps the {handlerAddress} to {resourceID} to {destinationDomainID} in {_domainResourceIDToFeeHandlerAddress}.
         @param destinationDomainID ID of chain FeeHandler contracts will be called.
         @param resourceID ResourceID for which the corresponding FeeHandler will collect/calcualte fee.
         @param handlerAddress Address of FeeHandler which will be called for specified resourceID.
