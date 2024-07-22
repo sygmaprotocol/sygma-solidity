@@ -7,27 +7,36 @@ const Retry = artifacts.require("Retry")
 contract("Retry", (accounts) => {
     let RetryInstance;
 
-    const domainID = 1;
+    const sourceDomainID = 1;
+    const destinationDomainID = 2;
     const blockHeight = 15;
+    const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000300";
 
     beforeEach(async () => {
         RetryInstance = await Retry.new(accounts[0]);
     });
 
     it("should emit Retry event when retry is called by the owner", async () => {
-      const tx = await RetryInstance.retry(domainID, blockHeight, {from: accounts[0]})
+      const tx = await RetryInstance.retry(
+        sourceDomainID, 
+        destinationDomainID,  
+        blockHeight, 
+        resourceID, 
+        {from: accounts[0]})
 
         TruffleAssert.eventEmitted(tx, "KeyRefresh", (event) => {
             return (
-                event.domainID === domainID && 
-                event.block == blockHeight
+                event.sourceDomainID === sourceDomainID && 
+                event.destinationDomainID === destinationDomainID && 
+                event.blockHeight == blockHeight &&
+                event.resourceID == resourceID
             );
         });
     });
 
     it("should revert when startFROSTKeygen is not called by the owner", async () => {
       await TruffleAssert.reverts(
-        RetryInstance.retry(domainID, blockHeight, {from: accounts[1]}),
+        RetryInstance.retry(sourceDomainID, destinationDomainID, blockHeight, resourceID, {from: accounts[1]}),
       )
     });
 })

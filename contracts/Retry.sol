@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Retry is Ownable {
 
-    event Retry(uint8 domainID, uint256 block);
+    event Retry(uint8 sourceDomainID, uint8 destinationDomainID, uint256 blockHeight, bytes32 resourceID);
 
     /**
         @notice This method is used to trigger the process for retrying failed deposits on the MPC side.
@@ -15,8 +15,8 @@ contract Retry is Ownable {
         @param block Block height on origin chain which contains failed deposits.
         @param domainID ID of the block domain. 
      */
-    function retry(uint8 domainID, uint256 block) external onlyOwner {
-        emit Retry(domainID, block);
+    function retry(uint8 sourceDomainID, uint8 destinationDomainID, uint256 blockHeight, bytes32 resourceID) external onlyOwner {
+        emit Retry(sourceDomainID, destinationDomainID, blockHeight, resourceID);
     }
 
 }
