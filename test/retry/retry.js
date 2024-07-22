@@ -24,7 +24,7 @@ contract("Retry", (accounts) => {
         resourceID, 
         {from: accounts[0]})
 
-        TruffleAssert.eventEmitted(tx, "KeyRefresh", (event) => {
+        TruffleAssert.eventEmitted(tx, "Retry", (event) => {
             return (
                 event.sourceDomainID === sourceDomainID && 
                 event.destinationDomainID === destinationDomainID && 
