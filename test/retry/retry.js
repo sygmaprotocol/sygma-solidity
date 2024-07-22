@@ -28,8 +28,8 @@ contract("Retry", (accounts) => {
             return (
                 event.sourceDomainID === sourceDomainID && 
                 event.destinationDomainID === destinationDomainID && 
-                event.blockHeight == blockHeight &&
-                event.resourceID == resourceID
+                event.blockHeight === blockHeight &&
+                event.resourceID === resourceID
             );
         });
     });
