@@ -26,9 +26,9 @@ contract("Retry", (accounts) => {
 
         TruffleAssert.eventEmitted(tx, "Retry", (event) => {
             return (
-                event.sourceDomainID === sourceDomainID && 
-                event.destinationDomainID === destinationDomainID && 
-                event.blockHeight === blockHeight &&
+                event.sourceDomainID.toNumber() === sourceDomainID && 
+                event.destinationDomainID.toNumber() === destinationDomainID && 
+                event.blockHeight.toNumber() === blockHeight &&
                 event.resourceID === resourceID
             );
         });
