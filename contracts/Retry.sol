@@ -5,7 +5,7 @@ pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Retry is Ownable {
+contract RetryContract is Ownable {
 
     event Retry(uint8 sourceDomainID, uint8 destinationDomainID, uint256 blockHeight, bytes32 resourceID);
 
