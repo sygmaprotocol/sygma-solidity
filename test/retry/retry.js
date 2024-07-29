@@ -34,9 +34,10 @@ contract("Retry", (accounts) => {
         });
     });
 
-    it("should revert when startFROSTKeygen is not called by the owner", async () => {
+    it("should revert when retry is not called by the owner", async () => {
       await TruffleAssert.reverts(
         RetryInstance.retry(sourceDomainID, destinationDomainID, blockHeight, resourceID, {from: accounts[1]}),
+        "Ownable: caller is not the owner."
       )
     });
 })
