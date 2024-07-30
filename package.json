@@ -80,6 +80,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.5.0",
-    "@uniswap/v3-periphery": "^1.4.4"
+    "@uniswap/v3-periphery": "^1.4.4",
+    "solmate": "^6.2.0"
   }
 }
