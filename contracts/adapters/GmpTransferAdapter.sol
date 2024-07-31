@@ -2,35 +2,23 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "../../contracts/interfaces/IBridge.sol";
 import "../../contracts/interfaces/IFeeHandler.sol";
 import "../XERC20/interfaces/IXERC20.sol";
 
-contract GmpTransferAdapter is AccessControl {
+contract GmpTransferAdapter {
     using ERC165Checker for address;
 
     IBridge public immutable _bridge;
     bytes32 public immutable _resourceID;
     address immutable _gmpAddress;
 
-
-    event Withdrawal(address recipient, uint amount);
-    event FundsTransferred(address recipient, uint256 amount);
-
-    error SenderNotAdmin();
     error InsufficientMsgValueAmount(uint256 amount);
     error InvalidHandler(address handler);
     error InvalidOriginAdapter(address adapter);
 
-    error Invalid_MsgNotZero();
     error FailedRefund();
-
-    modifier onlyAdmin() {
-        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert SenderNotAdmin();
-        _;
-    }
 
     /**
         @notice This contract requires for transfer that the origin adapter address is the same across all networks.
@@ -40,7 +28,6 @@ contract GmpTransferAdapter is AccessControl {
         _bridge = bridge;
         _gmpAddress = newGmpAddress;
         _resourceID = resourceID;
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function deposit(uint8 destinationDomainID, address recipientAddress, address XERC20Address, uint256 tokenAmount) external payable {
