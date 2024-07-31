@@ -21,12 +21,8 @@ contract GmpTransferAdapter is AccessControl {
 
     error SenderNotAdmin();
     error InsufficientMsgValueAmount(uint256 amount);
-    error MsgValueLowerThanFee(uint256 amount);
-    error TokenWithdrawalFailed();
-    error InsufficientBalance();
     error InvalidHandler(address handler);
     error InvalidOriginAdapter(address adapter);
-    error FailedFundsTransfer();
 
     error Invalid_MsgNotZero();
     error FailedRefund();
