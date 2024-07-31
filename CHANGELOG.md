@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.10.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.9.0...v2.10.0) (2024-07-31)
+
+
+### Features
+
+* retry contract ([#259](https://github.com/sygmaprotocol/sygma-solidity/issues/259)) ([a72c1f9](https://github.com/sygmaprotocol/sygma-solidity/commit/a72c1f980d6f9335d1b1f852e03cb0a821ad478b))
+
+
+### Miscellaneous
+
+* add retry migration ([#263](https://github.com/sygmaprotocol/sygma-solidity/issues/263)) ([27d9682](https://github.com/sygmaprotocol/sygma-solidity/commit/27d96827f8403a31f9a33a40b0a49d8d2b3e3c9a))
+
 ## [2.9.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.8.0...v2.9.0) (2024-07-30)
 
 
