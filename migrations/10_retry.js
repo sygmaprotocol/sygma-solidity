@@ -1,5 +1,3 @@
-const parseArgs = require("minimist");
-
 const RetryContract = artifacts.require("Retry");
 
 module.exports = async function (deployer) {
