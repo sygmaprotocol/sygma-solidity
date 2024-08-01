@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 const TruffleAssert = require("truffle-assertions");
+const Helpers = require("../helpers");
 const FROSTKeygen = artifacts.require("FROSTKeygen")
 
 contract("FROSTKeygen", (accounts) => {
@@ -21,7 +22,7 @@ contract("FROSTKeygen", (accounts) => {
 
     it("should revert when startFROSTKeygen is not called by the owner", async () => {
 
-      await TruffleAssert.reverts(
+      await Helpers.reverts(
         FROSTKeygenInstance.startFROSTKeygen({from: accounts[1]}),
       )
 
@@ -33,7 +34,7 @@ contract("FROSTKeygen", (accounts) => {
 
       TruffleAssert.eventEmitted(tx, "StartedFROSTKeygen");
 
-      await TruffleAssert.reverts(
+      await Helpers.reverts(
         FROSTKeygenInstance.startFROSTKeygen({from: accounts[0]}))
       })
 })

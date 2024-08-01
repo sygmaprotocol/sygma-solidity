@@ -82,25 +82,25 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
     );
 
     await Promise.all([
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         ERC20HandlerInstance.address,
         erc20ResourceID,
         ERC20MintableInstance.address,
         emptySetResourceData
       ),
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         ERC721HandlerInstance.address,
         erc721ResourceID,
         ERC721MintableInstance.address,
         emptySetResourceData
       ),
-      ERC20MintableInstance.mint(depositorAddress, depositAmount),
+      await ERC20MintableInstance.mint(depositorAddress, depositAmount),
       ERC20MintableInstance.approve(
         ERC20HandlerInstance.address,
         depositAmount,
         {from: depositorAddress}
       ),
-      ERC721MintableInstance.mint(depositorAddress, tokenID, ""),
+      await ERC721MintableInstance.mint(depositorAddress, tokenID, ""),
       ERC721MintableInstance.approve(ERC721HandlerInstance.address, tokenID, {
         from: depositorAddress,
       }),
@@ -281,7 +281,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
       "0x0000000000000000000000000000000000000000"
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         erc20ResourceID,
@@ -329,7 +329,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
       ERC20BasicFeeHandlerInstance.address
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       ERC20BasicFeeHandlerInstance.collectFee(
         depositorAddress,
         originDomainID,
@@ -372,7 +372,7 @@ contract("BasicFeeHandler - [collectFee]", async (accounts) => {
       ERC20BasicFeeHandlerInstance.address
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       FeeHandlerRouterInstance.collectFee(
         depositorAddress,
         originDomainID,

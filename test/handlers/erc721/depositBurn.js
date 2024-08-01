@@ -69,13 +69,13 @@ contract("ERC721Handler - [Deposit Burn ERC721]", async (accounts) => {
       ERC721MintableInstance1.approve(ERC721HandlerInstance.address, tokenID, {
         from: depositorAddress,
       }),
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         ERC721HandlerInstance.address,
         resourceID1,
         ERC721MintableInstance1.address,
         emptySetResourceData
       ),
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         ERC721HandlerInstance.address,
         resourceID2,
         ERC721MintableInstance2.address,
@@ -127,14 +127,14 @@ contract("ERC721Handler - [Deposit Burn ERC721]", async (accounts) => {
     );
     assert.strictEqual(depositorBalance.toNumber(), 0);
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       ERC721MintableInstance1.ownerOf(tokenID),
       "ERC721: owner query for nonexistent token"
     );
   });
 
   it("depositAmount of ERC721MintableInstance1 tokens should NOT burn from NOT token owner", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID1,

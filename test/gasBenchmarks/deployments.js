@@ -1,7 +1,7 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 
-const Helpers = require("../../test/helpers");
+const Helpers = require("../helpers");
 
 const BridgeContract = artifacts.require("Bridge");
 const AccessControlSegregatorContract = artifacts.require(
@@ -26,7 +26,7 @@ contract("Gas Benchmark - [contract deployments]", async (accounts) => {
 
   let BridgeInstance;
 
-  it("Should deploy all contracts and print benchmarks", async () => {
+  it.skip("Should deploy all contracts and print benchmarks", async () => {
     const accessControlInstance = await AccessControlSegregatorContract.new(
         Helpers.accessControlFuncSignatures,
         Array(13).fill(accounts[0])

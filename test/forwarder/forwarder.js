@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 const TruffleAssert = require("truffle-assertions");
+const Helpers = require("../helpers");
 const Ethers = require("ethers");
 const Wallet = require("ethereumjs-wallet").default;
 const ethSigUtil = require("eth-sig-util");
@@ -104,7 +105,7 @@ contract("Forwarder", async () => {
     };
 
     assert.equal(await ForwarderInstance.verify(request_other, sign), false);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request_other, sign),
       "MinimalForwarder: signature does not match request"
     );
@@ -122,7 +123,7 @@ contract("Forwarder", async () => {
     };
 
     assert.equal(await ForwarderInstance.verify(request_other, sign), false);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request_other, sign),
       "MinimalForwarder: signature does not match request"
     );
@@ -140,7 +141,7 @@ contract("Forwarder", async () => {
     };
 
     assert.equal(await ForwarderInstance.verify(request_other, sign), false);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request_other, sign),
       "MinimalForwarder: signature does not match request"
     );
@@ -158,7 +159,7 @@ contract("Forwarder", async () => {
     };
 
     assert.equal(await ForwarderInstance.verify(request_other, sign), false);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request_other, sign),
       "MinimalForwarder: signature does not match request"
     );
@@ -176,7 +177,7 @@ contract("Forwarder", async () => {
     };
 
     assert.equal(await ForwarderInstance.verify(request_other, sign), false);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request_other, sign),
       "MinimalForwarder: signature does not match request"
     );
@@ -194,7 +195,7 @@ contract("Forwarder", async () => {
     };
 
     assert.equal(await ForwarderInstance.verify(request_other, sign), false);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request_other, sign),
       "MinimalForwarder: signature does not match request"
     );
@@ -211,7 +212,7 @@ contract("Forwarder", async () => {
     });
 
     assert.equal(await ForwarderInstance.verify(request, sign_other), false);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request, sign_other),
       "MinimalForwarder: signature does not match request"
     );
@@ -241,7 +242,7 @@ contract("Forwarder", async () => {
       await ForwarderInstance.verify(request_other, sign_other),
       false
     );
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request_other, sign_other),
       "MinimalForwarder: signature does not match request"
     );
@@ -379,7 +380,7 @@ contract("Forwarder", async () => {
 
   it("The successful execute can not be replayed again", async () => {
     await ForwarderInstance.execute(request, sign);
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       ForwarderInstance.execute(request, sign),
       "MinimalForwarder: signature does not match request"
     );

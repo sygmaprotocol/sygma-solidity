@@ -1,6 +1,6 @@
-FROM trufflesuite/ganache-cli
+FROM trufflesuite/ganache
 
 WORKDIR /app
 COPY data/ /app/data
 
-CMD ["ganache-cli", "--db", "data/", "-h", "0.0.0.0", "-p", "8545"]
+CMD ["ganache", "--db", "data/", "-h", "0.0.0.0", "-p", "8545"]

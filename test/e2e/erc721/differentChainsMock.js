@@ -101,13 +101,13 @@ contract("E2E ERC721 - Two EVM Chains", async (accounts) => {
         await DestinationERC721MintableInstance.MINTER_ROLE(),
         DestinationERC721HandlerInstance.address
       ),
-      OriginBridgeInstance.adminSetResource(
+      await OriginBridgeInstance.adminSetResource(
         OriginERC721HandlerInstance.address,
         originResourceID,
         OriginERC721MintableInstance.address,
         emptySetResourceData
       ),
-      DestinationBridgeInstance.adminSetResource(
+      await DestinationBridgeInstance.adminSetResource(
         DestinationERC721HandlerInstance.address,
         destinationResourceID,
         DestinationERC721MintableInstance.address,
@@ -269,7 +269,7 @@ contract("E2E ERC721 - Two EVM Chains", async (accounts) => {
     );
 
     // Token should no longer exist
-    TruffleAssert.reverts(
+    await Helpers.reverts(
       DestinationERC721MintableInstance.ownerOf(tokenID),
       "ERC721: owner query for nonexistent token"
     );
@@ -284,7 +284,7 @@ contract("E2E ERC721 - Two EVM Chains", async (accounts) => {
     );
 
     // Assert Destination tokenID no longer exists
-    TruffleAssert.reverts(
+    await Helpers.reverts(
       DestinationERC721MintableInstance.ownerOf(tokenID),
       "ERC721: owner query for nonexistent token"
     );

@@ -225,7 +225,7 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
   });
 
   it("should revert if ERC20Safe contract call fails", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         initialResourceIDs[1],
