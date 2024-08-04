@@ -13,28 +13,29 @@ contract("FROSTKeygen", (accounts) => {
     });
 
     it("should emit StartedFROSTKeygen event when startFROSTKeygen is called by the owner", async () => {
-
       const tx = await FROSTKeygenInstance.startFROSTKeygen({from: accounts[0]})
 
       TruffleAssert.eventEmitted(tx, "StartedFROSTKeygen");
-
     });
 
     it("should revert when startFROSTKeygen is not called by the owner", async () => {
-
       await Helpers.reverts(
         FROSTKeygenInstance.startFROSTKeygen({from: accounts[1]}),
       )
-
     });
 
-    it("should revert when startFROSTKeygen is called more than once", async() => {
-
-      const tx = await FROSTKeygenInstance.startFROSTKeygen({from: accounts[0]})
-
-      TruffleAssert.eventEmitted(tx, "StartedFROSTKeygen");
+    it("should revert when keygen ended", async() => {
+      const tx = await FROSTKeygenInstance.endFROSTKeygen({from: accounts[0]})
+      TruffleAssert.eventEmitted(tx, "EndedFROSTKeygen");
 
       await Helpers.reverts(
-        FROSTKeygenInstance.startFROSTKeygen({from: accounts[0]}))
-      })
+        FROSTKeygenInstance.startFROSTKeygen({from: accounts[0]})
+      )
+    });
+
+    it("should revert when end keygen not called by owner", async() => {
+      await Helpers.reverts(
+        FROSTKeygenInstance.endFROSTKeygen({from: accounts[1]}),
+      )
+    });
 })

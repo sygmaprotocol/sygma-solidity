@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.9.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.8.0...v2.9.0) (2024-07-30)
+
+
+### Features
+
+* add native token handler and adapter ([#254](https://github.com/sygmaprotocol/sygma-solidity/issues/254)) ([d5cea35](https://github.com/sygmaprotocol/sygma-solidity/commit/d5cea359a5304113e10283bd5ea4e4070284b6d9))
+
+
+### Bug Fixes
+
+* make frost keygen retryable ([#251](https://github.com/sygmaprotocol/sygma-solidity/issues/251)) ([88fd294](https://github.com/sygmaprotocol/sygma-solidity/commit/88fd29458afe10ae2ee8994e992570b7d668c946))
+
+
+### Miscellaneous
+
+* update what gets pushed to npm package ([#258](https://github.com/sygmaprotocol/sygma-solidity/issues/258)) ([faa73ae](https://github.com/sygmaprotocol/sygma-solidity/commit/faa73aea87a1b3bd228f652481733d1592fc49f6))
+
 ## [2.8.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.7.0...v2.8.0) (2024-06-07)
 
 

@@ -1,8 +1,6 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 
-const TruffleAssert = require("truffle-assertions");
-
 const Helpers = require("../../helpers");
 
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
