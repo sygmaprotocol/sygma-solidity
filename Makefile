@@ -19,7 +19,7 @@ start-ganache:
 
 start-forkedMainnet:
 	@echo " > \033[32mStarting forked environment... \033[0m "
-	ganache-cli -f $(FORKED_TESTS_PROVIDER) & sleep 3
+	ganache -f $(FORKED_TESTS_PROVIDER) & sleep 3
 
 start-geth:
 	@echo " > \033[32mStarting geth... \033[0m "
