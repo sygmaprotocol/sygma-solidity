@@ -41,7 +41,7 @@ jobs:
         run: |
           fuser -k 8545/tcp
           make start-forkedMainnet FORKED_TESTS_PROVIDER=${{ secrets.FORKED_TESTS_PROVIDER }}
-          npx truffle test testUnderForked/*
+          make test-forked
 
   coverage:
     needs: test

@@ -21,6 +21,10 @@ start-forkedMainnet:
 	@echo " > \033[32mStarting forked environment... \033[0m "
 	ganache -f $(FORKED_TESTS_PROVIDER) & sleep 3
 
+test-forked:
+	@echo " > \033[32mTesting contracts... \033[0m "
+	truffle test --stacktrace testUnderForked/*
+
 start-geth:
 	@echo " > \033[32mStarting geth... \033[0m "
 	./scripts/geth/start_geth.sh
