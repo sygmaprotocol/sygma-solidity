@@ -64,9 +64,3 @@ jobs:
           path: build
       - name: Yarn install
         run: yarn install --frozen-lockfile
-      - name: Run coverage
-        run: ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
-      - name: Coverall
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
