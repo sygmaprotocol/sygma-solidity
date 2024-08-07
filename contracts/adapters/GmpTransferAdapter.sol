@@ -2,23 +2,30 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.11;
 
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "../../contracts/interfaces/IBridge.sol";
 import "../../contracts/interfaces/IFeeHandler.sol";
 import "../XERC20/interfaces/IXERC20.sol";
+import "./interfaces/IGmpTransferAdapter.sol";
 
-contract GmpTransferAdapter {
+contract GmpTransferAdapter is IGmpTransferAdapter, AccessControl {
     using ERC165Checker for address;
 
     IBridge public immutable _bridge;
     bytes32 public immutable _resourceID;
     address immutable _gmpAddress;
+    // source token address => destination domainID => destination token address
+    mapping(address => mapping(uint256 => address)) public crossChainTokenPairs;
+
+    event Withdrawal(address recipient, uint amount);
 
     error InsufficientMsgValueAmount(uint256 amount);
     error InvalidHandler(address handler);
     error InvalidOriginAdapter(address adapter);
-
     error FailedRefund();
+    error CallerNotAdmin();
+    error FailedFundsTransfer();
 
     /**
         @notice This contract requires for transfer that the origin adapter address is the same across all networks.
@@ -28,6 +35,12 @@ contract GmpTransferAdapter {
         _bridge = bridge;
         _gmpAddress = newGmpAddress;
         _resourceID = resourceID;
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    modifier onlyAdmin() {
+        if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender)) revert CallerNotAdmin();
+        _;
     }
 
     function deposit(uint8 destinationDomainID, address recipientAddress, address XERC20Address, uint256 tokenAmount) external payable {
@@ -49,23 +62,31 @@ contract GmpTransferAdapter {
             if (!success) revert FailedRefund();
         }
 
+        address destinationToken;
+        address assignedDestinationToken = crossChainTokenPairs[XERC20Address][destinationDomainID];
+        if (assignedDestinationToken != address(0)) {
+            destinationToken = assignedDestinationToken;
+        } else {
+            destinationToken = XERC20Address;
+        }
+
         bytes memory depositData = abi.encodePacked(
             // uint256 maxFee
             uint256(950000),
             // uint16 len(executeFuncSignature)
             uint16(4),
             // bytes executeFuncSignature
-            IXERC20(address(0)).mint.selector,
+            IGmpTransferAdapter(address(this)).executeProposal.selector,
             // uint8 len(executeContractAddress)
             uint8(20),
             // bytes executeContractAddress
-            XERC20Address,
+            address(this),
             // uint8 len(executionDataDepositor)
             uint8(20),
             // bytes executionDataDepositor
             address(this),
             // bytes executionDataDepositor + executionData
-            prepareDepositData(recipientAddress, XERC20Address, tokenAmount)
+            prepareDepositData(recipientAddress, destinationToken, tokenAmount)
         );
 
         IXERC20(XERC20Address).burn(msg.sender, tokenAmount);
@@ -80,6 +101,21 @@ contract GmpTransferAdapter {
         IXERC20(XERC20Address).mint(recipient, amount);
     }
 
+    /**
+        @notice Used to manually transfer native tokens from Adapter.
+        @param recipient Address that should recieve the native tokens.
+        recipient   address
+     */
+    function withdraw(address recipient, uint256 amount) external onlyAdmin {
+        (bool success, ) = address(recipient).call{value: amount}("");
+        if(!success) revert FailedFundsTransfer();
+        emit Withdrawal(recipient, amount);
+    }
+
+    function setTokenPairAddress(address sourceTokenAddress, uint8 destinationDomainID, address destinationTokenAddress) external onlyAdmin {
+        crossChainTokenPairs[sourceTokenAddress][destinationDomainID] = destinationTokenAddress;
+    }
+
     function slice(bytes calldata input, uint256 position) public pure returns (bytes memory) {
         return input[position:];
     }
@@ -89,8 +125,7 @@ contract GmpTransferAdapter {
         address XERC20Address,
         uint256 bridgingAmount
     ) public view returns (bytes memory) {
-        bytes memory encoded = abi.encode(address(0), recipientAddress, XERC20Address, bridgingAmount);
-        return this.slice(encoded, 32);
+        return abi.encode(recipientAddress, XERC20Address, bridgingAmount);
     }
 
     receive() external payable {}
