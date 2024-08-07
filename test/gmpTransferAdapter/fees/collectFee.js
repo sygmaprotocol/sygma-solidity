@@ -1,9 +1,8 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 
-const TruffleAssert = require("truffle-assertions");
-const Ethers = require("ethers");
 const Helpers = require("../../helpers");
+const Ethers = require("ethers");
 
 const GmpTransferAdapterContract = artifacts.require("GmpTransferAdapter");
 const GmpHandlerContract = artifacts.require(
@@ -16,18 +15,17 @@ const XERC20Contract = artifacts.require("XERC20");
 const XERC20LockboxContract = artifacts.require("XERC20Lockbox");
 
 
-contract("Gmp transfer adapter - [Deposit XERC20 - wrapped native token]", async (accounts) => {
+contract("Gmp transfer adapter - [Collect fee]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
-  const expectedDepositNonce = 1;
 
   const depositorAddress = accounts[1];
   const recipientAddress = accounts[3];
 
-  const destinationMaxFee = 950000;
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000500";
   const depositAmount = 10;
   const fee = Ethers.utils.parseEther("0.1");
+  const excessFee = Ethers.utils.parseEther("1");
   const transferredAmount = 10
   const mintingLimit = 500;
   const burningLimit = 500;
@@ -133,10 +131,10 @@ contract("Gmp transfer adapter - [Deposit XERC20 - wrapped native token]", async
     })
   });
 
-  it("deposit can be made successfully and depositor native tokens are deducted", async () => {
-    const depositorNativeBalanceBefore = await web3.eth.getBalance(depositorAddress);
+  it("should successfully charge fee on deposit", async () => {
+    const feeHandlerBalanceBefore = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
 
-    await TruffleAssert.passes(
+    await Helpers.passes(
       GmpTransferAdapterInstance.deposit(
         originDomainID,
         recipientAddress,
@@ -148,55 +146,40 @@ contract("Gmp transfer adapter - [Deposit XERC20 - wrapped native token]", async
         }
       )
     );
+    const feeHandlerBalanceAfter = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
+    assert.strictEqual(
+      Ethers.BigNumber.from(feeHandlerBalanceBefore).add(fee.toString()).toString(),
+      feeHandlerBalanceAfter.toString()
+    );
+  });
+
+  it("should refund the depositor if too much ETH is sent as fee", async () => {
+    const feeHandlerBalanceBefore = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
+    const depositorNativeBalanceBefore = await web3.eth.getBalance(depositorAddress);
+
+    await Helpers.passes(
+      GmpTransferAdapterInstance.deposit(
+        originDomainID,
+        recipientAddress,
+        XERC20Instance.address,
+        depositAmount,
+        {
+          from: depositorAddress,
+          value: excessFee,
+        }
+      )
+    );
+    const feeHandlerBalanceAfter = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
     const depositorNativeBalanceAfter = await web3.eth.getBalance(depositorAddress);
+    assert.strictEqual(
+      Ethers.BigNumber.from(feeHandlerBalanceBefore).add(fee.toString()).toString(),
+      feeHandlerBalanceAfter.toString()
+    );
     expect(
-      Number(Ethers.utils.formatEther(new Ethers.BigNumber.from(depositorNativeBalanceBefore).add(fee)))
+      Number(Ethers.utils.formatEther(new Ethers.BigNumber.from(depositorNativeBalanceBefore).sub(fee)))
     ).to.be.within(
       Number(Ethers.utils.formatEther(depositorNativeBalanceAfter))*0.99,
       Number(Ethers.utils.formatEther(depositorNativeBalanceAfter))*1.01
     );
-  });
-
-  it("depositEvent is emitted with expected values", async () => {
-    const preparedExecutionData = await GmpTransferAdapterInstance.prepareDepositData(
-      recipientAddress,
-      XERC20Instance.address,
-      depositAmount
-    );
-    const depositData = Helpers.createGmpDepositData(
-      depositFunctionSignature,
-      GmpTransferAdapterInstance.address,
-      destinationMaxFee,
-      GmpTransferAdapterInstance.address,
-      preparedExecutionData,
-      false
-    );
-
-    const depositTx = await GmpTransferAdapterInstance.deposit(
-      originDomainID,
-      recipientAddress,
-      XERC20Instance.address,
-      depositAmount,
-      {
-        from: depositorAddress,
-        value: fee,
-      }
-    );
-
-    const internalTx = await TruffleAssert.createTransactionResult(
-      BridgeInstance,
-      depositTx.tx
-    );
-
-    TruffleAssert.eventEmitted(internalTx, "Deposit", (event) => {
-      return (
-        event.destinationDomainID.toNumber() === originDomainID &&
-        event.resourceID === resourceID.toLowerCase() &&
-        event.depositNonce.toNumber() === expectedDepositNonce &&
-        event.user === GmpTransferAdapterInstance.address &&
-        event.data === depositData &&
-        event.handlerResponse === null
-      );
-    });
   });
 });

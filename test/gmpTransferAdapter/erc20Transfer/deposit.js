@@ -17,7 +17,7 @@ const XERC20LockboxContract = artifacts.require("XERC20Lockbox");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
 
-contract("Gmp transfer adapter - [Deposit - ERC20 token]", async (accounts) => {
+contract("Gmp transfer adapter - [Deposit XERC20 - wrapped ERC20 token]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const expectedDepositNonce = 1;
@@ -25,6 +25,7 @@ contract("Gmp transfer adapter - [Deposit - ERC20 token]", async (accounts) => {
   const depositorAddress = accounts[1];
   const recipientAddress = accounts[3];
 
+  const destinationMaxFee = 950000;
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000500";
   const depositAmount = 10;
   const fee = Ethers.utils.parseEther("0.1");
@@ -173,6 +174,20 @@ contract("Gmp transfer adapter - [Deposit - ERC20 token]", async (accounts) => {
   });
 
   it("depositEvent is emitted with expected values", async () => {
+    const preparedExecutionData = await GmpTransferAdapterInstance.prepareDepositData(
+      recipientAddress,
+      XERC20Instance.address,
+      depositAmount
+    );
+    const depositData = Helpers.createGmpDepositData(
+      depositFunctionSignature,
+      GmpTransferAdapterInstance.address,
+      destinationMaxFee,
+      GmpTransferAdapterInstance.address,
+      preparedExecutionData,
+      false
+    );
+
     const depositTx = await GmpTransferAdapterInstance.deposit(
       originDomainID,
       recipientAddress,
@@ -194,7 +209,9 @@ contract("Gmp transfer adapter - [Deposit - ERC20 token]", async (accounts) => {
         event.destinationDomainID.toNumber() === originDomainID &&
         event.resourceID === resourceID.toLowerCase() &&
         event.depositNonce.toNumber() === expectedDepositNonce &&
-        event.user === GmpTransferAdapterInstance.address
+        event.user === GmpTransferAdapterInstance.address &&
+        event.data === depositData &&
+        event.handlerResponse == null
       );
     });
   });

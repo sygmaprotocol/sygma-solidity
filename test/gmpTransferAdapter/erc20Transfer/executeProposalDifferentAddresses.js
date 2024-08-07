@@ -15,8 +15,10 @@ const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
 const XERC20FactoryContract = artifacts.require("XERC20Factory");
 const XERC20Contract = artifacts.require("XERC20");
 const XERC20LockboxContract = artifacts.require("XERC20Lockbox");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
-contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token]", async (accounts) => {
+contract(`Gmp transfer adapter -
+  [Execute proposal XERC20 with different addresses- wrapped ERC20 token]`, async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const adminAddress = accounts[0];
@@ -31,18 +33,22 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000650";
   const depositAmount = 10;
   const fee = Ethers.utils.parseEther("0.1");
-  const transferredAmount = 10
+  const transferredAmount = 10;
   const mintingLimit = 500;
   const burningLimit = 500;
 
   let BridgeInstance;
   let BasicFeeHandlerInstance;
   let FeeHandlerRouterInstance;
-  let XERC20Instance;
-  let XERC20LockboxInstance;
+  let sourceXERC20FactoryInstance;
+  let sourceXERC20Instance;
+  let sourceXERC20LockboxInstance;
+  let destinationXERC20FactoryInstance;
+  let destinationXERC20Instance;
   let proposal;
   let dataHash;
   let depositFunctionSignature;
+  let ERC20MintableSourceInstance;
 
 
   beforeEach(async () => {
@@ -51,8 +57,15 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
         destinationDomainID,
         adminAddress
       )),
+      ERC20MintableContract.new("sToken", "sTOK").then(
+        (instance) => (ERC20MintableSourceInstance = instance)
+      ),
+      ERC20MintableContract.new("dToken", "dTOK").then(
+        (instance) => (ERC20MintableDestinationInstance = instance)
+      ),
     ]);
 
+    await ERC20MintableSourceInstance.mint(depositorAddress, depositAmount);
 
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
@@ -77,33 +90,63 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       resourceID,
     );
 
-    XERC20FactoryInstance = await XERC20FactoryContract.new();
-    const response = await XERC20FactoryInstance.deployXERC20(
-      "sygmaETH",
-      "sETH",
+    // deploy source XERC20 contract instances
+    sourceXERC20FactoryInstance = await XERC20FactoryContract.new();
+    const sourceXERC20DeployResponse = await sourceXERC20FactoryInstance.deployXERC20(
+      "srcSygmaToken",
+      "srcSTOK",
       [mintingLimit],
       [burningLimit],
       [GmpTransferAdapterInstance.address]
     );
-    // set XERC20 contract instance address to the address deployed via XERC20Factory
-    const deployedXERC20Address = response.logs[0].args._xerc20
-    XERC20Instance = await XERC20Contract.at(deployedXERC20Address)
-    const lockboxDeployResponse = await XERC20FactoryInstance.deployLockbox(
-      XERC20Instance.address,
-      Ethers.constants.AddressZero,
-      true
+    // set source XERC20 contract instance address to the address deployed via XERC20Factory
+    const sourceDeployedXERC20Address = sourceXERC20DeployResponse.logs[0].args._xerc20
+    sourceXERC20Instance = await XERC20Contract.at(sourceDeployedXERC20Address)
+    const sourceLockboxDeployResponse = await sourceXERC20FactoryInstance.deployLockbox(
+      sourceXERC20Instance.address,
+      ERC20MintableSourceInstance.address,
+      false
     );
-    // set Lockbox contract instance address to the address deployed via XERC20Factory
-    const lockboxAddress = lockboxDeployResponse.logs[0].args._lockbox
-    XERC20LockboxInstance = await XERC20LockboxContract.at(lockboxAddress);
+    // set source Lockbox contract instance address to the address deployed via XERC20Factory
+    const sourceLockboxAddress = sourceLockboxDeployResponse.logs[0].args._lockbox
+    sourceXERC20LockboxInstance = await XERC20LockboxContract.at(sourceLockboxAddress);
 
-    await XERC20LockboxInstance.depositNativeTo(
-      depositorAddress,
+    // deploy destination contract instances
+    destinationXERC20FactoryInstance = await XERC20FactoryContract.new();
+    const destinationXERC20DeployResponse = await destinationXERC20FactoryInstance.deployXERC20(
+      "destSygmaToken",
+      "destSTOK",
+      [mintingLimit],
+      [burningLimit],
+      [GmpTransferAdapterInstance.address]
+    );
+    // set destination XERC20 contract instance address to the address deployed via XERC20Factory
+    const destinationDeployedXERC20Address = destinationXERC20DeployResponse.logs[0].args._xerc20
+    destinationXERC20Instance = await XERC20Contract.at(destinationDeployedXERC20Address)
+    const destinationLockboxDeployResponse = await destinationXERC20FactoryInstance.deployLockbox(
+      destinationXERC20Instance.address,
+      ERC20MintableDestinationInstance.address,
+      false
+    );
+    // set destination Lockbox contract instance address to the address deployed via XERC20Factory
+    const destinationLockboxAddress = destinationLockboxDeployResponse.logs[0].args._lockbox
+    await XERC20LockboxContract.at(destinationLockboxAddress);
+
+    await ERC20MintableSourceInstance.increaseAllowance(
+      sourceXERC20LockboxInstance.address,
+      depositAmount,
       {
-        value: depositAmount
+        from: depositorAddress
       }
     );
-    await XERC20Instance.increaseAllowance(
+    await sourceXERC20LockboxInstance.depositTo(
+      depositorAddress,
+      depositAmount,
+      {
+        from: depositorAddress
+      }
+    );
+    await sourceXERC20Instance.increaseAllowance(
       GmpTransferAdapterInstance.address,
       depositAmount,
       {
@@ -132,7 +175,7 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
 
     const preparedExecutionData = await GmpTransferAdapterInstance.prepareDepositData(
       recipientAddress,
-      XERC20Instance.address,
+      destinationXERC20Instance.address,
       transferredAmount
     );
     depositData = Helpers.createGmpDepositData(
@@ -141,6 +184,12 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       destinationMaxFee,
       GmpTransferAdapterInstance.address,
       preparedExecutionData
+    );
+
+    await GmpTransferAdapterInstance.setTokenPairAddress(
+      sourceXERC20Instance.address,
+      originDomainID,
+      destinationXERC20Instance.address
     );
 
     proposal = {
@@ -153,7 +202,6 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
     dataHash = Ethers.utils.keccak256(
       GmpHandlerInstance.address + depositData.substr(2)
     );
-
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -183,17 +231,17 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       [proposal]
     );
 
-    const recipientNativeBalanceBefore = await web3.eth.getBalance(recipientAddress);
-    const depositorXERC20BalanceBefore = await XERC20Instance.balanceOf(depositorAddress);
-    const recipientXERC20BalanceBefore = await XERC20Instance.balanceOf(recipientAddress);
-
+    const depositorSourceXERC20BalanceBefore = await sourceXERC20Instance.balanceOf(depositorAddress);
+    const recipientSourceXERC20BalanceBefore = await sourceXERC20Instance.balanceOf(recipientAddress);
+    const depositorDestinationXERC20BalanceBefore = await destinationXERC20Instance.balanceOf(depositorAddress);
+    const recipientDestinationXERC20BalanceBefore = await destinationXERC20Instance.balanceOf(recipientAddress);
     // depositorAddress makes initial deposit of depositAmount
     assert.isFalse(await BridgeInstance.paused());
     await TruffleAssert.passes(
       GmpTransferAdapterInstance.deposit(
         originDomainID,
         recipientAddress,
-        XERC20Instance.address,
+        sourceXERC20Instance.address,
         depositAmount,
         {
           from: depositorAddress,
@@ -206,9 +254,11 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       from: relayer1Address,
     });
 
-    const depositorXERC20BalanceAfter = await XERC20Instance.balanceOf(depositorAddress);
-    const recipientXERC20BalanceAfter = await XERC20Instance.balanceOf(recipientAddress);
-
+    const recipientSourceNativeBalanceBefore = await web3.eth.getBalance(recipientAddress);
+    const depositorSourceXERC20BalanceAfter = await sourceXERC20Instance.balanceOf(depositorAddress);
+    const recipientSourceXERC20BalanceAfter = await sourceXERC20Instance.balanceOf(recipientAddress);
+    const depositorDestinationXERC20BalanceAfter = await destinationXERC20Instance.balanceOf(depositorAddress);
+    const recipientDestinationXERC20BalanceAfter = await destinationXERC20Instance.balanceOf(recipientAddress);
     // check that deposit nonce has been marked as used in bitmap
     assert.isTrue(
       await BridgeInstance.isProposalExecuted(
@@ -219,18 +269,22 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
 
     // check that depositor and recipient balances are aligned with expectations
     const recipientNativeBalanceAfter = await web3.eth.getBalance(recipientAddress);
-    assert.strictEqual(recipientNativeBalanceBefore, recipientNativeBalanceAfter);
+    assert.strictEqual(recipientSourceNativeBalanceBefore, recipientNativeBalanceAfter);
     assert.strictEqual(
-      Ethers.BigNumber.from(depositAmount).sub(depositorXERC20BalanceBefore.toString()).toString(),
-      depositorXERC20BalanceAfter.toString()
+      Ethers.BigNumber.from(depositAmount).sub(depositorSourceXERC20BalanceBefore.toString()).toString(),
+      depositorSourceXERC20BalanceAfter.toString()
     );
     assert.strictEqual(
-      Ethers.BigNumber.from(depositAmount).add(recipientXERC20BalanceBefore.toString()).toString(),
-      recipientXERC20BalanceAfter.toString()
+      recipientSourceXERC20BalanceBefore.toString(),
+      recipientSourceXERC20BalanceAfter.toString()
     );
     assert.strictEqual(
-      Ethers.BigNumber.from(depositAmount).add(recipientXERC20BalanceBefore.toString()).toString(),
-      recipientXERC20BalanceAfter.toString()
+      depositorDestinationXERC20BalanceBefore.toString(),
+      depositorDestinationXERC20BalanceAfter.toString()
+    );
+    assert.strictEqual(
+      Ethers.BigNumber.from(depositAmount).add(recipientDestinationXERC20BalanceBefore.toString()).toString(),
+      recipientDestinationXERC20BalanceAfter.toString()
     );
   });
 
@@ -246,7 +300,7 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       GmpTransferAdapterInstance.deposit(
         originDomainID,
         recipientAddress,
-        XERC20Instance.address,
+        sourceXERC20Instance.address,
         depositAmount,
         {
           from: depositorAddress,
@@ -283,7 +337,7 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       GmpTransferAdapterInstance.deposit(
         originDomainID,
         recipientAddress,
-        XERC20Instance.address,
+        sourceXERC20Instance.address,
         depositAmount,
         {
           from: depositorAddress,
@@ -292,7 +346,7 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       )
     );
 
-    const recipientBalanceBefore = await web3.eth.getBalance(recipientAddress);
+    const recipientNativeBalanceBefore = await web3.eth.getBalance(recipientAddress);
 
     const proposalTx = await BridgeInstance.executeProposal(
       proposal,
@@ -322,8 +376,8 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
 
 
     // check that recipient native token balance hasn't changed
-    const recipientBalanceAfter = await web3.eth.getBalance(recipientAddress);
-    assert.strictEqual(recipientBalanceBefore, recipientBalanceAfter);
+    const recipientNativeBalanceAfter = await web3.eth.getBalance(recipientAddress);
+    assert.strictEqual(recipientNativeBalanceBefore, recipientNativeBalanceAfter);
   });
 
   it(`should fail to executeProposal if signed Proposal has different
@@ -340,7 +394,7 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
       GmpTransferAdapterInstance.deposit(
         originDomainID,
         recipientAddress,
-        XERC20Instance.address,
+        sourceXERC20Instance.address,
         depositAmount,
         {
           from: depositorAddress,

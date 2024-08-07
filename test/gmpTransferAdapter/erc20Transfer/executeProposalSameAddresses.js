@@ -17,7 +17,8 @@ const XERC20Contract = artifacts.require("XERC20");
 const XERC20LockboxContract = artifacts.require("XERC20Lockbox");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
-contract("Gmp transfer adapter - [Execute proposal - ERC20 token]", async (accounts) => {
+contract(`Gmp transfer adapter -
+  [Execute proposal XERC20 with same addresses- wrapped ERC20 token]`, async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
   const adminAddress = accounts[0];

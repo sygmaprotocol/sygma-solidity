@@ -1,9 +1,8 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 
-const TruffleAssert = require("truffle-assertions");
 const Ethers = require("ethers");
-const Helpers = require("../helpers");
+const Helpers = require("../../helpers");
 
 const GmpTransferAdapterContract = artifacts.require("GmpTransferAdapter");
 const GmpHandlerContract = artifacts.require(
@@ -16,22 +15,29 @@ const XERC20Contract = artifacts.require("XERC20");
 const XERC20LockboxContract = artifacts.require("XERC20Lockbox");
 
 
-contract("Gmp transfer adapter - [Deposit - native token]", async (accounts) => {
+contract("Gmp transfer adapter - [Withdraw]", async (accounts) => {
   const originDomainID = 1;
   const destinationDomainID = 2;
 
+  const adminAccount = accounts[0];
   const depositorAddress = accounts[1];
+  const nonAdminAddress = accounts[2];
   const recipientAddress = accounts[3];
 
   const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000500";
   const depositAmount = 10;
   const fee = Ethers.utils.parseEther("0.1");
-  const excessFee = Ethers.utils.parseEther("1");
   const transferredAmount = 10
   const mintingLimit = 500;
   const burningLimit = 500;
+  const withdrawAmount = Ethers.utils.parseEther("1")
 
-
+  const assertOnlyAdmin = (method) => {
+    return Helpers.expectToRevertWithCustomError(
+      method(),
+      "CallerNotAdmin()"
+    );
+  };
 
   let BridgeInstance;
   let GmpTransferAdapterInstance;
@@ -132,55 +138,47 @@ contract("Gmp transfer adapter - [Deposit - native token]", async (accounts) => 
     })
   });
 
-  it("should successfully charge fee on deposit", async () => {
-    const feeHandlerBalanceBefore = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
+  it("should fail if withdraw is called by non admin", async () => {
+    const adapterBalanceBefore = await web3.eth.getBalance(GmpTransferAdapterInstance.address);
 
-    await TruffleAssert.passes(
-      GmpTransferAdapterInstance.deposit(
-        originDomainID,
+    await assertOnlyAdmin(() =>
+      GmpTransferAdapterInstance.withdraw(
         recipientAddress,
-        XERC20Instance.address,
-        depositAmount,
+        withdrawAmount,
         {
-          from: depositorAddress,
-          value: fee,
+          from: nonAdminAddress
         }
       )
     );
-    const feeHandlerBalanceAfter = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
+
+    const adapterBalanceAfter = await web3.eth.getBalance(GmpTransferAdapterInstance.address);
     assert.strictEqual(
-      Ethers.BigNumber.from(feeHandlerBalanceBefore).add(fee.toString()).toString(),
-      feeHandlerBalanceAfter.toString()
+      Ethers.BigNumber.from(adapterBalanceBefore).toString(),
+      adapterBalanceAfter.toString()
     );
   });
 
-  it("should refund the depositor if too much ETH is sent as fee", async () => {
-    const feeHandlerBalanceBefore = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
-    const depositorNativeBalanceBefore = await web3.eth.getBalance(depositorAddress);
+  it("should successfully withdraw if called by admin", async () => {
+    const recipientBalanceBefore = await web3.eth.getBalance(recipientAddress);
+    const adapterBalanceBefore = await web3.eth.getBalance(GmpTransferAdapterInstance.address);
 
-    await TruffleAssert.passes(
-      GmpTransferAdapterInstance.deposit(
-        originDomainID,
+    await GmpTransferAdapterInstance.withdraw(
         recipientAddress,
-        XERC20Instance.address,
-        depositAmount,
+        withdrawAmount,
         {
-          from: depositorAddress,
-          value: excessFee,
+          from: adminAccount
         }
       )
-    );
-    const feeHandlerBalanceAfter = await web3.eth.getBalance(BasicFeeHandlerInstance.address);
-    const depositorNativeBalanceAfter = await web3.eth.getBalance(depositorAddress);
+
+    const recipientBalanceAfter = await web3.eth.getBalance(recipientAddress);
+    const adapterBalanceAfter = await web3.eth.getBalance(GmpTransferAdapterInstance.address);
     assert.strictEqual(
-      Ethers.BigNumber.from(feeHandlerBalanceBefore).add(fee.toString()).toString(),
-      feeHandlerBalanceAfter.toString()
+      Ethers.BigNumber.from(recipientBalanceBefore).add(withdrawAmount).toString(),
+      Ethers.BigNumber.from(recipientBalanceAfter).toString()
     );
-    expect(
-      Number(Ethers.utils.formatEther(new Ethers.BigNumber.from(depositorNativeBalanceBefore).sub(fee)))
-    ).to.be.within(
-      Number(Ethers.utils.formatEther(depositorNativeBalanceAfter))*0.99,
-      Number(Ethers.utils.formatEther(depositorNativeBalanceAfter))*1.01
+    assert.strictEqual(
+      Ethers.BigNumber.from(adapterBalanceBefore).add(recipientBalanceBefore).toString(),
+      Ethers.BigNumber.from(adapterBalanceAfter).add(recipientBalanceAfter).toString()
     );
   });
 });
