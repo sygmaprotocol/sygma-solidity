@@ -19,7 +19,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
   let resourceID;
 
   const assertOnlyAdmin = (method, ...params) => {
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       method(...params, {from: nonAdmin}),
       "sender doesn't have admin role"
     );
@@ -80,7 +80,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       PercentageFeeHandlerInstance.changeFee(destinationDomainID, resourceID, 0),
       "Current fee is equal to new fee"
     );
@@ -120,7 +120,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       FeeHandlerRouterInstance.address
     );
     await PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 50)
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 25, 50),
       "Current bounds are equal to new bounds"
     );
@@ -131,7 +131,7 @@ contract("PercentageFeeHandler - [change fee and bounds]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       PercentageFeeHandlerInstance.changeFeeBounds(resourceID, 50, 25),
       "Upper bound must be larger than lower bound or 0"
     );

@@ -14,11 +14,11 @@ else
   (set -x; npm install --global truffle)
 fi
 
-if [ -x "$(command -v ganache-cli)" ]
+if [ -x "$(command -v ganache)" ]
 then
-  echo "ganache-cli found, skipping install"
+  echo "ganache found, skipping install"
 else
-  (set -x; npm install --global ganache-cli)
+  (set -x; npm install --global ganache)
 fi
 
 if [ -x "$(command -v abigen)" ]

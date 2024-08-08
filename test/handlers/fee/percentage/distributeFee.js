@@ -33,7 +33,7 @@ contract("PercentageFeeHandler - [distributeFee]", async (accounts) => {
   let depositData;
 
     const assertOnlyAdmin = (method, ...params) => {
-      return TruffleAssert.reverts(
+      return Helpers.reverts(
         method(...params, {from: accounts[1]}),
         "sender doesn't have admin role"
       );
@@ -169,16 +169,15 @@ contract("PercentageFeeHandler - [distributeFee]", async (accounts) => {
     );
     assert.equal(balance, feeAmount);
 
-    // Incorrect resourceID
-    resourceID = Helpers.createResourceID(
+    const incorrectResourceID = Helpers.createResourceID(
       PercentageFeeHandlerInstance.address,
       originDomainID
     );
 
     // Transfer the funds: fails
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       PercentageFeeHandlerInstance.transferERC20Fee(
-        resourceID,
+        incorrectResourceID,
         [accounts[3], accounts[4]],
         [payout, payout]
       )
@@ -227,7 +226,7 @@ contract("PercentageFeeHandler - [distributeFee]", async (accounts) => {
     );
     assert.equal(balance, feeAmount);
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       PercentageFeeHandlerInstance.transferERC20Fee(
         resourceID,
         [accounts[3], accounts[4]],

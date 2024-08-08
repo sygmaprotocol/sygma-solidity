@@ -150,7 +150,7 @@ contract("E2E ERC1155 - Same Chain", async (accounts) => {
   });
 
   it("Handler's deposit function can be called by only bridge", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       ERC1155HandlerInstance.deposit(
         resourceID,
         depositorAddress,
@@ -162,7 +162,7 @@ contract("E2E ERC1155 - Same Chain", async (accounts) => {
   });
 
   it("Handler's executeProposal function can be called by only bridge", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       ERC1155HandlerInstance.executeProposal(resourceID, proposalData, {
         from: depositorAddress,
       }),
@@ -179,7 +179,7 @@ contract("E2E ERC1155 - Same Chain", async (accounts) => {
       "0x"
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       ERC1155HandlerInstance.withdraw(withdrawData, {from: depositorAddress}),
       "sender must be bridge contract"
     );

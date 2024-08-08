@@ -32,8 +32,8 @@
     "generate-types": "npm run generate-types:ethers",
     "generate-types:ethers": "npx typechain \"build/contracts/*\" --target=ethers-v5 --out-dir src/ethers",
     "test": "echo \\\\\\\"Error: no test specified\\\\\\\" && exit 1",
-    "deploy:local:1": "concurrently --raw --kill-others --success first \"ganache-cli --chainId 1337 -d --db data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test\"",
-    "deploy:local:2": "concurrently --raw --kill-others --success first \"ganache-cli -p 8547 --chainId 1338 -d --db data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test2\"",
+    "deploy:local:1": "concurrently --raw --kill-others --success first \"ganache --chainId 1337 -d --db data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test\"",
+    "deploy:local:2": "concurrently --raw --kill-others --success first \"ganache -p 8547 --chainId 1338 -d --db data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test2\"",
     "lint": "npm run lint:solidity && npm run lint:js",
     "lint:solidity": "solhint contracts/**/*.sol",
     "lint:js": "eslint --ext .js ."
@@ -61,7 +61,7 @@
     "eth-sig-util": "^3.0.1",
     "ethereumjs-wallet": "^1.0.2",
     "ethers": "^5.5.4",
-    "ganache-cli": "^6.12.2",
+    "ganache": "^7.9.2",
     "lodash.template": "^4.5.0",
     "minimist": "^1.2.7",
     "prettier": "2.8.1",
@@ -83,6 +83,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "4.5.0",
-    "@uniswap/v3-periphery": "^1.4.4"
+    "@uniswap/v3-periphery": "^1.4.4",
+    "solmate": "^6.2.0"
   }
 }

@@ -16,7 +16,7 @@ contract("BasicFeeHandler - [admin]", async (accounts) => {
   const currentFeeHandlerAdmin = accounts[0];
 
   const assertOnlyAdmin = (method, ...params) => {
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       method(...params, {from: initialRelayers[1]}),
       "sender doesn't have admin role"
     );

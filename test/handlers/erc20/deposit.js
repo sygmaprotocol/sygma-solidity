@@ -175,7 +175,7 @@ contract("ERC20Handler - [Deposit ERC20]", async (accounts) => {
     const recipientAddress = accounts[0] + accounts[1].substr(2);
     const lenRecipientAddress = 40;
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID_ZERO_Address,
@@ -190,7 +190,7 @@ contract("ERC20Handler - [Deposit ERC20]", async (accounts) => {
       "ERC20: not a contract"
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID_EOA_Address,

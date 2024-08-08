@@ -23,7 +23,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
   const emptySetResourceData = "0x";
 
   const assertOnlyAdmin = (method, ...params) => {
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       method(...params, {from: accounts[1]}),
       "sender doesn't have admin role"
     );
@@ -211,7 +211,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
     );
 
     const payout = Ethers.utils.parseEther("0.5");
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BasicFeeHandlerInstance.transferFee(
         [accounts[3], accounts[4]],
         [payout, payout, payout]

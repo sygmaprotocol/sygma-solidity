@@ -31,7 +31,7 @@ contract("TwapFeeHandler - [admin]", async (accounts) => {
   const currentFeeHandlerAdmin = accounts[0];
 
   const assertOnlyAdmin = (method, ...params) => {
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       method(...params, {from: initialRelayers[1]}),
       "sender doesn't have admin role"
     );
@@ -198,7 +198,7 @@ contract("TwapFeeHandler - [admin]", async (accounts) => {
       )
     );
 
-    await TruffleAssert.passes(
+    await Helpers.passes(
       DynamicFeeHandlerInstance.renounceAdmin(
         expectedDynamicFeeHandlerAdmin
       )

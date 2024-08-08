@@ -64,13 +64,13 @@ contract("XC20Handler - [Deposit Burn XC20]", async (accounts) => {
         depositAmount,
         {from: depositorAddress}
       ),
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         XC20HandlerInstance.address,
         resourceID1,
         ERC20MintableInstance1.address,
         emptySetResourceData
       ),
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         XC20HandlerInstance.address,
         resourceID2,
         ERC20MintableInstance2.address,
