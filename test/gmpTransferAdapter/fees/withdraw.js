@@ -142,7 +142,7 @@ contract("Gmp transfer adapter - [Withdraw]", async (accounts) => {
     const adapterBalanceBefore = await web3.eth.getBalance(GmpTransferAdapterInstance.address);
 
     await assertOnlyAdmin(() =>
-      GmpTransferAdapterInstance.withdraw(
+      GmpTransferAdapterInstance.withdraw.call(
         recipientAddress,
         withdrawAmount,
         {
