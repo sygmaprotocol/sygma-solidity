@@ -9,6 +9,21 @@ import "../../contracts/interfaces/IFeeHandler.sol";
 import "../XERC20/interfaces/IXERC20.sol";
 import "./interfaces/IGmpTransferAdapter.sol";
 
+/**
+        .__   __.   ______   .___________. __    ______  _______
+        |  \ |  |  /  __  \  |           ||  |  /      ||   ____|
+        |   \|  | |  |  |  | `---|  |----`|  | |  ,----'|  |__
+        |  . `  | |  |  |  |     |  |     |  | |  |     |   __|
+        |  |\   | |  `--'  |     |  |     |  | |  `----.|  |____
+        |__| \__|  \______/      |__|     |__|  \______||_______|
+
+    Be careful when interacting with this contact as it enables
+    permissionless token addition and transfers via Sygma brige.
+    Always double check contract addresses and code you are interacting with
+    since a malicious actor could deploy a fake contract on a route
+    that is isn't set up by the Sygma team or a trusted 3rd party.
+    This can result in loss of all your funds.
+*/
 contract GmpTransferAdapter is IGmpTransferAdapter, AccessControl {
     using ERC165Checker for address;
 
