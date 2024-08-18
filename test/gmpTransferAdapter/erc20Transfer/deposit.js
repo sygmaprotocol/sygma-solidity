@@ -142,13 +142,6 @@ contract("Gmp transfer adapter - [Deposit XERC20 - wrapped ERC20 token]", async 
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
-
-    // send ETH to destination adapter for transfers
-    await web3.eth.sendTransaction({
-      from: depositorAddress,
-      to: GmpTransferAdapterInstance.address,
-      value: "1000000000000000000"
-    })
   });
 
   it("deposit can be made successfully and depositor tokens are burnt", async () => {

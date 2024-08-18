@@ -116,23 +116,8 @@ contract GmpTransferAdapter is IGmpTransferAdapter, AccessControl {
         IXERC20(XERC20Address).mint(recipient, amount);
     }
 
-    /**
-        @notice Used to manually transfer native tokens from Adapter.
-        @param recipient Address that should recieve the native tokens.
-        recipient   address
-     */
-    function withdraw(address recipient, uint256 amount) external onlyAdmin {
-        (bool success, ) = address(recipient).call{value: amount}("");
-        if(!success) revert FailedFundsTransfer();
-        emit Withdrawal(recipient, amount);
-    }
-
     function setTokenPairAddress(address sourceTokenAddress, uint8 destinationDomainID, address destinationTokenAddress) external onlyAdmin {
         crossChainTokenPairs[sourceTokenAddress][destinationDomainID] = destinationTokenAddress;
-    }
-
-    function slice(bytes calldata input, uint256 position) public pure returns (bytes memory) {
-        return input[position:];
     }
 
     function prepareDepositData(
@@ -142,6 +127,4 @@ contract GmpTransferAdapter is IGmpTransferAdapter, AccessControl {
     ) public view returns (bytes memory) {
         return abi.encode(recipientAddress, XERC20Address, bridgingAmount);
     }
-
-    receive() external payable {}
 }

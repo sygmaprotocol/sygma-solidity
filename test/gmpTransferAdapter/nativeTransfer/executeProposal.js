@@ -157,13 +157,6 @@ contract("Gmp transfer adapter - [Execute proposal XERC20 - wrapped native token
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
-
-    // send ETH to destination adapter for transfers
-    await web3.eth.sendTransaction({
-      from: depositorAddress,
-      to: GmpTransferAdapterInstance.address,
-      value: "1000000000000000000"
-    })
   });
 
   it("isProposalExecuted returns false if depositNonce is not used", async () => {
