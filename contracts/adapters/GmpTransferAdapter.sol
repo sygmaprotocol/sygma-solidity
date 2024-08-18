@@ -18,11 +18,11 @@ import "./interfaces/IGmpTransferAdapter.sol";
         |__| \__|  \______/      |__|     |__|  \______||_______|
 
     Be careful when interacting with this contact as it enables
-    permissionless token addition and transfers via Sygma brige.
-    Always double check contract addresses and code you are interacting with
-    since a malicious actor could deploy a fake contract on a route
-    that is isn't set up by the Sygma team or a trusted 3rd party.
-    This can result in loss of all your funds.
+    permissionless token addition and transfers via Sygma bridge.
+    Make sure that a malicious actor cannot deploy arbitrary code
+    to the same address as your XERC20 token on another chain.
+    This would allow them to burn fake tokens on chain A then mint
+    legit tokens on chain B.
 */
 contract GmpTransferAdapter is IGmpTransferAdapter, AccessControl {
     using ERC165Checker for address;
