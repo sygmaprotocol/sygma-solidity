@@ -22,7 +22,7 @@ contract("FeeHandlerRouter", async (accounts) => {
   const bridgeAddress = accounts[4];
 
   const assertOnlyAdmin = (method, ...params) => {
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       method(...params, {from: nonAdmin}),
       "sender doesn't have admin role"
     );
@@ -171,7 +171,7 @@ contract("FeeHandlerRouter", async (accounts) => {
 
     const depositData = Helpers.createERCDepositData(100, 20, recipientAddress);
     await Helpers.expectToRevertWithCustomError(
-      FeeHandlerRouterInstance.collectFee(
+      FeeHandlerRouterInstance.collectFee.call(
         whitelistAddress,
         originDomainID,
         destinationDomainID,
@@ -185,7 +185,7 @@ contract("FeeHandlerRouter", async (accounts) => {
       ),
       "IncorrectFeeSupplied(uint256)"
     );
-    await TruffleAssert.passes(
+    await Helpers.passes(
       FeeHandlerRouterInstance.collectFee(
         nonWhitelistAddress,
         originDomainID,

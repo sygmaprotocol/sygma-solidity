@@ -368,13 +368,7 @@ const expectToRevertWithCustomError = async function(promise, expectedErrorSigna
     await promise;
   } catch (error) {
     const encoded = web3.eth.abi.encodeFunctionSignature(expectedErrorSignature);
-    const returnValue = Object.entries(error.data).filter(
-      (it) => it.length > 1
-    ).map(
-      (it) => it[1]
-    ).find(
-      (it) => it != null && it.constructor.name === "Object" && "return" in it
-    ).return;
+    const returnValue = error.data.result || error.data;
     // expect event error and provided error signatures to match
     assert.equal(returnValue.slice(0, 10), encoded);
 
@@ -390,7 +384,28 @@ const expectToRevertWithCustomError = async function(promise, expectedErrorSigna
     }
     return inputParams;
   }
-  assert.fail("Expected an exception but none was received");
+  assert.fail("Expected a custom error but none was received");
+}
+
+const reverts = async function(promise, expectedErrorMessage) {
+  try {
+    await promise;
+  } catch (error) {
+    if (expectedErrorMessage) {
+      const message = error.reason || error.hijackedStack.split("revert ")[1].split("\n")[0];
+      assert.equal(message, expectedErrorMessage);
+    }
+    return true;
+  }
+  assert.fail("Expected an error message but none was received");
+}
+
+const passes = async function(promise) {
+  try {
+    await promise;
+  } catch (error) {
+    assert.fail("Revert reason: " + error.data.result);
+  }
 }
 
 module.exports = {
@@ -424,5 +439,7 @@ module.exports = {
   mockSignTypedProposalWithInvalidChainID,
   createDepositProposalDataFromHandlerResponse,
   createGmpExecutionData,
-  expectToRevertWithCustomError
+  expectToRevertWithCustomError,
+  reverts,
+  passes,
 };

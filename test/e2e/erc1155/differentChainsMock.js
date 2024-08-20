@@ -107,13 +107,13 @@ contract("E2E ERC1155 - Two EVM Chains", async (accounts) => {
         await DestinationERC1155MintableInstance.MINTER_ROLE(),
         DestinationERC1155HandlerInstance.address
       ),
-      OriginBridgeInstance.adminSetResource(
+      await OriginBridgeInstance.adminSetResource(
         OriginERC1155HandlerInstance.address,
         originResourceID,
         OriginERC1155MintableInstance.address,
         emptySetResourceData
       ),
-      DestinationBridgeInstance.adminSetResource(
+      await DestinationBridgeInstance.adminSetResource(
         DestinationERC1155HandlerInstance.address,
         destinationResourceID,
         DestinationERC1155MintableInstance.address,

@@ -144,7 +144,7 @@ contract("PercentageFeeHandler - [collectFee]", async (accounts) => {
   });
 
   it("deposit should revert if msg.value != 0", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
@@ -155,7 +155,7 @@ contract("PercentageFeeHandler - [collectFee]", async (accounts) => {
           value: Ethers.utils.parseEther("0.5").toString(),
         }
       ),
-      "msg.value != 0"
+      "collectFee: msg.value != 0"
     );
   });
 
@@ -171,7 +171,7 @@ contract("PercentageFeeHandler - [collectFee]", async (accounts) => {
       0,
       {from: depositorAddress}
     );
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
@@ -196,7 +196,7 @@ contract("PercentageFeeHandler - [collectFee]", async (accounts) => {
       0,
       {from: depositorAddress}
     );
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       PercentageFeeHandlerInstance.collectFee(
         depositorAddress,
         originDomainID,
@@ -224,7 +224,7 @@ contract("PercentageFeeHandler - [collectFee]", async (accounts) => {
       0,
       {from: depositorAddress}
     );
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       FeeHandlerRouterInstance.collectFee(
         depositorAddress,
         originDomainID,

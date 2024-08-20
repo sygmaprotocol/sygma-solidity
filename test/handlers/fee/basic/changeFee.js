@@ -16,7 +16,7 @@ contract("BasicFeeHandler - [changeFee]", async (accounts) => {
   const nonAdmin = accounts[1];
 
   const assertOnlyAdmin = (method, ...params) => {
-    return TruffleAssert.reverts(
+    return Helpers.reverts(
       method(...params, {from: nonAdmin}),
       "sender doesn't have admin role"
     );
@@ -70,7 +70,7 @@ contract("BasicFeeHandler - [changeFee]", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID, 0),
       "Current fee is equal to new fee"
     );

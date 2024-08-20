@@ -118,7 +118,7 @@ contract("GmpHandler - [deposit]", async (accounts) => {
     // Min length is 76 bytes
     const invalidDepositData = "0x" + "aa".repeat(75);
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
@@ -141,7 +141,7 @@ contract("GmpHandler - [deposit]", async (accounts) => {
       hashOfTestStore
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,
@@ -164,7 +164,7 @@ contract("GmpHandler - [deposit]", async (accounts) => {
       hashOfTestStore
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
         resourceID,

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 const TruffleAssert = require("truffle-assertions");
+const Helpers = require("../../helpers");
 
 const AccessControlSegregatorContract = artifacts.require(
   "AccessControlSegregator"
@@ -29,7 +30,7 @@ contract("AccessControlSegregator - [grant access]", async (accounts) => {
   });
 
   it("should revert if sender doesn't have  grant access rights", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       AccessControlSegregatorInstance.grantAccess(
         functionSignature,
         accounts[2],

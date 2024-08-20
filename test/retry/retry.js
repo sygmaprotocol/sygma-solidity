@@ -1,6 +1,8 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
 
+const Helpers = require("../helpers");
+
 const TruffleAssert = require("truffle-assertions");
 const Retry = artifacts.require("Retry")
 
@@ -18,16 +20,16 @@ contract("Retry", (accounts) => {
 
     it("should emit Retry event when retry is called by the owner", async () => {
       const tx = await RetryInstance.retry(
-        sourceDomainID, 
-        destinationDomainID,  
-        blockHeight, 
-        resourceID, 
+        sourceDomainID,
+        destinationDomainID,
+        blockHeight,
+        resourceID,
         {from: accounts[0]})
 
         TruffleAssert.eventEmitted(tx, "Retry", (event) => {
             return (
-                event.sourceDomainID.toNumber() === sourceDomainID && 
-                event.destinationDomainID.toNumber() === destinationDomainID && 
+                event.sourceDomainID.toNumber() === sourceDomainID &&
+                event.destinationDomainID.toNumber() === destinationDomainID &&
                 event.blockHeight.toNumber() === blockHeight &&
                 event.resourceID === resourceID
             );
@@ -35,9 +37,9 @@ contract("Retry", (accounts) => {
     });
 
     it("should revert when retry is not called by the owner", async () => {
-      await TruffleAssert.reverts(
+      await Helpers.reverts(
         RetryInstance.retry(sourceDomainID, destinationDomainID, blockHeight, resourceID, {from: accounts[1]}),
-        "Ownable: caller is not the owner."
+        "Ownable: caller is not the owner"
       )
     });
 })

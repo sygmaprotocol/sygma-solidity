@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 const TruffleAssert = require("truffle-assertions");
+const Helpers = require("../../helpers");
 
 const AccessControlSegregatorContract = artifacts.require(
   "AccessControlSegregator"
@@ -36,7 +37,7 @@ contract("AccessControlSegregator - [constructor]", async (accounts) => {
   });
 
   it("should revert if length of functions and accounts array is different", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       AccessControlSegregatorContract.new(
         ["0xa973ec93", "0x78728c73"],
         [accounts[0]]

@@ -262,7 +262,7 @@ contract("Bridge - [admin]", async (accounts) => {
       domainID
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.adminSetResource(
         ERC1155HandlerInstance.address,
         invalidResourceID,
@@ -427,7 +427,7 @@ contract("Bridge - [admin]", async (accounts) => {
     const currentNonce = 3;
     await BridgeInstance.adminSetDepositNonce(domainID, currentNonce);
     const newNonce = 2;
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       BridgeInstance.adminSetDepositNonce(domainID, newNonce),
       "Does not allow decrements of the nonce"
     );

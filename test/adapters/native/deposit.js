@@ -133,7 +133,7 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
   });
 
   it("Should revert if destination domain is current bridge domain", async () => {
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       NativeTokenAdapterInstance.deposit(originDomainID, btcRecipientAddress, {
         from: depositorAddress,
         value: depositAmount
@@ -155,7 +155,7 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
       emptySetResourceData
     );
 
-    await TruffleAssert.reverts(
+    await Helpers.reverts(
       NativeTokenAdapterInstance.deposit(destinationDomainID, btcRecipientAddress, {
         from: depositorAddress,
         value: depositAmount

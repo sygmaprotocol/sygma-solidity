@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2.4.0
@@ -41,7 +41,7 @@ jobs:
         run: |
           fuser -k 8545/tcp
           make start-forkedMainnet FORKED_TESTS_PROVIDER=${{ secrets.FORKED_TESTS_PROVIDER }}
-          npx truffle test testUnderForked/*
+          make test-forked
 
   coverage:
     needs: test
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2.4.0
@@ -64,9 +64,3 @@ jobs:
           path: build
       - name: Yarn install
         run: yarn install --frozen-lockfile
-      - name: Run coverage
-        run: ./node_modules/.bin/truffle run coverage -solcoverjs ./scripts/.solcover.js --network test
-      - name: Coverall
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}

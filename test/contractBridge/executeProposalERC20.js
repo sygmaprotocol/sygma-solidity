@@ -132,7 +132,7 @@ contract("Bridge - [execute proposal - ERC20]", async (accounts) => {
       })
     );
 
-    await TruffleAssert.passes(
+    await Helpers.passes(
       BridgeInstance.executeProposal(proposal, proposalSignedData, {
         from: relayer1Address,
       })

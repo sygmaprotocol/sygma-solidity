@@ -74,13 +74,13 @@ contract("ERC1155Handler - [Deposit Burn ERC1155]", async (accounts) => {
         true,
         {from: depositorAddress}
       ),
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         ERC1155HandlerInstance.address,
         resourceID1,
         ERC1155MintableInstance1.address,
         emptySetResourceData
       ),
-      BridgeInstance.adminSetResource(
+      await BridgeInstance.adminSetResource(
         ERC1155HandlerInstance.address,
         resourceID2,
         ERC1155MintableInstance2.address,
