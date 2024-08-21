@@ -3,8 +3,10 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
+import "../interfaces/IERC20MessageHandler.sol";
 import "./ERCHandlerHelpers.sol";
 import "../ERC20Safe.sol";
+import "../utils/ExcessivelySafeCall.sol";
 
 /**
     @title Handles ERC20 deposits and deposit executions.
@@ -12,6 +14,10 @@ import "../ERC20Safe.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
+    using ExcessivelySafeCall for address;
+
+    uint16 internal constant MAX_RETURN_BYTES = 256;
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
@@ -24,11 +30,15 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
         @param depositor Address of account making the deposit in the Bridge contract.
-        @param data Consists of {amount} padded to 32 bytes.
+        @param data Consists of {amount}, {recipient}, {optionalGas}, {optionalMessage},
+        padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        amount                                      uint256     bytes   0 - 32
-        destinationRecipientAddress     length      uint256     bytes  32 - 64
-        destinationRecipientAddress                 bytes       bytes  64 - END
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
         @return an empty data.
@@ -57,19 +67,22 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
         by a relayer on the deposit's destination chain.
         @param resourceID ResourceID to be used when making deposits.
-        @param data Consists of {resourceID}, {amount}, {lenDestinationRecipientAddress},
-        and {destinationRecipientAddress} all padded to 32 bytes.
+        @param data Consists of {amount}, {recipient}, {optionalGas}, {optionalMessage},
+        padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        amount                                 uint256     bytes  0 - 32
-        destinationRecipientAddress length     uint256     bytes  32 - 64
-        destinationRecipientAddress            bytes       bytes  64 - END
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        uint256       amount;
-        uint256       lenDestinationRecipientAddress;
-        bytes  memory destinationRecipientAddress;
+        uint256      amount;
+        uint256      lenDestinationRecipientAddress;
+        bytes memory destinationRecipientAddress;
 
-        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
+        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint256, uint256));
         destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
 
         bytes20 recipientAddress;
@@ -81,10 +94,36 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
 
         if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
+        uint256 externalAmount = convertToExternalBalance(tokenAddress, amount);
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
-            mintERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
+            mintERC20(tokenAddress, address(recipientAddress), externalAmount);
         } else {
-            releaseERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
+            releaseERC20(tokenAddress, address(recipientAddress), externalAmount);
+        }
+
+        // Optional message processing.
+        uint256 pointer = 64 + lenDestinationRecipientAddress;
+        if (data.length > (pointer + 64)) {
+            (uint256 gas, uint256 messageLength) = abi.decode(data[pointer:], (uint256, uint256));
+            pointer += 64;
+            if (gas == 0 || messageLength == 0 || (messageLength + pointer) > data.length) {
+                return abi.encode(
+                    tokenAddress,
+                    address(recipientAddress),
+                    amount,
+                    abi.encode(false, abi.encodeWithSignature("InvalidEncoding()"))
+                );
+            }
+            bytes memory message = bytes(data[pointer:pointer + messageLength]);
+            bytes memory recipientMessage = abi.encodeWithSelector(
+                IERC20MessageHandler(address(recipientAddress)).handleSygmaERC20Message.selector,
+                tokenAddress,
+                externalAmount,
+                message
+            );
+            (bool success, bytes memory result) =
+                address(recipientAddress).excessivelySafeCall(gas, 0, MAX_RETURN_BYTES, recipientMessage);
+            return abi.encode(tokenAddress, address(recipientAddress), amount, abi.encode(success, result));
         }
         return abi.encode(tokenAddress, address(recipientAddress), amount);
     }
