@@ -103,7 +103,7 @@ contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
       ),
       ERC20HandlerContract.new(
         DestinationBridgeInstance.address,
-        DestinationERC20HandlerInstance.address
+        DestinationDefaultMessageReceiverInstance.address
       ).then(
         (instance) => (DestinationERC20HandlerInstance = instance)
       ),

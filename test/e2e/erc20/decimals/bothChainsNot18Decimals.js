@@ -78,10 +78,14 @@ contract("E2E ERC20 - Two EVM Chains both with decimal places != 18", async acco
           100000
         );
         await Promise.all([
-            ERC20HandlerContract.new(OriginBridgeInstance.address, OriginDefaultMessageReceiverInstance.address)
-                .then(instance => OriginERC20HandlerInstance = instance),
-            ERC20HandlerContract.new(DestinationBridgeInstance.address, DestinationDefaultMessageReceiverInstance.address)
-                .then(instance => DestinationERC20HandlerInstance = instance),
+            ERC20HandlerContract.new(
+              OriginBridgeInstance.address,
+              OriginDefaultMessageReceiverInstance.address
+            ).then(instance => OriginERC20HandlerInstance = instance),
+            ERC20HandlerContract.new(
+              DestinationBridgeInstance.address,
+              DestinationDefaultMessageReceiverInstance.address
+            ).then(instance => DestinationERC20HandlerInstance = instance),
         ]);
 
         await OriginERC20MintableInstance.mint(depositorAddress, initialTokenAmount);
