@@ -5,6 +5,7 @@
 const Helpers = require("../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauserDecimals");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("ERC20Handler - [decimals]", async (accounts) => {
@@ -23,6 +24,7 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
 
   let BridgeInstance;
   let ERC20MintableInstance;
+  let DefaultMessageReceiverInstance;
   let ERC20HandlerInstance;
 
   let resourceID;
@@ -47,8 +49,10 @@ contract("ERC20Handler - [decimals]", async (accounts) => {
 
       depositProposalData = Helpers.createERCDepositData(depositAmount, 20, recipientAddress)
 
+      DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
       await Promise.all([
-          ERC20HandlerContract.new(BridgeInstance.address).then(instance => ERC20HandlerInstance = instance),
+          ERC20HandlerContract.new(BridgeInstance.address, DefaultMessageReceiverInstance.address)
+            .then(instance => ERC20HandlerInstance = instance),
           ERC20MintableInstance.mint(depositorAddress, tokenAmount)
       ]);
 

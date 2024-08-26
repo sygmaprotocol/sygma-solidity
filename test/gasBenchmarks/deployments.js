@@ -7,6 +7,7 @@ const BridgeContract = artifacts.require("Bridge");
 const AccessControlSegregatorContract = artifacts.require(
   "AccessControlSegregator"
 );
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
@@ -25,6 +26,7 @@ contract("Gas Benchmark - [contract deployments]", async (accounts) => {
   const gasBenchmarks = [];
 
   let BridgeInstance;
+  let DefaultMessageReceiverInstance;
 
   it.skip("Should deploy all contracts and print benchmarks", async () => {
     const accessControlInstance = await AccessControlSegregatorContract.new(
@@ -37,7 +39,10 @@ contract("Gas Benchmark - [contract deployments]", async (accounts) => {
         await BridgeContract.new(domainID, accessControlInstance.address).then(
           (instance) => (BridgeInstance = instance)
         ),
-        ERC20HandlerContract.new(BridgeInstance.address),
+        await DefaultMessageReceiverContract.new([], 100000).then(
+          (instance) => (DefaultMessageReceiverInstance = instance)
+        ),
+        ERC20HandlerContract.new(BridgeInstance.address, DefaultMessageReceiverInstance.address),
         ERC721HandlerContract.new(BridgeInstance.address),
         ERC1155HandlerContract.new(BridgeInstance.address),
         GmpHandlerContract.new(BridgeInstance.address),

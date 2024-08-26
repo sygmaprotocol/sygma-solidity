@@ -7,6 +7,7 @@ const Helpers = require("../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC20MintableContractMock = artifacts.require("ERC20PresetMinterPauserMock");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("Bridge - [deposit - ERC20]", async (accounts) => {
@@ -54,8 +55,13 @@ contract("Bridge - [deposit - ERC20]", async (accounts) => {
 
     initialResourceIDs = [resourceID1, resourceID2];
 
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
     OriginERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     await Promise.all([

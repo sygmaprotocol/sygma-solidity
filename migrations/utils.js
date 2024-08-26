@@ -190,7 +190,8 @@ async function redeployHandler(
     bridgeInstance,
     handlerContract,
     handlerInstance,
-    tokenType
+    tokenType,
+    defaultMessageReceiverInstance
   ) {
   let deployNewHandler = true;
   let newHandlerInstance;
@@ -199,7 +200,8 @@ async function redeployHandler(
     if (deployNewHandler) {
       newHandlerInstance = await deployer.deploy(
         handlerContract,
-        bridgeInstance.address
+        bridgeInstance.address,
+        defaultMessageReceiverInstance && defaultMessageReceiverInstance.address
       );
       console.log("New handler address:", "\t", newHandlerInstance.address);
       deployNewHandler = false;

@@ -9,6 +9,7 @@ const AccessControlSegregatorContract = artifacts.require(
 );
 const PausableContract = artifacts.require("Pausable");
 const BridgeContract = artifacts.require("Bridge");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
 
@@ -44,9 +45,15 @@ module.exports = async function (deployer, network) {
   );
 
   // deploy handler contracts
+  const defaultMessageReceiverInstance = await deployer.deploy(
+    DefaultMessageReceiverContract,
+    [],
+    100000
+  );
   const erc20HandlerInstance = await deployer.deploy(
     ERC20HandlerContract,
-    bridgeInstance.address
+    bridgeInstance.address,
+    defaultMessageReceiverInstance.address
   );
   const erc721HandlerInstance = await deployer.deploy(
     ERC721HandlerContract,
@@ -76,6 +83,7 @@ module.exports = async function (deployer, network) {
     "Deployer Address": deployerAddress,
     "Domain ID": currentNetworkConfig.domainID,
     "Bridge Address": bridgeInstance.address,
+    "DefaultMessageReceiver Address": defaultMessageReceiverInstance.address,
     "ERC20Handler Address": erc20HandlerInstance.address,
     "ERC721Handler Address": erc721HandlerInstance.address,
     "FeeRouterContract Address": feeRouterInstance.address,

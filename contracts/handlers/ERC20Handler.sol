@@ -3,7 +3,7 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
-import "../interfaces/IERC20MessageHandler.sol";
+import "../interfaces/ISygmaMessageReceiver.sol";
 import "./ERCHandlerHelpers.sol";
 import "../ERC20Safe.sol";
 import "../utils/ExcessivelySafeCall.sol";
@@ -16,14 +16,20 @@ import "../utils/ExcessivelySafeCall.sol";
 contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
     using ExcessivelySafeCall for address;
 
-    uint16 internal constant MAX_RETURN_BYTES = 256;
+    uint16 internal constant maxReturnBytes = 256;
+    address internal constant transformRecipient = address(0);
+    address public immutable _defaultMessageReceiver;
+
+    enum OptionalMessageCheck { Absent, Valid, Invalid }
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(
-        address          bridgeAddress
+        address bridgeAddress,
+        address defaultMessageReceiver
     ) ERCHandlerHelpers(bridgeAddress) {
+        _defaultMessageReceiver = defaultMessageReceiver;
     }
 
     /**
@@ -80,52 +86,61 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
         uint256      amount;
         uint256      lenDestinationRecipientAddress;
-        bytes memory destinationRecipientAddress;
 
         (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint256, uint256));
-        destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
+        address recipientAddress = address(bytes20(bytes(data[64:64 + lenDestinationRecipientAddress])));
 
-        bytes20 recipientAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
 
-        assembly {
-            recipientAddress := mload(add(destinationRecipientAddress, 0x20))
+        // Optional message recipient transformation.
+        uint256 pointer = 64 + lenDestinationRecipientAddress;
+        uint256 gas;
+        uint256 messageLength;
+        OptionalMessageCheck optionalMessageCheck;
+        if (data.length > (pointer + 64)) {
+            (gas, messageLength) = abi.decode(data[pointer:], (uint256, uint256));
+            pointer += 64;
+            if (gas > 0 && messageLength > 0 && (messageLength + pointer) <= data.length) {
+                optionalMessageCheck = OptionalMessageCheck.Valid;
+                if (recipientAddress == transformRecipient) {
+                    recipientAddress = _defaultMessageReceiver;
+                }
+            } else {
+                optionalMessageCheck = OptionalMessageCheck.Invalid;
+            }
         }
 
         if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
 
         uint256 externalAmount = convertToExternalBalance(tokenAddress, amount);
         if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
-            mintERC20(tokenAddress, address(recipientAddress), externalAmount);
+            mintERC20(tokenAddress, recipientAddress, externalAmount);
         } else {
-            releaseERC20(tokenAddress, address(recipientAddress), externalAmount);
+            releaseERC20(tokenAddress, recipientAddress, externalAmount);
         }
 
-        // Optional message processing.
-        uint256 pointer = 64 + lenDestinationRecipientAddress;
-        if (data.length > (pointer + 64)) {
-            (uint256 gas, uint256 messageLength) = abi.decode(data[pointer:], (uint256, uint256));
-            pointer += 64;
-            if (gas == 0 || messageLength == 0 || (messageLength + pointer) > data.length) {
-                return abi.encode(
-                    tokenAddress,
-                    address(recipientAddress),
-                    amount,
-                    abi.encode(false, abi.encodeWithSignature("InvalidEncoding()"))
-                );
-            }
+        if (optionalMessageCheck == OptionalMessageCheck.Invalid) {
+            return abi.encode(
+                tokenAddress,
+                recipientAddress,
+                amount,
+                abi.encode(false, abi.encodeWithSignature("InvalidEncoding()"))
+            );
+        }
+        if (optionalMessageCheck == OptionalMessageCheck.Valid) {
             bytes memory message = bytes(data[pointer:pointer + messageLength]);
             bytes memory recipientMessage = abi.encodeWithSelector(
-                IERC20MessageHandler(address(recipientAddress)).handleSygmaERC20Message.selector,
+                ISygmaMessageReceiver(recipientAddress).handleSygmaMessage.selector,
                 tokenAddress,
                 externalAmount,
                 message
             );
             (bool success, bytes memory result) =
-                address(recipientAddress).excessivelySafeCall(gas, 0, MAX_RETURN_BYTES, recipientMessage);
-            return abi.encode(tokenAddress, address(recipientAddress), amount, abi.encode(success, result));
+                recipientAddress.excessivelySafeCall(gas, 0, maxReturnBytes, recipientMessage);
+            return abi.encode(tokenAddress, recipientAddress, amount, abi.encode(success, result));
         }
-        return abi.encode(tokenAddress, address(recipientAddress), amount);
+
+        return abi.encode(tokenAddress, recipientAddress, amount);
     }
 
     /**

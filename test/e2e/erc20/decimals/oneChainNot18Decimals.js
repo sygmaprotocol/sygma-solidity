@@ -7,6 +7,7 @@ const TruffleAssert = require("truffle-assertions");
 const Helpers = require("../../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauserDecimals");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with != 18", async accounts => {
@@ -34,6 +35,7 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
 
     let OriginBridgeInstance;
     let OriginERC20MintableInstance;
+    let OriginDefaultMessageReceiverInstance;
     let OriginERC20HandlerInstance;
     let originDepositData;
     let originResourceID;
@@ -42,6 +44,7 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
 
     let DestinationBridgeInstance;
     let DestinationERC20MintableInstance;
+    let DestinationDefaultMessageReceiverInstance;
     let DestinationERC20HandlerInstance;
     let destinationDepositData;
     let destinationDepositProposalData;
@@ -71,10 +74,18 @@ contract("E2E ERC20 - Two EVM Chains, one with decimal places == 18, other with 
         destinationInitialContractAddresses = [DestinationERC20MintableInstance.address];
         destinationBurnableContractAddresses = [DestinationERC20MintableInstance.address];
 
+        OriginDefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+          [],
+          100000
+        );
+        DestinationDefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+          [],
+          100000
+        );
         await Promise.all([
-            ERC20HandlerContract.new(OriginBridgeInstance.address)
+            ERC20HandlerContract.new(OriginBridgeInstance.address, OriginDefaultMessageReceiverInstance.address)
                 .then(instance => OriginERC20HandlerInstance = instance),
-            ERC20HandlerContract.new(DestinationBridgeInstance.address)
+            ERC20HandlerContract.new(DestinationBridgeInstance.address, DestinationDefaultMessageReceiverInstance.address)
                 .then(instance => DestinationERC20HandlerInstance = instance),
         ]);
 

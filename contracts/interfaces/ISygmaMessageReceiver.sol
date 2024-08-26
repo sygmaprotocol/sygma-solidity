@@ -3,19 +3,20 @@
 pragma solidity 0.8.11;
 
 /**
-    @title Interface for Bridge contract.
+    @title Interface for optional message receive.
     @author ChainSafe Systems.
  */
-interface IERC20MessageHandler {
+interface ISygmaMessageReceiver {
     /**
-        @notice ERC20Handler will call this function on recipient if there is an optional message included.
+        @notice ERC20 and NativeToken Handlers will call this function
+        @notice on recipient if there is an optional message included.
         @param token Transferred token.
         @param amount Transferred amount.
         @param message Arbitrary message.
      */
-    function handleSygmaERC20Message(
+    function handleSygmaMessage(
         address token,
         uint256 amount,
         bytes calldata message
-    ) external;
+    ) external payable;
 }

@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC721MintableContract = artifacts.require("ERC721MinterBurnerPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
@@ -88,8 +89,13 @@ contract("Bridge - [execute proposals]", async (accounts) => {
       ERC1155MintableInstance.address,
     ];
 
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
     ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
     ERC721HandlerInstance = await ERC721HandlerContract.new(
       BridgeInstance.address
