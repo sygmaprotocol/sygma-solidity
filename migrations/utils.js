@@ -252,6 +252,12 @@ async function migrateToNewTokenHandler(
     );
   }
 
+  if (defaultMessageReceiverInstance) {
+    await defaultMessageReceiverInstance.grantRole(
+      await defaultMessageReceiverInstance.SYGMA_HANDLER_ROLE(),
+      newHandlerInstance.address
+    );
+  }
   console.log("Associated resourceID:", "\t", tokenConfig.resourceID);
   console.log(
     "-------------------------------------------------------------------------------"
