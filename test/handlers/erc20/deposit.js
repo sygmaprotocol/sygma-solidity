@@ -21,6 +21,7 @@ contract("ERC20Handler - [Deposit ERC20]", async (accounts) => {
 
   let BridgeInstance;
   let ERC20MintableInstance;
+  let DefaultMessageReceiverInstance;
   let ERC20HandlerInstance;
 
   let resourceID;

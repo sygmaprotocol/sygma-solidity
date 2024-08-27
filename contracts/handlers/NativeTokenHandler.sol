@@ -3,7 +3,9 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
+import "../interfaces/ISygmaMessageReceiver.sol";
 import "./ERCHandlerHelpers.sol";
+import "../utils/ExcessivelySafeCall.sol";
 
 /**
     @title Handles native token deposits and deposit executions.
@@ -11,17 +13,26 @@ import "./ERCHandlerHelpers.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
+    using ExcessivelySafeCall for address;
 
+    uint16 internal constant maxReturnBytes = 256;
+    address internal constant transformRecipient = address(0);
+    uint256 internal constant defaultGas = 50000;
     address public immutable _nativeTokenAdapterAddress;
+    address public immutable _defaultMessageReceiver;
+
+    enum OptionalMessageCheck { Absent, Valid, Invalid }
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(
         address bridgeAddress,
-        address nativeTokenAdapterAddress
+        address nativeTokenAdapterAddress,
+        address defaultMessageReceiver
     ) ERCHandlerHelpers(bridgeAddress) {
         _nativeTokenAdapterAddress = nativeTokenAdapterAddress;
+        _defaultMessageReceiver = defaultMessageReceiver;
     }
 
     event Withdrawal(address recipient, uint256 amount);
@@ -38,17 +49,20 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of {amount} padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        amount                                      uint256     bytes   0 - 32
-        destinationRecipientAddress     length      uint256     bytes  32 - 64
-        destinationRecipientAddress                 bytes       bytes  64 - END
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
         @return deposit amount internal representation.
      */
     function deposit(
         bytes32 resourceID,
         address depositor,
         bytes   calldata data
-    ) external override onlyBridge returns (bytes memory) {
-        uint256        amount;
+    ) external view override onlyBridge returns (bytes memory) {
+        uint256 amount;
         (amount) = abi.decode(data, (uint256));
 
         if(depositor != _nativeTokenAdapterAddress) revert InvalidSender(depositor);
@@ -65,21 +79,68 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         @param data Consists of {amount}, {lenDestinationRecipientAddress}
         and {destinationRecipientAddress}.
         @notice Data passed into the function should be constructed as follows:
-        amount                                 uint256     bytes  0 - 32
-        destinationRecipientAddress length     uint256     bytes  32 - 64 // not used
-        destinationRecipientAddress            bytes       bytes  64 - 84
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        (uint256 amount) = abi.decode(data, (uint256));
+        uint256 amount;
+        uint256 lenDestinationRecipientAddress;
+
+        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint256, uint256));
+        address recipientAddress = address(bytes20(bytes(data[64:64 + lenDestinationRecipientAddress])));
+
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        address recipientAddress = address(bytes20(bytes(data[64:84])));
-        uint256 convertedAmount = convertToExternalBalance(tokenAddress, amount);
 
-        (bool success, ) = address(recipientAddress).call{value: convertedAmount}("");
-        if(!success) revert FailedFundsTransfer();
-        emit FundsTransferred(recipientAddress, amount);
+        // Optional message recipient transformation.
+        uint256 pointer = 64 + lenDestinationRecipientAddress;
+        uint256 gas;
+        uint256 messageLength;
+        OptionalMessageCheck optionalMessageCheck;
+        if (data.length > (pointer + 64)) {
+            (gas, messageLength) = abi.decode(data[pointer:], (uint256, uint256));
+            pointer += 64;
+            if (gas > 0 && messageLength > 0 && (messageLength + pointer) <= data.length) {
+                optionalMessageCheck = OptionalMessageCheck.Valid;
+                if (recipientAddress == transformRecipient) {
+                    recipientAddress = _defaultMessageReceiver;
+                }
+            } else {
+                gas = defaultGas;
+                optionalMessageCheck = OptionalMessageCheck.Invalid;
+            }
+        }
 
-        return abi.encode(tokenAddress, address(recipientAddress), convertedAmount);
+        if (optionalMessageCheck == OptionalMessageCheck.Invalid) {
+            return abi.encode(
+                tokenAddress,
+                recipientAddress,
+                amount,
+                abi.encode(false, abi.encodeWithSignature("InvalidEncoding()"))
+            );
+        }
+
+        uint256 externalAmount = convertToExternalBalance(tokenAddress, amount);
+        bytes memory recipientMessage = "";
+        if (optionalMessageCheck == OptionalMessageCheck.Valid) {
+            bytes memory message = bytes(data[pointer:pointer + messageLength]);
+            recipientMessage = abi.encodeWithSelector(
+                ISygmaMessageReceiver(recipientAddress).handleSygmaMessage.selector,
+                tokenAddress,
+                externalAmount,
+                message
+            );
+        }
+        (bool success, bytes memory result) =
+            recipientAddress.excessivelySafeCall(gas, externalAmount, maxReturnBytes, recipientMessage);
+        if (!success && !_revert(result)) revert FailedFundsTransfer();
+
+        emit FundsTransferred(recipientAddress, externalAmount);
+
+        return abi.encode(tokenAddress, address(recipientAddress), amount);
     }
 
     /**
@@ -118,6 +179,19 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
             uint8 externalTokenDecimals = uint8(bytes1(args));
             _setDecimals(contractAddress, externalTokenDecimals);
         }
+    }
+
+    /// @dev Inspired by OZ implementation.
+    function _revert(bytes memory _returnData) private pure returns(bool) {
+        // Look for revert reason and bubble it up if present
+        if (_returnData.length > 0) {
+            // The easiest way to bubble the revert reason is using memory via assembly
+            assembly {
+                let returndata_size := mload(_returnData)
+                revert(add(32, _returnData), returndata_size)
+            }
+        }
+        return false;
     }
 
     receive() external payable {}

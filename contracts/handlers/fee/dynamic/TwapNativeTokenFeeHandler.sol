@@ -21,15 +21,23 @@ contract TwapNativeTokenFeeHandler is TwapFeeHandler {
     /**
         @notice Calculates fee for transaction cost.
         @param destinationDomainID ID of chain deposit will be bridged to.
+        @param depositData Data to be passed to Native Token handler.
         @return fee Returns the fee amount.
         @return tokenAddress Returns the address of the token to be used for fee.
      */
-    function _calculateFee(address, uint8, uint8 destinationDomainID, bytes32, bytes calldata, bytes calldata) internal view override returns (uint256 fee, address tokenAddress) {
+    function _calculateFee(address, uint8, uint8 destinationDomainID, bytes32, bytes calldata depositData, bytes calldata) internal view override returns (uint256 fee, address tokenAddress) {
+        uint256 maxFee = _gasUsed;
+        uint256 recipientLength = uint256(bytes32(depositData[32:64]));
+        uint256 pointer = 64 + recipientLength;
+        if (depositData.length > (pointer + 64)) {
+            uint256 gas = abi.decode(depositData[pointer:], (uint256));
+            maxFee += gas;
+        }
         uint256 desintationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
         if (desintationCoinPrice == 0) revert IncorrectPrice();
         Fee memory destFeeConfig = destinationFee[destinationDomainID];
 
-        uint256 txCost = destFeeConfig.gasPrice * _gasUsed * desintationCoinPrice / 1e18;
+        uint256 txCost = destFeeConfig.gasPrice * maxFee * desintationCoinPrice / 1e18;
         if(destFeeConfig.feeType == ProtocolFeeType.Fixed) {
             txCost += destFeeConfig.amount;
         } else if (destFeeConfig.feeType == ProtocolFeeType.Percentage) {

@@ -54,8 +54,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         address depositor,
         bytes   calldata data
     ) external override onlyBridge returns (bytes memory) {
-        uint256        amount;
-        (amount) = abi.decode(data, (uint));
+        uint256 amount;
+        (amount) = abi.decode(data, (uint256));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
@@ -84,8 +84,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        uint256      amount;
-        uint256      lenDestinationRecipientAddress;
+        uint256 amount;
+        uint256 lenDestinationRecipientAddress;
 
         (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint256, uint256));
         address recipientAddress = address(bytes20(bytes(data[64:64 + lenDestinationRecipientAddress])));
