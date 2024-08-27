@@ -79,6 +79,11 @@ module.exports = async function (deployer, network) {
   // setup fee router
   await bridgeInstance.adminChangeFeeHandler(feeRouterInstance.address);
 
+  await defaultMessageReceiverInstance.grantRole(
+    await defaultMessageReceiverInstance.SYGMA_HANDLER_ROLE(),
+    erc20HandlerInstance.address
+  );
+
   console.table({
     "Deployer Address": deployerAddress,
     "Domain ID": currentNetworkConfig.domainID,

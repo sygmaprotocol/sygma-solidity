@@ -22,6 +22,7 @@ module.exports = async function (deployer, network) {
   const feeRouterInstance = await FeeRouterContract.deployed();
   const basicFeeHandlerInstance = await BasicFeeHandlerContract.deployed();
   const percentageFeeHandlerInstance = await PercentageFeeHandlerContract.deployed();
+  const defaultMessageReceiverInstance = await DefaultMessageReceiverContract.deployed();
 
   if (currentNetworkConfig.access.feeHandlerAdmin) {
     console.log(
@@ -48,6 +49,22 @@ module.exports = async function (deployer, network) {
       currentNetworkConfig.access.feeRouterAdmin
     );
     await feeRouterInstance.renounceRole(
+      "0x00",
+      await Utils.getDeployerAddress(deployer)
+    );
+  }
+
+  if (currentNetworkConfig.access.defaultMessageReceiverAdmin) {
+    console.log(
+      "Renouncing default message receiver admin to %s",
+      currentNetworkConfig.access.defaultMessageReceiverAdmin
+    );
+
+    await defaultMessageReceiverInstance.grantRole(
+      "0x00",
+      currentNetworkConfig.access.defaultMessageReceiverAdmin
+    );
+    await defaultMessageReceiverInstance.renounceRole(
       "0x00",
       await Utils.getDeployerAddress(deployer)
     );

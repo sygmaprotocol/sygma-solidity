@@ -6,6 +6,7 @@
     "access": {
       "feeRouterAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",
       "feeHandlerAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",
+      "defaultMessageReceiverAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",
       "accessControl": {
         "0x80ae1c28": "0x695bd50CB07ffBd4098b272CE8b52B3c256ca049",
         "0xffaac0eb": "0x695bd50CB07ffBd4098b272CE8b52B3c256ca049",

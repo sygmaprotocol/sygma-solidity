@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../test/helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const DynamicFeeHandlerContract = artifacts.require("TwapNativeTokenFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
@@ -52,6 +53,7 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
   let QuoterInstance;
   let DynamicFeeHandlerInstance;
   let resourceID;
+  let DefaultMessageReceiverInstance;
   let ERC20HandlerInstance;
   let ERC20MintableInstance;
   let depositData;
@@ -68,8 +70,10 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
       ).then((instance) => (ERC20MintableInstance = instance))),
     ]);
 
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
     ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address

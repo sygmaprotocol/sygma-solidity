@@ -212,7 +212,8 @@ async function redeployHandler(
       erc20,
       bridgeInstance,
       handlerInstance,
-      newHandlerInstance
+      newHandlerInstance,
+      defaultMessageReceiverInstance
     );
   }
 }
@@ -222,7 +223,8 @@ async function migrateToNewTokenHandler(
   tokenConfig,
   bridgeInstance,
   handlerInstance,
-  newHandlerInstance
+  newHandlerInstance,
+  defaultMessageReceiverInstance
 ) {
   const tokenContractAddress = await handlerInstance._resourceIDToTokenContractAddress(
     tokenConfig.resourceID
@@ -236,8 +238,8 @@ async function migrateToNewTokenHandler(
     tokenConfig.decimals != "18" ? tokenConfig.decimals : emptySetResourceData
   );
 
-    if(tokenConfig.strategy === "mb"){
-      const erc20Instance = await ERC20PresetMinterPauser.at(tokenContractAddress);
+  if(tokenConfig.strategy === "mb") {
+    const erc20Instance = await ERC20PresetMinterPauser.at(tokenContractAddress);
 
     await erc20Instance.grantRole(
       await erc20Instance.MINTER_ROLE(),

@@ -6,6 +6,7 @@
     "access": {
       "feeRouterAdmin": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
       "feeHandlerAdmin": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
+      "defaultMessageReceiverAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",
       "accessControl": {
         "0x80ae1c28": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
         "0xffaac0eb": "0x8616909A3a1DbdA36cB3f145EE978dB70041e816",
@@ -67,6 +68,7 @@
     "access": {
       "feeRouterAdmin": "0xe9f23A8289764280697a03aC06795eA92a170e42",
       "feeHandlerAdmin": "0xe9f23A8289764280697a03aC06795eA92a170e42",
+      "defaultMessageReceiverAdmin": "0xde79695d5cefF7c324552B3ecbe6165f77FCdF53",
       "accessControl": {
         "0x80ae1c28": "0xe9f23A8289764280697a03aC06795eA92a170e42",
         "0xffaac0eb": "0xe9f23A8289764280697a03aC06795eA92a170e42",
