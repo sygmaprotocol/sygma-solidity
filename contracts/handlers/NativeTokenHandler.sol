@@ -136,7 +136,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         }
         (bool success, bytes memory result) =
             recipientAddress.excessivelySafeCall(gas, externalAmount, maxReturnBytes, recipientMessage);
-        if (!success && !_revert(result)) revert FailedFundsTransfer();
+        if (!success && !ExcessivelySafeCall.revertWith(result)) revert FailedFundsTransfer();
 
         emit FundsTransferred(recipientAddress, externalAmount);
 
@@ -179,19 +179,6 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
             uint8 externalTokenDecimals = uint8(bytes1(args));
             _setDecimals(contractAddress, externalTokenDecimals);
         }
-    }
-
-    /// @dev Inspired by OZ implementation.
-    function _revert(bytes memory _returnData) private pure returns(bool) {
-        // Look for revert reason and bubble it up if present
-        if (_returnData.length > 0) {
-            // The easiest way to bubble the revert reason is using memory via assembly
-            assembly {
-                let returndata_size := mload(_returnData)
-                revert(add(32, _returnData), returndata_size)
-            }
-        }
-        return false;
     }
 
     receive() external payable {}

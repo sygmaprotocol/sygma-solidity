@@ -22,6 +22,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
 
     enum OptionalMessageCheck { Absent, Valid, Invalid }
 
+    error OptionalMessageCallFailed();
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
@@ -137,7 +139,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
             );
             (bool success, bytes memory result) =
                 recipientAddress.excessivelySafeCall(gas, 0, maxReturnBytes, recipientMessage);
-            return abi.encode(tokenAddress, recipientAddress, amount, abi.encode(success, result));
+            if (!success && !ExcessivelySafeCall.revertWith(result)) revert OptionalMessageCallFailed();
+            return abi.encode(tokenAddress, recipientAddress, amount, result);
         }
 
         return abi.encode(tokenAddress, recipientAddress, amount);

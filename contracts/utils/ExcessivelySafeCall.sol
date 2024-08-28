@@ -107,4 +107,17 @@ library ExcessivelySafeCall {
         }
         return (_success, _returnData);
     }
+
+    /// @dev Inspired by OZ implementation.
+    function revertWith(bytes memory _returnData) internal pure returns(bool) {
+        // Look for revert reason and bubble it up if present
+        if (_returnData.length > 0) {
+            // The easiest way to bubble the revert reason is using memory via assembly
+            assembly {
+                let returndata_size := mload(_returnData)
+                revert(add(32, _returnData), returndata_size)
+            }
+        }
+        return false;
+    }
 }
