@@ -36,7 +36,7 @@ contract("Admin - [Frost]", (accounts) => {
 
     it("should revert when startFROSTREfresh is not called by the owner", async () => {
       await Helpers.reverts(
-        AdminInstance.startFROSTRefresh({from: accounts[1]}),
+        AdminInstance.startFROSTRefresh(publicKey, {from: accounts[2]}),
       )
     });
 })

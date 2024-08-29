@@ -11,7 +11,7 @@ contract("Admin - [Liqudity]", (accounts) => {
 
     const domainID = 1;
     const resourceID = "0x0000000000000000000000000000000000000000000000000000000000000650";
-    const recipient = "bc1qs0fcdq73vgurej48yhtupzcv83un2p5qhsje7n";
+    const recipient = "0x62633171733066636471373376677572656A343879687475707A63763833756E3270357168736A65376E";
     const amount = Ethers.utils.parseEther("1");
 
     beforeEach(async () => {
@@ -26,10 +26,10 @@ contract("Admin - [Liqudity]", (accounts) => {
 
       TruffleAssert.eventEmitted(tx, "TransferLiquidity", (event) => {
         return (
-            event.domainID === domainID &&
+            event.domainID == domainID &&
             event.resourceID === resourceID &&
-            event.amount === amount &&
-            event.destinationAddress === recipient
+            event.amount.toString() == amount.toString() &&
+            event.destinationAddress === recipient.toLowerCase()
         )
       });
     });

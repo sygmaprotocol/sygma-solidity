@@ -9,7 +9,7 @@ contract Admin is Ownable {
 
     event StartedFROSTKeygen();
     event StartedFROSTRefresh(string publicKey);
-    event TransferLiquidity(uint8 domainID, bytes32 resourceID, uint256 amount, bytes32 destinationAddress);
+    event TransferLiquidity(uint8 domainID, bytes32 resourceID, uint256 amount, bytes destinationAddress);
 
     /**
        @notice Emits {StartedFROSTKeygen} event
@@ -35,7 +35,7 @@ contract Admin is Ownable {
         @param amount amount of tokens to be moved
         @param destinationAddress destination address where the tokens should end up
      */
-    function transferLiquidity(uint8 domainID, bytes32 resourceID, uint256 amount, bytes32 destinationAddress) public onlyOwner { 
+    function transferLiquidity(uint8 domainID, bytes32 resourceID, uint256 amount, bytes calldata destinationAddress) public onlyOwner { 
         emit TransferLiquidity(domainID, resourceID, amount, destinationAddress); 
     }
 }
