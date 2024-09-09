@@ -10,6 +10,8 @@ import "../interfaces/ISygmaMessageReceiver.sol";
     @author ChainSafe Systems.
  */
 contract DepositDataHelper is ERCHandlerHelpers {
+    using SanityChecks for *;
+
     address public immutable _defaultMessageReceiver;
     uint16 internal constant maxReturnBytes = 256;
     address internal constant transformRecipient = address(0);
@@ -54,13 +56,14 @@ contract DepositDataHelper is ERCHandlerHelpers {
         uint256 lenDestinationRecipientAddress;
 
         (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint256, uint256));
-        address recipientAddress = address(bytes20(bytes(data[64:64 + lenDestinationRecipientAddress])));
+        lenDestinationRecipientAddress.mustBe(20);
+        address recipientAddress = address(bytes20(bytes(data[64:84])));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         uint256 externalAmount = convertToExternalBalance(tokenAddress, amount);
 
         // Optional message recipient transformation.
-        uint256 pointer = 64 + lenDestinationRecipientAddress;
+        uint256 pointer = 84;
         uint256 gas;
         uint256 messageLength;
         bytes memory message;

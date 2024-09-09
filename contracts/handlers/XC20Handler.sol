@@ -72,7 +72,8 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         bytes  memory destinationRecipientAddress;
 
         (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
-        destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
+        lenDestinationRecipientAddress.mustBe(20);
+        destinationRecipientAddress = bytes(data[64:84]);
 
         bytes20 recipientAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];

@@ -92,7 +92,8 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         bytes memory metaData;
 
         (tokenID, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
-        offsetMetaData = 64 + lenDestinationRecipientAddress;
+        lenDestinationRecipientAddress.mustBe(20);
+        offsetMetaData = 84;
         destinationRecipientAddress = bytes(data[64:offsetMetaData]);
         lenMetaData = abi.decode(data[offsetMetaData:], (uint));
         metaData = bytes(data[offsetMetaData + 32:offsetMetaData + 32 + lenMetaData]);

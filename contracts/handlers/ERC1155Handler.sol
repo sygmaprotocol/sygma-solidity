@@ -71,6 +71,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
 
         (tokenIDs, amounts, recipient, transferData) = abi.decode(data, (uint[], uint[], bytes, bytes));
 
+        recipient.length.mustBe(20);
         bytes20 recipientAddress;
 
         assembly {
