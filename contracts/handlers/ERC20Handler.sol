@@ -14,6 +14,7 @@ import "../utils/ExcessivelySafeCall.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Safe {
+    using SanityChecks for *;
     using ExcessivelySafeCall for address;
 
     error OptionalMessageCallFailed();
@@ -117,6 +118,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
 
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         releaseERC20(tokenAddress, recipient, amount);
     }
 
@@ -131,6 +133,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
                     or has a first byte set to the uint8 decimals value of the token contract.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        contractAddress.mustNotBeZero();
         _setResource(resourceID, contractAddress);
 
         if (args.length > 0) {

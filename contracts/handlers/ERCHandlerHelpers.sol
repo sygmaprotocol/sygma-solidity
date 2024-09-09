@@ -3,6 +3,7 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IERCHandler.sol";
+import "../utils/SanityChecks.sol";
 
 /**
     @title Function used across handler contracts.

@@ -12,7 +12,9 @@ import "../XC20Safe.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
-        /**
+    using SanityChecks for *;
+
+    /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(
@@ -104,6 +106,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
 
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         releaseERC20(tokenAddress, recipient, amount);
     }
 
@@ -116,6 +119,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         @param args Additional data to be passed to specified handler.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        contractAddress.mustNotBeZero();
         _setResource(resourceID, contractAddress);
 
         uint8 externalTokenDecimals = uint8(bytes1(args));

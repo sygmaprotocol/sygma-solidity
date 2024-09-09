@@ -14,6 +14,7 @@ import "../utils/ExcessivelySafeCall.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
+    using SanityChecks for *;
     using ExcessivelySafeCall for address;
 
     uint256 internal constant defaultGas = 50000;
@@ -123,6 +124,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
         if (address(this).balance <= amount) revert InsufficientBalance();
         (, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         (bool success, ) = address(recipient).call{value: amount}("");
         if(!success) revert FailedFundsTransfer();
         emit Withdrawal(recipient, amount);

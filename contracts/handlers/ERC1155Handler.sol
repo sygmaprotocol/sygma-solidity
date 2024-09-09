@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
 
 contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Holder {
+    using SanityChecks for *;
     using ERC165Checker for address;
 
     bytes private constant EMPTY_BYTES = "";
@@ -101,6 +102,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
 
         (tokenAddress, recipient, tokenIDs, amounts, transferData) = abi.decode(data, (address, address, uint[], uint[], bytes));
 
+        recipient.mustNotBeZero();
         releaseBatchERC1155(tokenAddress, address(this), recipient, tokenIDs, amounts, transferData);
     }
 
