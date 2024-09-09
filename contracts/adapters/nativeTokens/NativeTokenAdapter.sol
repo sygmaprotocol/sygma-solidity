@@ -37,6 +37,19 @@ contract NativeTokenAdapter {
         depositGeneral(destinationDomainID, depositData);
     }
 
+    /**
+        @notice Makes a native token deposit with an included message.
+        @param destinationDomainID ID of destination chain.
+        @param recipient The destination chain contract address that implements the ISygmaMessageReceiver interface.
+                         If the recipient is set to zero address then it will be replaced on the destination with
+                         the address of the DefaultMessageReceiver which is a generic ISygmaMessageReceiver implementation.
+        @param gas The amount of gas needed to successfully execute the call to recipient on the destination. Fee amount is
+                   directly affected by this value.
+        @param message Arbitrary encoded bytes array that will be passed as the third argument in the
+                       ISygmaMessageReceiver(recipient).handleSygmaMessage(_, _, message) call. If you intend to use the
+                       DefaultMessageReceiver, make sure to encode the message to comply with the
+                       DefaultMessageReceiver.handleSygmaMessage() message decoding implementation.
+     */
     function depositToEVMWithMessage(uint8 destinationDomainID, address recipient, uint256 gas, bytes calldata message) external payable {
         if (gas == 0) revert ZeroGas();
         bytes memory depositData = abi.encodePacked(
