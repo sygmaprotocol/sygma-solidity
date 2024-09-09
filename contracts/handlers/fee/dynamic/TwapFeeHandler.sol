@@ -134,9 +134,13 @@ abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
 
     /**
         @notice Sets the fee properties.
-        @param gasUsed Gas used for transfer.
+        @param gasUsed Default gas used for proposal execution in the destination.
      */
     function setFeeProperties(uint32 gasUsed) external onlyAdmin {
+        _setFeeProperties(gasUsed);
+    }
+
+    function _setFeeProperties(uint32 gasUsed) internal {
         _gasUsed = gasUsed;
         emit FeePropertySet(gasUsed);
     }

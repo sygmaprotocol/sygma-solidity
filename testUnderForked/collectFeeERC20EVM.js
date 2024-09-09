@@ -80,7 +80,8 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
     );
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
-      FeeHandlerRouterInstance.address
+      FeeHandlerRouterInstance.address,
+      0
     );
 
     resourceID = Helpers.createResourceID(

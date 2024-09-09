@@ -101,7 +101,8 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
     );
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
-      FeeHandlerRouterInstance.address
+      FeeHandlerRouterInstance.address,
+      0
     );
     FeeHandlerRouterInstance.adminSetResourceHandler(
       destinationDomainID,

@@ -30,15 +30,6 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
     error ActionFailed();
     error InsufficientNativeBalance();
     error ReturnNativeLeftOverFailed();
-
-    event ActionPerformed(
-        bytes32 transactionId,
-        address target,
-        address tokenSend,
-        address tokenReceive,
-        uint256 toAmount,
-        uint256 timestamp
-    );
     
     event Executed(
         bytes32 transactionId,
@@ -92,6 +83,11 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
         if (cacheGasLeft < _recoverGas) revert InsufficientGasLimit();
         
         uint256 startingNativeBalance = address(this).balance - msg.value;
+        /// We are wrapping the Actions processing in new call in order to be
+        /// able to recover, ie. send funds to the receiver, in case of fail or
+        /// running out of gas. Otherwise we can only revert whole execution
+        /// which would result in the need to manually process proposal resolution
+        /// to unstuck the assets.
         try this.performActions{gas: cacheGasLeft - _recoverGas}(
             tokenSent,
             receiver,
@@ -121,6 +117,7 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
         }
     }
 
+    /// @dev See the comment inside of the _execute() function.
     function performActions(
         address tokenSent,
         address payable receiver,

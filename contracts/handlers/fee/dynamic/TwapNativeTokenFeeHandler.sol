@@ -14,8 +14,14 @@ contract TwapNativeTokenFeeHandler is TwapFeeHandler {
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
+        @param gasUsed Default gas used for proposal execution in the destination.
      */
-    constructor(address bridgeAddress, address feeHandlerRouterAddress) TwapFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
+    constructor(
+        address bridgeAddress,
+        address feeHandlerRouterAddress,
+        uint32 gasUsed
+    ) TwapFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
+        _setFeeProperties(gasUsed);
     }
 
     /**
@@ -33,11 +39,11 @@ contract TwapNativeTokenFeeHandler is TwapFeeHandler {
             uint256 gas = abi.decode(depositData[pointer:], (uint256));
             maxFee += gas;
         }
-        uint256 desintationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
-        if (desintationCoinPrice == 0) revert IncorrectPrice();
+        uint256 destinationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
+        if (destinationCoinPrice == 0) revert IncorrectPrice();
         Fee memory destFeeConfig = destinationFee[destinationDomainID];
 
-        uint256 txCost = destFeeConfig.gasPrice * maxFee * desintationCoinPrice / 1e18;
+        uint256 txCost = destFeeConfig.gasPrice * maxFee * destinationCoinPrice / 1e18;
         if(destFeeConfig.feeType == ProtocolFeeType.Fixed) {
             txCost += destFeeConfig.amount;
         } else if (destFeeConfig.feeType == ProtocolFeeType.Percentage) {

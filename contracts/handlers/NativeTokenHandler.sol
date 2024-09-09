@@ -5,6 +5,7 @@ pragma solidity 0.8.11;
 import "../interfaces/IHandler.sol";
 import "../interfaces/ISygmaMessageReceiver.sol";
 import "./ERCHandlerHelpers.sol";
+import "./DepositDataHelper.sol";
 import "../utils/ExcessivelySafeCall.sol";
 
 /**
@@ -12,27 +13,23 @@ import "../utils/ExcessivelySafeCall.sol";
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
+contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
     using ExcessivelySafeCall for address;
 
-    uint16 internal constant maxReturnBytes = 256;
-    address internal constant transformRecipient = address(0);
     uint256 internal constant defaultGas = 50000;
     address public immutable _nativeTokenAdapterAddress;
-    address public immutable _defaultMessageReceiver;
-
-    enum OptionalMessageCheck { Absent, Valid, Invalid }
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
+        @param nativeTokenAdapterAddress Contract address of previously deployed NativeTokenAdapter.
+        @param defaultMessageReceiver Contract address of previously deployed DefaultMessageReceiver.
      */
     constructor(
         address bridgeAddress,
         address nativeTokenAdapterAddress,
         address defaultMessageReceiver
-    ) ERCHandlerHelpers(bridgeAddress) {
+    ) DepositDataHelper(bridgeAddress, defaultMessageReceiver) {
         _nativeTokenAdapterAddress = nativeTokenAdapterAddress;
-        _defaultMessageReceiver = defaultMessageReceiver;
     }
 
     event Withdrawal(address recipient, uint256 amount);
@@ -87,60 +84,28 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        uint256 amount;
-        uint256 lenDestinationRecipientAddress;
+        DepositData memory depositData = parseDepositData(resourceID, data);
 
-        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint256, uint256));
-        address recipientAddress = address(bytes20(bytes(data[64:64 + lenDestinationRecipientAddress])));
-
-        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-
-        // Optional message recipient transformation.
-        uint256 pointer = 64 + lenDestinationRecipientAddress;
-        uint256 gas;
-        uint256 messageLength;
-        OptionalMessageCheck optionalMessageCheck;
-        if (data.length > (pointer + 64)) {
-            (gas, messageLength) = abi.decode(data[pointer:], (uint256, uint256));
-            pointer += 64;
-            if (gas > 0 && messageLength > 0 && (messageLength + pointer) <= data.length) {
-                optionalMessageCheck = OptionalMessageCheck.Valid;
-                if (recipientAddress == transformRecipient) {
-                    recipientAddress = _defaultMessageReceiver;
-                }
-            } else {
-                gas = defaultGas;
-                optionalMessageCheck = OptionalMessageCheck.Invalid;
-            }
+        if (depositData.optionalMessageCheck == OptionalMessageCheck.Invalid) {
+            return depositData.message;
         }
 
-        if (optionalMessageCheck == OptionalMessageCheck.Invalid) {
-            return abi.encode(
-                tokenAddress,
-                recipientAddress,
-                amount,
-                abi.encode(false, abi.encodeWithSignature("InvalidEncoding()"))
-            );
+        if (depositData.gas == 0) {
+            depositData.gas = defaultGas;
         }
 
-        uint256 externalAmount = convertToExternalBalance(tokenAddress, amount);
-        bytes memory recipientMessage = "";
-        if (optionalMessageCheck == OptionalMessageCheck.Valid) {
-            bytes memory message = bytes(data[pointer:pointer + messageLength]);
-            recipientMessage = abi.encodeWithSelector(
-                ISygmaMessageReceiver(recipientAddress).handleSygmaMessage.selector,
-                tokenAddress,
-                externalAmount,
-                message
-            );
-        }
         (bool success, bytes memory result) =
-            recipientAddress.excessivelySafeCall(gas, externalAmount, maxReturnBytes, recipientMessage);
+            depositData.recipientAddress.excessivelySafeCall(
+                depositData.gas,
+                depositData.externalAmount,
+                maxReturnBytes,
+                depositData.message
+            );
         if (!success && !ExcessivelySafeCall.revertWith(result)) revert FailedFundsTransfer();
 
-        emit FundsTransferred(recipientAddress, externalAmount);
+        emit FundsTransferred(depositData.recipientAddress, depositData.externalAmount);
 
-        return abi.encode(tokenAddress, address(recipientAddress), amount);
+        return abi.encode(depositData.tokenAddress, depositData.recipientAddress, depositData.amount);
     }
 
     /**
