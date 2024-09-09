@@ -41,7 +41,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
         optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
-        @return an empty data.
+        @return bytes representation of the uint256 amount that was deposited, with bridge's defaultDecimals.
      */
     function deposit(
         bytes32 resourceID,
@@ -127,7 +127,8 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
         Sets decimals value for contractAddress if value is provided in args.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param args Additional data to be passed to specified handler.
+        @param args Byte array which is either empty if the token contract decimals are the same as the bridge defaultDecimals,
+                    or has a first byte set to the uint8 decimals value of the token contract.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
         _setResource(resourceID, contractAddress);

@@ -31,7 +31,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         destinationRecipientAddress                 bytes       bytes  64 - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
-        @return an empty data.
+        @return bytes representation of the uint256 amount that was deposited, with bridge's defaultDecimals.
      */
     function deposit(
         bytes32 resourceID,
