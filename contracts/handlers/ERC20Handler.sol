@@ -61,7 +61,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
             lockERC20(tokenAddress, depositor, address(this), amount);
         }
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**

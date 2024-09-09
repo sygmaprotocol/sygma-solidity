@@ -113,18 +113,19 @@ contract ERCHandlerHelpers is IERCHandler {
         @notice Converts token amount based on decimal places difference from current network to bridge.
         @param tokenAddress Address of contract to be used when executing proposals.
         @param amount The token amount with decimals on the current network.
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
     */
-    function convertToInternalBalance(address tokenAddress, uint256 amount) internal view returns(uint256) {
+    function convertToInternalBalance(address tokenAddress, uint256 amount) internal view returns(bytes memory) {
         Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
         uint256 convertedBalance;
         if (!decimals.isSet) {
-            convertedBalance = amount;
+            return "";
         } else if (decimals.externalDecimals >= defaultDecimals) {
             convertedBalance = amount / (10 ** (decimals.externalDecimals - defaultDecimals));
         } else {
             convertedBalance = amount * (10 ** (defaultDecimals - decimals.externalDecimals));
         }
 
-        return convertedBalance;
+        return abi.encodePacked(convertedBalance);
     }
 }

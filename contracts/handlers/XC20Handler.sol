@@ -52,7 +52,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
             lockERC20(tokenAddress, depositor, address(this), amount);
         }
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**

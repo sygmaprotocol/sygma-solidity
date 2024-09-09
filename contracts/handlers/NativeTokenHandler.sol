@@ -67,7 +67,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**
