@@ -149,10 +149,10 @@ contract("XC20Handler - [Deposit ERC20]", async (accounts) => {
 
   it(`When non-contract addresses are whitelisted in the handler,
       deposits which the addresses are set as a token address will be failed`, async () => {
-    const ZERO_Address = "0x0000000000000000000000000000000000000000";
+    const NonContract_Address = "0x0000000000000000000000000000000000001111";
     const EOA_Address = accounts[1];
-    const resourceID_ZERO_Address = Helpers.createResourceID(
-      ZERO_Address,
+    const resourceID_NonContract_Address = Helpers.createResourceID(
+      NonContract_Address,
       originDomainID
     );
     const resourceID_EOA_Address = Helpers.createResourceID(
@@ -161,8 +161,8 @@ contract("XC20Handler - [Deposit ERC20]", async (accounts) => {
     );
     await BridgeInstance.adminSetResource(
       XC20HandlerInstance.address,
-      resourceID_ZERO_Address,
-      ZERO_Address,
+      resourceID_NonContract_Address,
+      NonContract_Address,
       emptySetResourceData
     );
     await BridgeInstance.adminSetResource(
@@ -178,7 +178,7 @@ contract("XC20Handler - [Deposit ERC20]", async (accounts) => {
     await Helpers.reverts(
       BridgeInstance.deposit(
         destinationDomainID,
-        resourceID_ZERO_Address,
+        resourceID_NonContract_Address,
         Helpers.createERCDepositData(
           tokenAmount,
           lenRecipientAddress,
