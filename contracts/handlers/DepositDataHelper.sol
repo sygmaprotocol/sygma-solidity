@@ -6,9 +6,8 @@ import "./ERCHandlerHelpers.sol";
 import "../interfaces/ISygmaMessageReceiver.sol";
 
 /**
-    @title Function used across handler contracts.
+    @title Contract to simplify parsing of deposit data with an optional message.
     @author ChainSafe Systems.
-    @notice This contract is intended to be used with the Bridge contract.
  */
 contract DepositDataHelper is ERCHandlerHelpers {
     address public immutable _defaultMessageReceiver;
