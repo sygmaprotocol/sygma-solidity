@@ -53,7 +53,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
         optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
         optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
         optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
-        @return bytes representation of the uint256 amount that was deposited, with bridge's defaultDecimals.
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
      */
     function deposit(
         bytes32 resourceID,
