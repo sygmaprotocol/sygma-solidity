@@ -57,6 +57,18 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
         }
     }
 
+    /**
+        @notice Users have to understand the design and limitations behind the Actions processing.
+        The contract will try to return all the leftover tokens and native token to the
+        receiver address. This logic is applied to the native token if there was a balance
+        increase during the message processing, then to the tokenSent which is received from
+        Sygma proposal and finally to every Action.tokenReceive. In the vast majority of
+        cases that would be enough, though user can come up with a scenario where an Action
+        produces results in a receival of more than one token, while only one could be
+        specified in this particular Action.tokenReceive property. In such a case it is
+        a users responsibility to either send it all with a transferBalanceAciton() Action or to
+        include an extra action[s] with tokenReceive set to each of the tokens received.
+     */
     function handleSygmaMessage(
         address tokenSent,
         uint256 amount,
@@ -128,7 +140,8 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
 
         uint256 numActions = actions.length;
         for (uint256 i = 0; i < numActions; i++) {
-            if (!isContract(actions[i].callTo)) revert InvalidContract();
+            // Allow EOA if the data is empty. Could be used to send native currency.
+            if (!isContract(actions[i].callTo) && actions[i].data.length > 0) revert InvalidContract();
             uint256 nativeValue = actions[i].nativeValue;
             if (nativeValue > 0 && address(this).balance < nativeValue) {
                 revert InsufficientNativeBalance();
@@ -167,6 +180,17 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
             if (tokenBalance > 0) {
                 SafeERC20.safeTransfer(IERC20(token), receiver, tokenBalance);
             }
+        }
+    }
+
+    /// @notice Helper function that could be used as an Action to itself to transfer whole
+    /// @notice balance of a particular token.
+    function transferBalanceAciton(address token, address receiver) external {
+        if (msg.sender != address(this)) revert InsufficientPermission();
+        if (token != zeroAddress) {
+            transferBalance(token, receiver);
+        } else {
+            transferNativeBalance(payable(receiver));
         }
     }
 
