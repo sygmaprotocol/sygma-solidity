@@ -66,7 +66,7 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
         cases that would be enough, though user can come up with a scenario where an Action
         produces results in a receival of more than one token, while only one could be
         specified in this particular Action.tokenReceive property. In such a case it is
-        a users responsibility to either send it all with a transferBalanceAciton() Action or to
+        a users responsibility to either send it all with a transferBalanceAction() Action or to
         include an extra action[s] with tokenReceive set to each of the tokens received.
      */
     function handleSygmaMessage(
@@ -185,7 +185,7 @@ contract DefaultMessageReceiver is ISygmaMessageReceiver, AccessControl, ERC721H
 
     /// @notice Helper function that could be used as an Action to itself to transfer whole
     /// @notice balance of a particular token.
-    function transferBalanceAciton(address token, address receiver) external {
+    function transferBalanceAction(address token, address receiver) external {
         if (msg.sender != address(this)) revert InsufficientPermission();
         if (token != zeroAddress) {
             transferBalance(token, receiver);
