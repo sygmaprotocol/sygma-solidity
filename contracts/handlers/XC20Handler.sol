@@ -12,7 +12,9 @@ import "../XC20Safe.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
-        /**
+    using SanityChecks for *;
+
+    /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(
@@ -31,7 +33,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         destinationRecipientAddress                 bytes       bytes  64 - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
-        @return an empty data.
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
      */
     function deposit(
         bytes32 resourceID,
@@ -50,7 +52,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
             lockERC20(tokenAddress, depositor, address(this), amount);
         }
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**
@@ -70,7 +72,8 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         bytes  memory destinationRecipientAddress;
 
         (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
-        destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
+        lenDestinationRecipientAddress.mustBe(20);
+        destinationRecipientAddress = bytes(data[64:84]);
 
         bytes20 recipientAddress;
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
@@ -104,6 +107,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
 
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         releaseERC20(tokenAddress, recipient, amount);
     }
 
@@ -116,6 +120,7 @@ contract XC20Handler is IHandler, ERCHandlerHelpers, XC20Safe {
         @param args Additional data to be passed to specified handler.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        contractAddress.mustNotBeZero();
         _setResource(resourceID, contractAddress);
 
         uint8 externalTokenDecimals = uint8(bytes1(args));

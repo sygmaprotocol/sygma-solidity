@@ -127,20 +127,18 @@ contract("TwapGenericFeeHandler - [collectFee]", async (accounts) => {
     );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
 
-    await Promise.all([
-        BridgeInstance.adminSetResource(
-          GmpHandlerInstance.address,
-          resourceID,
-          TestStoreInstance.address,
-          emptySetResourceData
-        ),
-        BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
-        FeeHandlerRouterInstance.adminSetResourceHandler(
-          destinationDomainID,
-          resourceID,
-          DynamicFeeHandlerInstance.address
-        ),
-    ]);
+    await BridgeInstance.adminSetResource(
+      GmpHandlerInstance.address,
+      resourceID,
+      TestStoreInstance.address,
+      emptySetResourceData
+    );
+    await BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address);
+    await FeeHandlerRouterInstance.adminSetResourceHandler(
+      destinationDomainID,
+      resourceID,
+      DynamicFeeHandlerInstance.address
+    );
 
     depositData = Helpers.createGmpDepositData(
         depositFunctionSignature,

@@ -14,6 +14,7 @@ import "../utils/ExcessivelySafeCall.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Safe {
+    using SanityChecks for *;
     using ExcessivelySafeCall for address;
 
     error OptionalMessageCallFailed();
@@ -41,7 +42,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
         optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
-        @return an empty data.
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
      */
     function deposit(
         bytes32 resourceID,
@@ -60,7 +61,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
             lockERC20(tokenAddress, depositor, address(this), amount);
         }
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**
@@ -117,6 +118,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
 
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         releaseERC20(tokenAddress, recipient, amount);
     }
 
@@ -127,9 +129,11 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
         Sets decimals value for contractAddress if value is provided in args.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param args Additional data to be passed to specified handler.
+        @param args Byte array which is either empty if the token contract decimals are the same as the bridge defaultDecimals,
+                    or has a first byte set to the uint8 decimals value of the token contract.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        contractAddress.mustNotBeZero();
         _setResource(resourceID, contractAddress);
 
         if (args.length > 0) {

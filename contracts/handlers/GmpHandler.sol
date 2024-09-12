@@ -3,6 +3,7 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
+import "../utils/SanityChecks.sol";
 
 /**
     @title Handles generic deposits and deposit executions.
@@ -10,6 +11,8 @@ import "../interfaces/IHandler.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract GmpHandler is IHandler {
+    using SanityChecks for *;
+
     uint256 public constant MAX_FEE = 1000000;
 
     address public immutable _bridgeAddress;
@@ -165,10 +168,13 @@ contract GmpHandler is IHandler {
 
         maxFee                            = uint256(bytes32(data[:pointer += 32])); 
         lenExecuteFuncSignature           = uint16(bytes2(data[pointer:pointer += 2]));
+        lenExecuteFuncSignature.mustBe(4);
         executeFuncSignature              = bytes4(data[pointer:pointer += lenExecuteFuncSignature]);
         lenExecuteContractAddress         = uint8(bytes1(data[pointer:pointer += 1]));
+        lenExecuteContractAddress.mustBe(20);
         executeContractAddress            = address(uint160(bytes20(data[pointer:pointer += lenExecuteContractAddress])));
         lenExecutionDataDepositor         = uint8(bytes1(data[pointer:pointer += 1]));
+        lenExecutionDataDepositor.mustBe(20);
         executionDataDepositor            = address(uint160(bytes20(data[pointer:pointer += lenExecutionDataDepositor])));
         executionData                     = bytes(data[pointer:]);
 

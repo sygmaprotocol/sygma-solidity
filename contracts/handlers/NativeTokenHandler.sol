@@ -14,6 +14,7 @@ import "../utils/ExcessivelySafeCall.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
+    using SanityChecks for *;
     using ExcessivelySafeCall for address;
 
     uint256 internal constant defaultGas = 50000;
@@ -52,7 +53,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
         optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
         optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
         optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
-        @return deposit amount internal representation.
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
      */
     function deposit(
         bytes32 resourceID,
@@ -66,7 +67,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**
@@ -123,6 +124,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
         if (address(this).balance <= amount) revert InsufficientBalance();
         (, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         (bool success, ) = address(recipient).call{value: amount}("");
         if(!success) revert FailedFundsTransfer();
         emit Withdrawal(recipient, amount);

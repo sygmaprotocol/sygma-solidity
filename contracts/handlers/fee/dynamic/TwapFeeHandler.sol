@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "../../../interfaces/IFeeHandler.sol";
 import "../../../interfaces/IERCHandler.sol";
 import "../../../interfaces/IBridge.sol";
+import "../../../utils/SanityChecks.sol";
 import "./TwapOracle.sol";
 
 /**
@@ -16,6 +17,8 @@ import "./TwapOracle.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
+    using SanityChecks for *;
+
     address public immutable _bridgeAddress;
     address public immutable _feeHandlerRouterAddress;
 
@@ -191,6 +194,7 @@ abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
     function transferFee(address payable[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
         require(addrs.length == amounts.length, "addrs[], amounts[]: diff length");
         for (uint256 i = 0; i < addrs.length; i++) {
+            addrs[i].mustNotBeZero();
             (bool success,) = addrs[i].call{value: amounts[i]}("");
             require(success, "Fee ether transfer failed");
             emit FeeDistributed(address(0), addrs[i], amounts[i]);
