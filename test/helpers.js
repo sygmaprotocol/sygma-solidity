@@ -408,6 +408,39 @@ const passes = async function(promise) {
   }
 }
 
+// eslint-disable-next-line max-len
+const ACTIONS_ARRAY_ABI = "tuple(uint256 nativeValue, address callTo, address approveTo, address tokenSend, address tokenReceive, bytes data)[]";
+
+const createMessageCallData = function(transactionId, actions, receiver) {
+  return abiEncode(
+    ["bytes32", ACTIONS_ARRAY_ABI, "address"],
+    [
+      transactionId,
+      actions.map(action => [
+        action.nativeValue,
+        action.callTo,
+        action.approveTo,
+        action.tokenSend,
+        action.tokenReceive,
+        action.data,
+      ]),
+      receiver
+    ]
+  )
+}
+
+const createOptionalContractCallDepositData = function(amount, recipient, executionGasAmount, message) {
+  return (
+    "0x" +
+    toHex(amount, 32).substr(2) + // uint256
+    toHex(recipient.substr(2).length / 2, 32).substr(2) + // uint256
+    recipient.substr(2) + // bytes
+    toHex(executionGasAmount, 32).substr(2) + // uint256
+    toHex(message.substr(2).length / 2, 32).substr(2) + // uint256
+    message.substr(2) // bytes
+  )
+}
+
 module.exports = {
   advanceBlock,
   advanceTime,
@@ -442,4 +475,6 @@ module.exports = {
   expectToRevertWithCustomError,
   reverts,
   passes,
+  createMessageCallData,
+  createOptionalContractCallDepositData
 };
