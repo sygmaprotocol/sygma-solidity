@@ -38,6 +38,7 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
   let FeeHandlerRouterInstance;
   let NativeTokenAdapterInstance;
   let ERC20MintableInstance;
+  let message;
 
   beforeEach(async () => {
     await Promise.all([
@@ -83,7 +84,22 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
       destinationDomainID,
       resourceID,
       BasicFeeHandlerInstance.address
-    ),
+    );
+
+    const mintableERC20Iface = new Ethers.utils.Interface(["function mint(address to, uint256 amount)"]);
+    const actions = [{
+      nativeValue: 0,
+      callTo: ERC20MintableInstance.address,
+      approveTo: NativeTokenHandlerInstance.address,
+      tokenSend: ERC20MintableInstance.address,
+      tokenReceive: ERC20MintableInstance.address,
+      data: mintableERC20Iface.encodeFunctionData("mint", [evmRecipientAddress, "20"]),
+    }];
+    message = Helpers.createMessageCallData(
+      transactionId,
+      actions,
+      DefaultMessageReceiverInstance.address
+    );
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -116,21 +132,6 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
   });
 
   it("Native token deposit to EVM with message can be made", async () => {
-    const mintableERC20Iface = new Ethers.utils.Interface(["function mint(address to, uint256 amount)"]);
-    const actions = [{
-      nativeValue: Ethers.utils.parseEther("0.1"),
-      callTo: ERC20MintableInstance.address,
-      approveTo: NativeTokenHandlerInstance.address,
-      tokenSend: ERC20MintableInstance.address,
-      tokenReceive: ERC20MintableInstance.address,
-      data: mintableERC20Iface.encodeFunctionData("mint", [evmRecipientAddress, "20"]),
-    }];
-    const message = Helpers.createMessageCallData(
-      transactionId,
-      actions,
-      DefaultMessageReceiverInstance.address
-    );
-
     await TruffleAssert.passes(
       await NativeTokenAdapterInstance.depositToEVMWithMessage(
         destinationDomainID,
@@ -234,6 +235,38 @@ contract("Bridge - [deposit - native token]", async (accounts) => {
         from: depositorAddress,
         value: depositAmount
       })
+    );
+  });
+
+  it("Should revert if execution gas provided is 0", async () => {
+    const invalidExecutionGasAmount = 0;
+    await Helpers.expectToRevertWithCustomError(
+      NativeTokenAdapterInstance.depositToEVMWithMessage.call(
+        destinationDomainID,
+        Ethers.constants.AddressZero,
+        invalidExecutionGasAmount,
+        message,
+        {
+          from: depositorAddress,
+          value: depositAmount,
+        }
+      ),
+      "ZeroGas()"
+    );
+  });
+
+  it("Should revert if msg.value is 0", async () => {
+    await Helpers.expectToRevertWithCustomError(
+      NativeTokenAdapterInstance.depositToEVMWithMessage.call(
+        destinationDomainID,
+        Ethers.constants.AddressZero,
+        executionGasAmount,
+        message,
+        {
+          from: depositorAddress,
+        }
+      ),
+      "InsufficientMsgValueAmount(uint256)"
     );
   });
 });

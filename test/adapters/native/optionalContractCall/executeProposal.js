@@ -18,7 +18,7 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
   const destinationDomainID = 2;
   const adminAddress = accounts[0];
   const depositorAddress = accounts[1];
-  const recipientAddress = accounts[2];
+  const evmRecipientAddress = accounts[2];
   const relayer1Address = accounts[3];
 
   const expectedDepositNonce = 1;
@@ -104,12 +104,12 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
       approveTo: DefaultMessageReceiverInstance.address,
       tokenSend: ERC20MintableInstance.address,
       tokenReceive: Ethers.constants.AddressZero,
-      data: mintableERC20Iface.encodeFunctionData("mint", [recipientAddress, "20"]),
+      data: mintableERC20Iface.encodeFunctionData("mint", [evmRecipientAddress, "20"]),
     }]
     message = Helpers.createMessageCallData(
       transactionId,
       actions,
-      recipientAddress
+      evmRecipientAddress
     );
 
     depositProposalData = Helpers.createOptionalContractCallDepositData(
@@ -165,8 +165,8 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
       })
     );
 
-    const recipientNativeBalanceBefore = await web3.eth.getBalance(recipientAddress);
-    const recipientERC20BalanceBefore = await ERC20MintableInstance.balanceOf(recipientAddress);
+    const recipientNativeBalanceBefore = await web3.eth.getBalance(evmRecipientAddress);
+    const recipientERC20BalanceBefore = await ERC20MintableInstance.balanceOf(evmRecipientAddress);
     const defaultReceiverBalanceBefore = await web3.eth.getBalance(DefaultMessageReceiverInstance.address);
 
     await TruffleAssert.passes(
@@ -185,8 +185,8 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
     );
 
     // check that tokens are transferred to recipient address
-    const recipientNativeBalanceAfter = await web3.eth.getBalance(recipientAddress);
-    const recipientERC20BalanceAfter = await ERC20MintableInstance.balanceOf(recipientAddress);
+    const recipientNativeBalanceAfter = await web3.eth.getBalance(evmRecipientAddress);
+    const recipientERC20BalanceAfter = await ERC20MintableInstance.balanceOf(evmRecipientAddress);
     const defaultReceiverBalanceAfter = await web3.eth.getBalance(DefaultMessageReceiverInstance.address);
 
     assert.strictEqual(
@@ -259,7 +259,7 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
       })
     );
 
-    const recipientBalanceBefore = await web3.eth.getBalance(recipientAddress);
+    const recipientBalanceBefore = await web3.eth.getBalance(evmRecipientAddress);
 
     const proposalTx = await BridgeInstance.executeProposal(
       proposal,
@@ -292,7 +292,7 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
 
 
     // check that tokens are transferred to recipient address
-    const recipientBalanceAfter = await web3.eth.getBalance(recipientAddress);
+    const recipientBalanceAfter = await web3.eth.getBalance(evmRecipientAddress);
     assert.strictEqual(transferredAmount.add(recipientBalanceBefore).toString(), recipientBalanceAfter);
   });
 
@@ -324,5 +324,86 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
       }),
       "InvalidProposalSigner()"
     );
+  });
+
+  it("should revert if handler does not have SYGMA_HANDLER_ROLE", async () => {
+    await DefaultMessageReceiverInstance.revokeRole(
+      await DefaultMessageReceiverInstance.SYGMA_HANDLER_ROLE(),
+      NativeTokenHandlerInstance.address
+    );
+    const proposalSignedData = await Helpers.signTypedProposal(
+      BridgeInstance.address,
+      [proposal]
+    );
+
+    // depositorAddress makes initial deposit of depositAmount
+    assert.isFalse(await BridgeInstance.paused());
+    await TruffleAssert.passes(
+      NativeTokenAdapterInstance.depositToEVMWithMessage(
+        originDomainID,
+        Ethers.constants.AddressZero,
+        executionGasAmount,
+        message,
+      {
+        from: depositorAddress,
+        value: depositAmount
+      })
+    );
+
+      const executeTx = await BridgeInstance.executeProposal(
+        proposal,
+        proposalSignedData,
+        {
+          from: relayer1Address,
+          gas: executionGasAmount
+        }
+      );
+
+    TruffleAssert.eventEmitted(executeTx, "FailedHandlerExecution", (event) => {
+      return (
+        event.originDomainID.toNumber() === originDomainID &&
+        event.depositNonce.toNumber() === expectedDepositNonce &&
+        event.lowLevelData === "0xdeda9030" // InsufficientPermission()
+      );
+    });
+  });
+
+  it("should revert if insufficient gas limit left for executing action", async () => {
+    const insufficientExecutionGasAmount = 100000;
+    const proposalSignedData = await Helpers.signTypedProposal(
+      BridgeInstance.address,
+      [proposal]
+    );
+
+    // depositorAddress makes initial deposit of depositAmount
+    assert.isFalse(await BridgeInstance.paused());
+    await TruffleAssert.passes(
+      NativeTokenAdapterInstance.depositToEVMWithMessage(
+        originDomainID,
+        Ethers.constants.AddressZero,
+        insufficientExecutionGasAmount,
+        message,
+      {
+        from: depositorAddress,
+        value: depositAmount
+      })
+    );
+
+      const executeTx = await BridgeInstance.executeProposal(
+        proposal,
+        proposalSignedData,
+        {
+          from: relayer1Address,
+          gas: insufficientExecutionGasAmount
+        }
+      );
+
+    TruffleAssert.eventEmitted(executeTx, "FailedHandlerExecution", (event) => {
+      return (
+        event.originDomainID.toNumber() === originDomainID &&
+        event.depositNonce.toNumber() === expectedDepositNonce &&
+        event.lowLevelData === "0x60ee1247" // InsufficientGasLimit()
+      );
+    });
   });
 });
