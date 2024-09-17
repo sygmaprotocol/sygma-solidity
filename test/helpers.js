@@ -408,8 +408,8 @@ const passes = async function(promise) {
   }
 }
 
-// eslint-disable-next-line max-len
-const ACTIONS_ARRAY_ABI = "tuple(uint256 nativeValue, address callTo, address approveTo, address tokenSend, address tokenReceive, bytes data)[]";
+const ACTIONS_ARRAY_ABI =
+"tuple(uint256 nativeValue, address callTo, address approveTo, address tokenSend, address tokenReceive, bytes data)[]";
 
 const createMessageCallData = function(transactionId, actions, receiver) {
   return abiEncode(

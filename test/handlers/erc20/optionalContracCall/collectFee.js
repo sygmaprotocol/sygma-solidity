@@ -92,8 +92,9 @@ contract("Bridge - [collect fee - erc20 token]", async (accounts) => {
       {from: depositorAddress}
     );
 
-    // eslint-disable-next-line max-len
-    const mintableERC721Iface = new Ethers.utils.Interface(["function mint(address to, uint256 tokenId, string memory _data)"]);
+    const mintableERC721Iface = new Ethers.utils.Interface(
+      ["function mint(address to, uint256 tokenId, string memory _data)"]
+    );
     const actions = [{
       nativeValue: 0,
       callTo: ERC721MintableInstance.address,
