@@ -114,8 +114,8 @@ contract("Bridge - [execute proposal - erc20 token with contract call]", async (
     const actions = [{
       nativeValue: 0,
       callTo: ERC721MintableInstance.address,
-      approveTo: DefaultMessageReceiverInstance.address,
-      tokenSend: ERC721MintableInstance.address,
+      approveTo: Ethers.constants.AddressZero,
+      tokenSend: Ethers.constants.AddressZero,
       tokenReceive: Ethers.constants.AddressZero,
       data: mintableERC721Iface.encodeFunctionData("mint", [evmRecipientAddress, "5", ""]),
     }]

@@ -113,8 +113,8 @@ contract("PercentageFeeHandler - [distributeFee]", async (accounts) => {
     const actions = [{
       nativeValue: 0,
       callTo: ERC721MintableInstance.address,
-      approveTo: DefaultMessageReceiverInstance.address,
-      tokenSend: ERC721MintableInstance.address,
+      approveTo: Ethers.constants.AddressZero,
+      tokenSend: Ethers.constants.AddressZero,
       tokenReceive: Ethers.constants.AddressZero,
       data: mintableERC721Iface.encodeFunctionData("mint", [evmRecipientAddress, "5", ""]),
     }]

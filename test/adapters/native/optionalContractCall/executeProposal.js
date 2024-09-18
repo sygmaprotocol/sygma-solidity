@@ -101,8 +101,8 @@ contract("Bridge - [execute proposal - native token]", async (accounts) => {
     const actions = [{
       nativeValue: 0,
       callTo: ERC20MintableInstance.address,
-      approveTo: DefaultMessageReceiverInstance.address,
-      tokenSend: ERC20MintableInstance.address,
+      approveTo: Ethers.constants.AddressZero,
+      tokenSend: Ethers.constants.AddressZero,
       tokenReceive: Ethers.constants.AddressZero,
       data: mintableERC20Iface.encodeFunctionData("mint", [evmRecipientAddress, "20"]),
     }]
