@@ -129,24 +129,22 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
     await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
 
-    await Promise.all([
-      BridgeInstance.adminSetResource(
-        ERC20HandlerInstance.address,
-        resourceID,
-        ERC20MintableInstance.address,
-        emptySetResourceData
-      ),
-      ERC20MintableInstance.mint(depositorAddress, tokenAmount),
-      ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, {
-        from: depositorAddress,
-      }),
-      BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
-      FeeHandlerRouterInstance.adminSetResourceHandler(
-        destinationDomainID,
-        resourceID,
-        DynamicFeeHandlerInstance.address
-      ),
-    ]);
+    await BridgeInstance.adminSetResource(
+      ERC20HandlerInstance.address,
+      resourceID,
+      ERC20MintableInstance.address,
+      emptySetResourceData
+    );
+    await ERC20MintableInstance.mint(depositorAddress, tokenAmount);
+    await ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, {
+      from: depositorAddress,
+    });
+    await BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address);
+    await FeeHandlerRouterInstance.adminSetResourceHandler(
+      destinationDomainID,
+      resourceID,
+      DynamicFeeHandlerInstance.address
+    );
 
     depositData = Helpers.createERCDepositData(
       tokenAmount,

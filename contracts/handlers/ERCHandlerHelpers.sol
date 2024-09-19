@@ -3,6 +3,7 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IERCHandler.sol";
+import "../utils/SanityChecks.sol";
 
 /**
     @title Function used across handler contracts.
@@ -93,10 +94,9 @@ contract ERCHandlerHelpers is IERCHandler {
     }
 
     /**
-        @notice Converts token amount based on decimal places difference between the nework
-        deposit is made on and bridge.
+        @notice Converts token amount based on decimal places difference from bridge to current network.
         @param tokenAddress Address of contract to be used when executing proposals.
-        @param amount Decimals value to be set for {contractAddress}.
+        @param amount The bridge internal amount with defaultDecimals.
     */
     function convertToExternalBalance(address tokenAddress, uint256 amount) internal view returns(uint256) {
         Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
@@ -110,10 +110,10 @@ contract ERCHandlerHelpers is IERCHandler {
     }
 
     /**
-        @notice Converts token amount based on decimal places difference between the bridge and nework
-        deposit is executed on.
+        @notice Converts token amount based on decimal places difference from current network to bridge.
         @param tokenAddress Address of contract to be used when executing proposals.
-        @param amount Decimals value to be set for {contractAddress}.
+        @param amount The token amount with decimals on the current network.
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
     */
     function convertToInternalBalance(address tokenAddress, uint256 amount) internal view returns(bytes memory) {
         Decimals memory decimals = _tokenContractAddressToTokenProperties[tokenAddress].decimals;
@@ -121,7 +121,7 @@ contract ERCHandlerHelpers is IERCHandler {
         if (!decimals.isSet) {
             return "";
         } else if (decimals.externalDecimals >= defaultDecimals) {
-            convertedBalance =  amount / (10 ** (decimals.externalDecimals - defaultDecimals));
+            convertedBalance = amount / (10 ** (decimals.externalDecimals - defaultDecimals));
         } else {
             convertedBalance = amount * (10 ** (defaultDecimals - decimals.externalDecimals));
         }

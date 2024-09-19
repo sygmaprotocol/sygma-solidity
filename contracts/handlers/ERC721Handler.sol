@@ -15,6 +15,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
+    using SanityChecks for *;
     using ERC165Checker for address;
 
     bytes4 private constant _INTERFACE_ERC721_METADATA = 0x5b5e139f;
@@ -91,7 +92,8 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         bytes memory metaData;
 
         (tokenID, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
-        offsetMetaData = 64 + lenDestinationRecipientAddress;
+        lenDestinationRecipientAddress.mustBe(20);
+        offsetMetaData = 84;
         destinationRecipientAddress = bytes(data[64:offsetMetaData]);
         lenMetaData = abi.decode(data[offsetMetaData:], (uint));
         metaData = bytes(data[offsetMetaData + 32:offsetMetaData + 32 + lenMetaData]);
@@ -128,6 +130,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
 
         (tokenAddress, recipient, tokenID) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         releaseERC721(tokenAddress, address(this), recipient, tokenID);
     }
 
@@ -140,6 +143,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         @param args Additional data to be passed to specified handler.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        contractAddress.mustNotBeZero();
         _setResource(resourceID, contractAddress);
     }
 }
