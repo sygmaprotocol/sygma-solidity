@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 
 const TruffleAssert = require("truffle-assertions");
-const Ethers = require("ethers");
 
 const Helpers = require("../helpers");
 
