@@ -175,7 +175,8 @@ contract("DefaultMessageReceiver - direct interaction", async (accounts) => {
     assert.equal(await Helpers.getTokenBalance(ERC20MintableInstance, DefaultMessageReceiverInstance.address), 0n);
   });
 
-  it("should return full native token balance if contract balance increased during handling and actions reverted", async () => {
+  it("should return full native token balance if contract balance increased during handling and actions reverted",
+  async () => {
     const actions = [{
       nativeValue: 100,
       callTo: TestForwarderInstance.address,
@@ -290,15 +291,21 @@ contract("DefaultMessageReceiver - direct interaction", async (accounts) => {
 
   it("should give approval to the approveTo then revoke it", async () => {
     // DMR -> TestForwarder.execute -> TestForwarder2.execute -> Token.transferFrom(DMR, admin)
-    const transferFrom = (await ERC20MintableInstance.transferFrom.request(DefaultMessageReceiverInstance.address, adminAddress, 33)).data;
-    const transferFromExecute = (await TestForwarderInstance2.execute.request(transferFrom, ERC20MintableInstance.address, ZERO_ADDRESS)).data;
+    const transferFrom = (await ERC20MintableInstance.transferFrom.request(
+      DefaultMessageReceiverInstance.address, adminAddress, 33)
+    ).data;
+    const transferFromExecute = (await TestForwarderInstance2.execute.request(
+      transferFrom, ERC20MintableInstance.address, ZERO_ADDRESS)
+    ).data;
     const actions = [{
       nativeValue: 0,
       callTo: TestForwarderInstance.address,
       approveTo: TestForwarderInstance2.address,
       tokenSend: ERC20MintableInstance.address,
       tokenReceive: ZERO_ADDRESS,
-      data: (await TestForwarderInstance.execute.request(transferFromExecute, TestForwarderInstance2.address, ZERO_ADDRESS)).data,
+      data: (await TestForwarderInstance.execute.request(
+        transferFromExecute, TestForwarderInstance2.address, ZERO_ADDRESS)
+      ).data,
     }];
     await ERC20MintableInstance.mint(DefaultMessageReceiverInstance.address, 333);
     const message = Helpers.createMessageCallData(
@@ -327,8 +334,12 @@ contract("DefaultMessageReceiver - direct interaction", async (accounts) => {
         event.amount.toNumber() === 333
       );
     });
-    assert.equal(await ERC20MintableInstance.allowance(DefaultMessageReceiverInstance.address, TestForwarderInstance2.address), 0n);
-    assert.equal(await ERC20MintableInstance.allowance(DefaultMessageReceiverInstance.address, TestForwarderInstance.address), 0n);
+    assert.equal(await ERC20MintableInstance.allowance(
+      DefaultMessageReceiverInstance.address, TestForwarderInstance2.address),
+    0n);
+    assert.equal(await ERC20MintableInstance.allowance(
+      DefaultMessageReceiverInstance.address, TestForwarderInstance.address),
+    0n);
   });
 
   it("should revert if callTo is EOA and data is not empty", async () => {
@@ -437,15 +448,21 @@ contract("DefaultMessageReceiver - direct interaction", async (accounts) => {
 
   it("should revert if has too little gas after actions", async () => {
     // DMR -> TestForwarder.execute -> TestForwarder2.execute -> Token.transferFrom(DMR, admin)
-    const transferFrom = (await ERC20MintableInstance.transferFrom.request(DefaultMessageReceiverInstance.address, adminAddress, 33)).data;
-    const transferFromExecute = (await TestForwarderInstance2.execute.request(transferFrom, ERC20MintableInstance.address, ZERO_ADDRESS)).data;
+    const transferFrom = (await ERC20MintableInstance.transferFrom.request(
+      DefaultMessageReceiverInstance.address, adminAddress, 33)
+    ).data;
+    const transferFromExecute = (await TestForwarderInstance2.execute.request(
+      transferFrom, ERC20MintableInstance.address, ZERO_ADDRESS)
+    ).data;
     const actions = [{
       nativeValue: 0,
       callTo: TestForwarderInstance.address,
       approveTo: TestForwarderInstance2.address,
       tokenSend: ERC20MintableInstance.address,
       tokenReceive: ZERO_ADDRESS,
-      data: (await TestForwarderInstance.execute.request(transferFromExecute, TestForwarderInstance2.address, ZERO_ADDRESS)).data,
+      data: (await TestForwarderInstance.execute.request(
+        transferFromExecute, TestForwarderInstance2.address, ZERO_ADDRESS)
+      ).data,
     }];
     await ERC20MintableInstance.mint(DefaultMessageReceiverInstance.address, 333);
     const message = Helpers.createMessageCallData(
@@ -474,14 +491,18 @@ contract("DefaultMessageReceiver - direct interaction", async (accounts) => {
       approveTo: ZERO_ADDRESS,
       tokenSend: ZERO_ADDRESS,
       tokenReceive: ZERO_ADDRESS,
-      data: (await DefaultMessageReceiverInstance.transferBalanceAction.request(ZERO_ADDRESS, relayer1Address)).data,
+      data: (await DefaultMessageReceiverInstance.transferBalanceAction.request(
+        ZERO_ADDRESS, relayer1Address)
+      ).data,
     }, {
       nativeValue: 0,
       callTo: DefaultMessageReceiverInstance.address,
       approveTo: ZERO_ADDRESS,
       tokenSend: ZERO_ADDRESS,
       tokenReceive: ZERO_ADDRESS,
-      data: (await DefaultMessageReceiverInstance.transferBalanceAction.request(ERC20MintableInstance.address, relayer1Address)).data,
+      data: (await DefaultMessageReceiverInstance.transferBalanceAction.request(
+        ERC20MintableInstance.address, relayer1Address)
+      ).data,
     }];
     const message = Helpers.createMessageCallData(
       transactionId,
