@@ -367,6 +367,9 @@ const expectToRevertWithCustomError = async function(promise, expectedErrorSigna
   try {
     await promise;
   } catch (error) {
+    if (!error.data) {
+      throw error;
+    }
     const encoded = web3.eth.abi.encodeFunctionSignature(expectedErrorSignature);
     const returnValue = error.data.result || error.data;
     // expect event error and provided error signatures to match
@@ -441,6 +444,14 @@ const createOptionalContractCallDepositData = function(amount, recipient, execut
   )
 }
 
+const getBalance = async (address) => {
+  return BigInt(await web3.eth.getBalance(address));
+};
+
+const getTokenBalance = async (token, address) => {
+  return BigInt(await token.balanceOf(address));
+};
+
 module.exports = {
   advanceBlock,
   advanceTime,
@@ -476,5 +487,7 @@ module.exports = {
   reverts,
   passes,
   createMessageCallData,
-  createOptionalContractCallDepositData
+  createOptionalContractCallDepositData,
+  getBalance,
+  getTokenBalance,
 };
