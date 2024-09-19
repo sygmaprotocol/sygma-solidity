@@ -3,13 +3,16 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IERCHandler.sol";
+import { AccessControl } from "../utils/AccessControl.sol";
 
 /**
     @title Function used across handler contracts.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERCHandlerHelpers is IERCHandler {
+contract ERCHandlerHelpers is IERCHandler, AccessControl {
+    bytes32 public constant LIQUIDITY_MANAGER_ROLE = keccak256("LIQUIDITY_MANAGER_ROLE");
+
     address public immutable _bridgeAddress;
 
     uint8 public constant defaultDecimals = 18;
@@ -27,6 +30,7 @@ contract ERCHandlerHelpers is IERCHandler {
     }
 
     error ContractAddressNotWhitelisted(address contractAddress);
+    error NotAuthorized();
 
     // resourceID => token contract address
     mapping (bytes32 => address) public _resourceIDToTokenContractAddress;
@@ -41,6 +45,11 @@ contract ERCHandlerHelpers is IERCHandler {
         _;
     }
 
+    modifier onlyAuthorized() {
+        _onlyAuthorized();
+        _;
+    }
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
@@ -48,10 +57,16 @@ contract ERCHandlerHelpers is IERCHandler {
         address          bridgeAddress
     ) {
         _bridgeAddress = bridgeAddress;
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(LIQUIDITY_MANAGER_ROLE, bridgeAddress);
     }
 
     function _onlyBridge() private view {
         require(msg.sender == _bridgeAddress, "sender must be bridge contract");
+    }
+
+    function _onlyAuthorized() private view {
+        if(!hasRole(LIQUIDITY_MANAGER_ROLE, _msgSender())) revert NotAuthorized();
     }
 
     /**

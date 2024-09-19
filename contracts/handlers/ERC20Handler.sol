@@ -4,7 +4,7 @@ pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
 import "./ERCHandlerHelpers.sol";
-import "../ERC20Safe.sol";
+import { ERC20Safe } from "../ERC20Safe.sol";
 
 /**
     @title Handles ERC20 deposits and deposit executions.
@@ -97,7 +97,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         recipient                              address     bytes  32 - 64
         amount                                 uint        bytes  64 - 96
      */
-    function withdraw(bytes memory data) external override onlyBridge {
+    function withdraw(bytes memory data) external override onlyAuthorized {
         address tokenAddress;
         address recipient;
         uint amount;

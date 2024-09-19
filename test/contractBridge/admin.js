@@ -19,12 +19,13 @@ contract("Bridge - [admin]", async (accounts) => {
   const nonAdminAddress = accounts[1];
 
   const expectedBridgeAdmin = accounts[0];
+  const authorizedAddress = accounts[2];
   const someAddress = "0xcafecafecafecafecafecafecafecafecafecafe";
   const nullAddress = "0x0000000000000000000000000000000000000000";
   const topologyHash = "549f715f5b06809ada23145c2dc548db";
   const txHash =
     "0x59d881e01ca682130e550e3576b6de760951fb45b1d5dd81342132f57920bbfa";
-
+  const depositAmount = 10;
   const bytes32 = "0x0";
   const emptySetResourceData = "0x";
 
@@ -402,6 +403,45 @@ contract("Bridge - [admin]", async (accounts) => {
         {from: nonAdminAddress}
       )
     )
+  });
+
+  it("Should allow to withdraw funds if called by authorized address", async () => {
+    const tokenOwner = accounts[0];
+    const ERC20HandlerInstance = await ERC20HandlerContract.new(
+      BridgeInstance.address
+    );
+    const ERC20MintableInstance = await ERC20MintableContract.new(
+      "token",
+      "TOK"
+    );
+    await ERC20MintableInstance.mint(ERC20HandlerInstance.address, depositAmount)
+
+    expect(await ERC20HandlerInstance.hasRole(
+      await ERC20HandlerInstance.LIQUIDITY_MANAGER_ROLE(),
+      tokenOwner
+    )).to.be.equal(false);
+
+    await ERC20HandlerInstance.grantRole(
+      await ERC20HandlerInstance.LIQUIDITY_MANAGER_ROLE(),
+      authorizedAddress,
+      {
+        from: tokenOwner
+      }
+    );
+
+    const recipientBalanceBefore = await ERC20MintableInstance.balanceOf(tokenOwner);
+    const withdrawData = Helpers.createERCWithdrawData(
+      ERC20MintableInstance.address,
+      tokenOwner,
+      depositAmount,
+    );
+
+    await TruffleAssert.passes(ERC20HandlerInstance.withdraw(withdrawData, {from: authorizedAddress}));
+    const recipientBalanceAfter = await ERC20MintableInstance.balanceOf(tokenOwner);
+
+    expect(
+      new Ethers.BigNumber.from(depositAmount).add(recipientBalanceBefore.toString()).toString()
+    ).to.be.equal(recipientBalanceAfter.toString());
   });
 
   // Set nonce

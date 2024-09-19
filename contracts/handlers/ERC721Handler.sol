@@ -4,7 +4,7 @@ pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
 import "./ERCHandlerHelpers.sol";
-import "../ERC721Safe.sol";
+import { ERC721Safe } from "../ERC721Safe.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
@@ -121,7 +121,7 @@ contract ERC721Handler is IHandler, ERCHandlerHelpers, ERC721Safe {
         recipient                              address     bytes  32 - 64
         tokenID                                uint        bytes  64 - 96
      */
-    function withdraw(bytes memory data) external override onlyBridge {
+    function withdraw(bytes memory data) external override onlyAuthorized {
         address tokenAddress;
         address recipient;
         uint tokenID;
