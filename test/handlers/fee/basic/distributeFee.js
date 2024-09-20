@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
@@ -31,6 +32,7 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
 
   let BridgeInstance;
   let ERC20MintableInstance;
+  let DefaultMessageReceiverInstance;
   let ERC20HandlerInstance;
   let BasicFeeHandlerInstance;
   let FeeHandlerRouterInstance;
@@ -57,8 +59,10 @@ contract("BasicFeeHandler - [distributeFee]", async (accounts) => {
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
     ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     await Promise.all([

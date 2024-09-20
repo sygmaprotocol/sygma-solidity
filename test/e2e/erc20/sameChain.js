@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("E2E ERC20 - Same Chain", async (accounts) => {
@@ -27,6 +28,7 @@ contract("E2E ERC20 - Same Chain", async (accounts) => {
   let BridgeInstance;
   let ERC20MintableInstance;
   let ERC20HandlerInstance;
+  let DefaultMessageReceiverInstance;
 
   let resourceID;
   let depositData;
@@ -50,8 +52,13 @@ contract("E2E ERC20 - Same Chain", async (accounts) => {
       originDomainID
     );
 
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
     ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     await Promise.all([

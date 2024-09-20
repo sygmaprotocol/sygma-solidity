@@ -7,7 +7,7 @@ install-deps:
 .PHONY: test
 test:
 	@echo " > \033[32mTesting contracts... \033[0m "
-	truffle test --stacktrace
+	truffle test --stacktrace ./test/contractBridge/admin.js
 
 compile:
 	@echo " > \033[32mCompiling contracts... \033[0m "

@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
@@ -28,6 +29,7 @@ contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
 
   let OriginBridgeInstance;
   let OriginERC20MintableInstance;
+  let OriginDefaultMessageReceiverInstance;
   let OriginERC20HandlerInstance;
   let originDepositData;
   let originDepositProposalData;
@@ -36,6 +38,7 @@ contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
 
   let DestinationBridgeInstance;
   let DestinationERC20MintableInstance;
+  let DestinationDefaultMessageReceiverInstance;
   let DestinationERC20HandlerInstance;
   let destinationDepositData;
   let destinationDepositProposalData;
@@ -83,11 +86,25 @@ contract("E2E ERC20 - Two EVM Chains", async (accounts) => {
       DestinationERC20MintableInstance.address,
     ];
 
+    OriginDefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
+    DestinationDefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
     await Promise.all([
-      ERC20HandlerContract.new(OriginBridgeInstance.address).then(
+      ERC20HandlerContract.new(
+        OriginBridgeInstance.address,
+        OriginDefaultMessageReceiverInstance.address
+      ).then(
         (instance) => (OriginERC20HandlerInstance = instance)
       ),
-      ERC20HandlerContract.new(DestinationBridgeInstance.address).then(
+      ERC20HandlerContract.new(
+        DestinationBridgeInstance.address,
+        DestinationDefaultMessageReceiverInstance.address
+      ).then(
         (instance) => (DestinationERC20HandlerInstance = instance)
       ),
     ]);

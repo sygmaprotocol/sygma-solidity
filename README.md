@@ -45,3 +45,6 @@ to ensure a statement and patch release is made in a timely manner.
 
 Please email us a description of the flaw and any related information (e.g. reproduction steps, version) to
 [dev@buildwithsygma.com](mailto:dev@buildwithsygma.com).
+
+## Audits
+You can find audit reports inside [`/audits`](./audits/)

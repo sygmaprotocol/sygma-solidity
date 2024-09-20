@@ -367,6 +367,9 @@ const expectToRevertWithCustomError = async function(promise, expectedErrorSigna
   try {
     await promise;
   } catch (error) {
+    if (!error.data) {
+      throw error;
+    }
     const encoded = web3.eth.abi.encodeFunctionSignature(expectedErrorSignature);
     const returnValue = error.data.result || error.data;
     // expect event error and provided error signatures to match
@@ -408,6 +411,47 @@ const passes = async function(promise) {
   }
 }
 
+const ACTIONS_ARRAY_ABI =
+"tuple(uint256 nativeValue, address callTo, address approveTo, address tokenSend, address tokenReceive, bytes data)[]";
+
+const createMessageCallData = function(transactionId, actions, receiver) {
+  return abiEncode(
+    ["bytes32", ACTIONS_ARRAY_ABI, "address"],
+    [
+      transactionId,
+      actions.map(action => [
+        action.nativeValue,
+        action.callTo,
+        action.approveTo,
+        action.tokenSend,
+        action.tokenReceive,
+        action.data,
+      ]),
+      receiver
+    ]
+  )
+}
+
+const createOptionalContractCallDepositData = function(amount, recipient, executionGasAmount, message) {
+  return (
+    "0x" +
+    toHex(amount, 32).substr(2) + // uint256
+    toHex(recipient.substr(2).length / 2, 32).substr(2) + // uint256
+    recipient.substr(2) + // bytes
+    toHex(executionGasAmount, 32).substr(2) + // uint256
+    toHex(message.substr(2).length / 2, 32).substr(2) + // uint256
+    message.substr(2) // bytes
+  )
+}
+
+const getBalance = async (address) => {
+  return BigInt(await web3.eth.getBalance(address));
+};
+
+const getTokenBalance = async (token, address) => {
+  return BigInt(await token.balanceOf(address));
+};
+
 module.exports = {
   advanceBlock,
   advanceTime,
@@ -442,4 +486,8 @@ module.exports = {
   expectToRevertWithCustomError,
   reverts,
   passes,
+  createMessageCallData,
+  createOptionalContractCallDepositData,
+  getBalance,
+  getTokenBalance,
 };

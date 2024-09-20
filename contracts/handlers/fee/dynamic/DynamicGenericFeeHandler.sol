@@ -27,11 +27,11 @@ contract TwapGenericFeeHandler is TwapFeeHandler {
      */
     function _calculateFee(address, uint8, uint8 destinationDomainID, bytes32, bytes calldata depositData, bytes calldata) internal view override returns (uint256 fee, address tokenAddress) {
         uint256 maxFee = uint256(bytes32(depositData[:32]));
-        uint256 desintationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
-        if (desintationCoinPrice == 0) revert IncorrectPrice();
+        uint256 destinationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
+        if (destinationCoinPrice == 0) revert IncorrectPrice();
         Fee memory destFeeConfig = destinationFee[destinationDomainID];
 
-        uint256 txCost = destFeeConfig.gasPrice * maxFee * desintationCoinPrice / 1e18;
+        uint256 txCost = destFeeConfig.gasPrice * maxFee * destinationCoinPrice / 1e18;
         if(destFeeConfig.feeType == ProtocolFeeType.Fixed) {
             txCost += destFeeConfig.amount;
         } else if (destFeeConfig.feeType == ProtocolFeeType.Percentage) {
