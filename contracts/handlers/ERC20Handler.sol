@@ -21,6 +21,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Sa
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
+        @param defaultMessageReceiver Contract address of previously deployed DefaultMessageReceiver.
      */
     constructor(
         address bridgeAddress,
