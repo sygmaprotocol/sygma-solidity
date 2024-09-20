@@ -1,5 +1,20 @@
 # Changelog
 
+## [2.10.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.9.0...v2.10.0) (2024-09-20)
+
+
+### Features
+
+* add optional call to ERC20Handler and NativeTokenHandler execute ([#266](https://github.com/sygmaprotocol/sygma-solidity/issues/266)) ([b166d41](https://github.com/sygmaprotocol/sygma-solidity/commit/b166d419247df746fc8a34f490e9d9ec4ba15e57))
+* permissionless token addition with GMP ([#261](https://github.com/sygmaprotocol/sygma-solidity/issues/261)) ([0234458](https://github.com/sygmaprotocol/sygma-solidity/commit/02344587e99c7f41d66f4846daab5701261e7071))
+* retry contract ([#259](https://github.com/sygmaprotocol/sygma-solidity/issues/259)) ([a72c1f9](https://github.com/sygmaprotocol/sygma-solidity/commit/a72c1f980d6f9335d1b1f852e03cb0a821ad478b))
+
+
+### Miscellaneous
+
+* add optional message call docs ([#276](https://github.com/sygmaprotocol/sygma-solidity/issues/276)) ([2aafeb7](https://github.com/sygmaprotocol/sygma-solidity/commit/2aafeb78931c44ed74db1f8ee5a6aca7bcf52393))
+* add retry migration ([#263](https://github.com/sygmaprotocol/sygma-solidity/issues/263)) ([27d9682](https://github.com/sygmaprotocol/sygma-solidity/commit/27d96827f8403a31f9a33a40b0a49d8d2b3e3c9a))
+
 ## [2.9.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.8.0...v2.9.0) (2024-07-30)
 
 
