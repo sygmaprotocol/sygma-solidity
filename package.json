@@ -18,7 +18,7 @@
     "build/contracts/TwapFeeHandler.json",
     "build/contracts/FeeHandlerRouter.json",
     "build/contracts/NativeTokenAdapter.json",
-    "build/contracts/NativeTokenHandler.json",
+    "build/contracts/DefaultMessageReceiver.json",
     "contracts/interfaces"
   ],
   "directories": {
