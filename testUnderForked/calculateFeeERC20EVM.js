@@ -54,6 +54,7 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
   let QuoterInstance;
   let DynamicFeeHandlerInstance;
   let resourceID;
+  let depositData;
 
   beforeEach(async () => {
     await Promise.all([
@@ -100,7 +101,8 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
     );
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
-      FeeHandlerRouterInstance.address
+      FeeHandlerRouterInstance.address,
+      0
     );
     FeeHandlerRouterInstance.adminSetResourceHandler(
       destinationDomainID,
@@ -116,6 +118,12 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
     );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
     await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
+
+    depositData = Helpers.createERCDepositData(
+      100,
+      20,
+      sender,
+    );
   });
 
   it("[fixed protocol fee] should get the correct values", async () => {
@@ -125,7 +133,7 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
       originDomainID,
       destinationDomainID,
       resourceID,
-      "0x00",
+      depositData,
       "0x00"
     );
 
@@ -161,7 +169,7 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
       originDomainID,
       destinationDomainID,
       resourceID,
-      "0x00",
+      depositData,
       "0x00"
     );
 

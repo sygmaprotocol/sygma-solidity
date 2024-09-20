@@ -6,6 +6,7 @@ const parseArgs = require("minimist");
 const Utils = require("./utils");
 
 const BridgeContract = artifacts.require("Bridge");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const XC20HandlerContract = artifacts.require("XC20Handler");
 
@@ -28,6 +29,7 @@ module.exports = async function (deployer, network) {
 
     // fetch deployed contracts addresses
     const bridgeInstance = await BridgeContract.deployed();
+    const defaultMessageReceiverInstance = await DefaultMessageReceiverContract.deployed();
     const erc20HandlerInstance = await ERC20HandlerContract.deployed();
     try {
       xc20HandlerInstance = await XC20HandlerContract.deployed();
@@ -42,7 +44,8 @@ module.exports = async function (deployer, network) {
       bridgeInstance,
       ERC20HandlerContract,
       erc20HandlerInstance,
-      TOKEN_TYPE.ERC20
+      TOKEN_TYPE.ERC20,
+      defaultMessageReceiverInstance
     );
 
     // redeploy XC20 handler and register (if deployed to current network)

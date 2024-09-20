@@ -6,6 +6,7 @@ const Ethers = require("ethers");
 
 const Helpers = require("../../helpers");
 
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const NativeTokenHandlerContract = artifacts.require("NativeTokenHandler");
 const NativeTokenAdapterContract = artifacts.require("NativeTokenAdapter");
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
@@ -36,6 +37,7 @@ contract("Bridge - [decimal conversion - native token]", async (accounts) => {
   );
 
   let BridgeInstance;
+  let DefaultMessageReceiverInstance;
   let NativeTokenHandlerInstance;
   let BasicFeeHandlerInstance;
   let FeeHandlerRouterInstance;
@@ -62,9 +64,11 @@ contract("Bridge - [decimal conversion - native token]", async (accounts) => {
       BridgeInstance.address,
       resourceID
     );
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
     NativeTokenHandlerInstance = await NativeTokenHandlerContract.new(
       BridgeInstance.address,
       NativeTokenAdapterInstance.address,
+      DefaultMessageReceiverInstance.address,
     );
 
     await BridgeInstance.adminSetResource(
@@ -172,6 +176,16 @@ contract("Bridge - [decimal conversion - native token]", async (accounts) => {
       {from: relayer1Address}
     );
 
+    const internalHandlerTx = await TruffleAssert.createTransactionResult(
+      NativeTokenHandlerInstance,
+      proposalTx.tx
+    );
+    TruffleAssert.eventEmitted(internalHandlerTx, "FundsTransferred", (event) => {
+      return (
+        event.amount.toNumber() === expectedRecipientTransferAmount.toNumber()
+      );
+    });
+
     TruffleAssert.eventEmitted(proposalTx, "ProposalExecution", (event) => {
       return (
         event.originDomainID.toNumber() === originDomainID &&
@@ -179,7 +193,7 @@ contract("Bridge - [decimal conversion - native token]", async (accounts) => {
         event.dataHash === dataHash &&
         event.handlerResponse === Ethers.utils.defaultAbiCoder.encode(
           ["address", "address", "uint256"],
-          [NativeTokenHandlerInstance.address, evmRecipientAddress, expectedRecipientTransferAmount]
+          [NativeTokenHandlerInstance.address, evmRecipientAddress, convertedTransferAmount]
         )
       );
     });

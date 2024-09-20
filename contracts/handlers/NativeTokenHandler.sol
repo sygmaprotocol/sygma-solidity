@@ -3,24 +3,33 @@
 pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
+import "../interfaces/ISygmaMessageReceiver.sol";
 import "./ERCHandlerHelpers.sol";
+import "./DepositDataHelper.sol";
+import "../utils/ExcessivelySafeCall.sol";
 
 /**
     @title Handles native token deposits and deposit executions.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
+contract NativeTokenHandler is IHandler, ERCHandlerHelpers, DepositDataHelper {
+    using SanityChecks for *;
+    using ExcessivelySafeCall for address;
 
+    uint256 internal constant defaultGas = 50000;
     address public immutable _nativeTokenAdapterAddress;
 
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
+        @param nativeTokenAdapterAddress Contract address of previously deployed NativeTokenAdapter.
+        @param defaultMessageReceiver Contract address of previously deployed DefaultMessageReceiver.
      */
     constructor(
         address bridgeAddress,
-        address nativeTokenAdapterAddress
-    ) ERCHandlerHelpers(bridgeAddress) {
+        address nativeTokenAdapterAddress,
+        address defaultMessageReceiver
+    ) DepositDataHelper(bridgeAddress, defaultMessageReceiver) {
         _nativeTokenAdapterAddress = nativeTokenAdapterAddress;
     }
 
@@ -38,24 +47,27 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         @param depositor Address of account making the deposit in the Bridge contract.
         @param data Consists of {amount} padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        amount                                      uint256     bytes   0 - 32
-        destinationRecipientAddress     length      uint256     bytes  32 - 64
-        destinationRecipientAddress                 bytes       bytes  64 - END
-        @return deposit amount internal representation.
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
      */
     function deposit(
         bytes32 resourceID,
         address depositor,
         bytes   calldata data
-    ) external override onlyBridge returns (bytes memory) {
-        uint256        amount;
+    ) external view override onlyBridge returns (bytes memory) {
+        uint256 amount;
         (amount) = abi.decode(data, (uint256));
 
         if(depositor != _nativeTokenAdapterAddress) revert InvalidSender(depositor);
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**
@@ -65,21 +77,36 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         @param data Consists of {amount}, {lenDestinationRecipientAddress}
         and {destinationRecipientAddress}.
         @notice Data passed into the function should be constructed as follows:
-        amount                                 uint256     bytes  0 - 32
-        destinationRecipientAddress length     uint256     bytes  32 - 64 // not used
-        destinationRecipientAddress            bytes       bytes  64 - 84
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        (uint256 amount) = abi.decode(data, (uint256));
-        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-        address recipientAddress = address(bytes20(bytes(data[64:84])));
-        uint256 convertedAmount = convertToExternalBalance(tokenAddress, amount);
+        DepositData memory depositData = parseDepositData(resourceID, data);
 
-        (bool success, ) = address(recipientAddress).call{value: convertedAmount}("");
-        if(!success) revert FailedFundsTransfer();
-        emit FundsTransferred(recipientAddress, amount);
+        if (depositData.optionalMessageCheck == OptionalMessageCheck.Invalid) {
+            return depositData.message;
+        }
 
-        return abi.encode(tokenAddress, address(recipientAddress), convertedAmount);
+        if (depositData.gas == 0) {
+            depositData.gas = defaultGas;
+        }
+
+        (bool success, bytes memory result) =
+            depositData.recipientAddress.excessivelySafeCall(
+                depositData.gas,
+                depositData.externalAmount,
+                maxReturnBytes,
+                depositData.message
+            );
+        if (!success && !ExcessivelySafeCall.revertWith(result)) revert FailedFundsTransfer();
+
+        emit FundsTransferred(depositData.recipientAddress, depositData.externalAmount);
+
+        return abi.encode(depositData.tokenAddress, depositData.recipientAddress, depositData.amount);
     }
 
     /**
@@ -97,6 +124,7 @@ contract NativeTokenHandler is IHandler, ERCHandlerHelpers {
         if (address(this).balance <= amount) revert InsufficientBalance();
         (, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         (bool success, ) = address(recipient).call{value: amount}("");
         if(!success) revert FailedFundsTransfer();
         emit Withdrawal(recipient, amount);

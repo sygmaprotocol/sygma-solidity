@@ -6,6 +6,7 @@ const Ethers = require("ethers");
 
 const Helpers = require("../../helpers.js");
 
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const NativeTokenHandlerContract = artifacts.require("NativeTokenHandler");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const NativeTokenAdapterContract = artifacts.require("NativeTokenAdapter");
@@ -36,6 +37,7 @@ contract("Native token adapter - [distributeFee]", async (accounts) => {
   };
 
   let BridgeInstance;
+  let DefaultMessageReceiverInstance;
   let NativeTokenHandlerInstance;
   let NativeTokenAdapterInstance;
   let FeeHandlerRouterInstance;
@@ -52,8 +54,13 @@ contract("Native token adapter - [distributeFee]", async (accounts) => {
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
     ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
     BasicFeeHandlerInstance = await BasicFeeHandlerContract.new(
       BridgeInstance.address,
@@ -68,6 +75,7 @@ contract("Native token adapter - [distributeFee]", async (accounts) => {
     NativeTokenHandlerInstance = await NativeTokenHandlerContract.new(
       BridgeInstance.address,
       NativeTokenAdapterInstance.address,
+      DefaultMessageReceiverInstance.address,
     );
 
     await BridgeInstance.adminSetResource(

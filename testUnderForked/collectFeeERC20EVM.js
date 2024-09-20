@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../test/helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const DynamicFeeHandlerContract = artifacts.require("TwapNativeTokenFeeHandler");
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter");
@@ -52,6 +53,7 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
   let QuoterInstance;
   let DynamicFeeHandlerInstance;
   let resourceID;
+  let DefaultMessageReceiverInstance;
   let ERC20HandlerInstance;
   let ERC20MintableInstance;
   let depositData;
@@ -68,15 +70,18 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
       ).then((instance) => (ERC20MintableInstance = instance))),
     ]);
 
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
     ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
     );
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
-      FeeHandlerRouterInstance.address
+      FeeHandlerRouterInstance.address,
+      0
     );
 
     resourceID = Helpers.createResourceID(
@@ -124,24 +129,22 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
     await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
 
-    await Promise.all([
-      BridgeInstance.adminSetResource(
-        ERC20HandlerInstance.address,
-        resourceID,
-        ERC20MintableInstance.address,
-        emptySetResourceData
-      ),
-      ERC20MintableInstance.mint(depositorAddress, tokenAmount),
-      ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, {
-        from: depositorAddress,
-      }),
-      BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
-      FeeHandlerRouterInstance.adminSetResourceHandler(
-        destinationDomainID,
-        resourceID,
-        DynamicFeeHandlerInstance.address
-      ),
-    ]);
+    await BridgeInstance.adminSetResource(
+      ERC20HandlerInstance.address,
+      resourceID,
+      ERC20MintableInstance.address,
+      emptySetResourceData
+    );
+    await ERC20MintableInstance.mint(depositorAddress, tokenAmount);
+    await ERC20MintableInstance.approve(ERC20HandlerInstance.address, tokenAmount, {
+      from: depositorAddress,
+    });
+    await BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address);
+    await FeeHandlerRouterInstance.adminSetResourceHandler(
+      destinationDomainID,
+      resourceID,
+      DynamicFeeHandlerInstance.address
+    );
 
     depositData = Helpers.createERCDepositData(
       tokenAmount,

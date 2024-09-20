@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
@@ -14,6 +15,7 @@ contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
   const emptySetResourceData = "0x";
 
   let BridgeInstance;
+  let DefaultMessageReceiverInstance;
   let ERC20MintableInstance1;
   let ERC20MintableInstance2;
   let resourceID1;
@@ -23,6 +25,7 @@ contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
   let burnableContractAddresses;
 
   beforeEach(async () => {
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
     await Promise.all([
       (BridgeInstance = await Helpers.deployBridge(domainID, accounts[0])),
       ERC20MintableContract.new("token", "TOK").then(
@@ -51,13 +54,14 @@ contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
 
   it("[sanity] contract should be deployed successfully", async () => {
     await TruffleAssert.passes(
-      ERC20HandlerContract.new(BridgeInstance.address)
+      ERC20HandlerContract.new(BridgeInstance.address, DefaultMessageReceiverInstance.address)
     );
   });
 
   it("burnableContractAddresses should be marked as burnable", async () => {
     const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     for (i = 0; i < initialResourceIDs.length; i++) {
@@ -91,7 +95,8 @@ contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
 
   it("ERC20MintableInstance2.address should not be marked as burnable", async () => {
     const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     for (i = 0; i < initialResourceIDs.length; i++) {
@@ -123,7 +128,8 @@ contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
 
   it("ERC20MintableInstance2.address should be marked as burnable after setBurnable is called", async () => {
     const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     for (i = 0; i < initialResourceIDs.length; i++) {
@@ -160,7 +166,8 @@ contract("ERC20Handler - [Burn ERC20]", async (accounts) => {
   it(`ERC20MintableInstances should not be marked as
       burnable after setResource is called on already burnable tokens`, async () => {
     const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     for (i = 0; i < initialResourceIDs.length; i++) {

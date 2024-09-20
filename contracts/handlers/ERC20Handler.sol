@@ -4,42 +4,53 @@ pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
 import "./ERCHandlerHelpers.sol";
+import "./DepositDataHelper.sol";
 import "../ERC20Safe.sol";
+import "../utils/ExcessivelySafeCall.sol";
 
 /**
     @title Handles ERC20 deposits and deposit executions.
     @author ChainSafe Systems.
     @notice This contract is intended to be used with the Bridge contract.
  */
-contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
+contract ERC20Handler is IHandler, ERCHandlerHelpers, DepositDataHelper, ERC20Safe {
+    using SanityChecks for *;
+    using ExcessivelySafeCall for address;
+
+    error OptionalMessageCallFailed();
+
     /**
         @param bridgeAddress Contract address of previously deployed Bridge.
      */
     constructor(
-        address          bridgeAddress
-    ) ERCHandlerHelpers(bridgeAddress) {
-    }
+        address bridgeAddress,
+        address defaultMessageReceiver
+    ) DepositDataHelper(bridgeAddress, defaultMessageReceiver) {}
 
     /**
         @notice A deposit is initiated by making a deposit in the Bridge contract.
         @param resourceID ResourceID used to find address of token to be used for deposit.
         @param depositor Address of account making the deposit in the Bridge contract.
-        @param data Consists of {amount} padded to 32 bytes.
+        @param data Consists of {amount}, {recipient}, {optionalGas}, {optionalMessage},
+        padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        amount                                      uint256     bytes   0 - 32
-        destinationRecipientAddress     length      uint256     bytes  32 - 64
-        destinationRecipientAddress                 bytes       bytes  64 - END
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
         @dev Depending if the corresponding {tokenAddress} for the parsed {resourceID} is
         marked true in {_tokenContractAddressToTokenProperties[tokenAddress].isBurnable}, deposited tokens will be burned, if not, they will be locked.
-        @return an empty data.
+        @return 32-length byte array with internal bridge amount OR empty byte array if conversion is not needed.
      */
     function deposit(
         bytes32 resourceID,
         address depositor,
         bytes   calldata data
     ) external override onlyBridge returns (bytes memory) {
-        uint256        amount;
-        (amount) = abi.decode(data, (uint));
+        uint256 amount;
+        (amount) = abi.decode(data, (uint256));
 
         address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
         if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
@@ -50,43 +61,46 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
             lockERC20(tokenAddress, depositor, address(this), amount);
         }
 
-        return abi.encodePacked(convertToInternalBalance(tokenAddress, amount));
+        return convertToInternalBalance(tokenAddress, amount);
     }
 
     /**
         @notice Proposal execution should be initiated when a proposal is finalized in the Bridge contract.
         by a relayer on the deposit's destination chain.
         @param resourceID ResourceID to be used when making deposits.
-        @param data Consists of {resourceID}, {amount}, {lenDestinationRecipientAddress},
-        and {destinationRecipientAddress} all padded to 32 bytes.
+        @param data Consists of {amount}, {recipient}, {optionalGas}, {optionalMessage},
+        padded to 32 bytes.
         @notice Data passed into the function should be constructed as follows:
-        amount                                 uint256     bytes  0 - 32
-        destinationRecipientAddress length     uint256     bytes  32 - 64
-        destinationRecipientAddress            bytes       bytes  64 - END
+        amount                             uint256 bytes  0 - 32
+        destinationRecipientAddress length uint256 bytes 32 - 64
+        destinationRecipientAddress        bytes   bytes 64 - (64 + len(destinationRecipientAddress))
+        optionalGas                        uint256 bytes (64 + len(destinationRecipientAddress)) - (96 + len(destinationRecipientAddress))
+        optionalMessage             length uint256 bytes (96 + len(destinationRecipientAddress)) - (128 + len(destinationRecipientAddress))
+        optionalMessage                    bytes   bytes (160 + len(destinationRecipientAddress)) - END
      */
     function executeProposal(bytes32 resourceID, bytes calldata data) external override onlyBridge returns (bytes memory) {
-        uint256       amount;
-        uint256       lenDestinationRecipientAddress;
-        bytes  memory destinationRecipientAddress;
+        DepositData memory depositData = parseDepositData(resourceID, data);
 
-        (amount, lenDestinationRecipientAddress) = abi.decode(data, (uint, uint));
-        destinationRecipientAddress = bytes(data[64:64 + lenDestinationRecipientAddress]);
+        if (!_tokenContractAddressToTokenProperties[depositData.tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(depositData.tokenAddress);
 
-        bytes20 recipientAddress;
-        address tokenAddress = _resourceIDToTokenContractAddress[resourceID];
-
-        assembly {
-            recipientAddress := mload(add(destinationRecipientAddress, 0x20))
-        }
-
-        if (!_tokenContractAddressToTokenProperties[tokenAddress].isWhitelisted) revert ContractAddressNotWhitelisted(tokenAddress);
-
-        if (_tokenContractAddressToTokenProperties[tokenAddress].isBurnable) {
-            mintERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
+        if (_tokenContractAddressToTokenProperties[depositData.tokenAddress].isBurnable) {
+            mintERC20(depositData.tokenAddress, depositData.recipientAddress, depositData.externalAmount);
         } else {
-            releaseERC20(tokenAddress, address(recipientAddress), convertToExternalBalance(tokenAddress, amount));
+            releaseERC20(depositData.tokenAddress, depositData.recipientAddress, depositData.externalAmount);
         }
-        return abi.encode(tokenAddress, address(recipientAddress), amount);
+
+        if (depositData.optionalMessageCheck == OptionalMessageCheck.Invalid) {
+            return depositData.message;
+        }
+
+        if (depositData.optionalMessageCheck == OptionalMessageCheck.Valid) {
+            (bool success, bytes memory result) =
+                depositData.recipientAddress.excessivelySafeCall(depositData.gas, 0, maxReturnBytes, depositData.message);
+            if (!success && !ExcessivelySafeCall.revertWith(result)) revert OptionalMessageCallFailed();
+            return abi.encode(depositData.tokenAddress, depositData.recipientAddress, depositData.amount, result);
+        }
+
+        return abi.encode(depositData.tokenAddress, depositData.recipientAddress, depositData.amount);
     }
 
     /**
@@ -104,6 +118,7 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
 
         (tokenAddress, recipient, amount) = abi.decode(data, (address, address, uint));
 
+        recipient.mustNotBeZero();
         releaseERC20(tokenAddress, recipient, amount);
     }
 
@@ -114,9 +129,11 @@ contract ERC20Handler is IHandler, ERCHandlerHelpers, ERC20Safe {
         Sets decimals value for contractAddress if value is provided in args.
         @param resourceID ResourceID to be used when making deposits.
         @param contractAddress Address of contract to be called when a deposit is made and a deposited is executed.
-        @param args Additional data to be passed to specified handler.
+        @param args Byte array which is either empty if the token contract decimals are the same as the bridge defaultDecimals,
+                    or has a first byte set to the uint8 decimals value of the token contract.
      */
     function setResource(bytes32 resourceID, address contractAddress, bytes calldata args) external onlyBridge {
+        contractAddress.mustNotBeZero();
         _setResource(resourceID, contractAddress);
 
         if (args.length > 0) {

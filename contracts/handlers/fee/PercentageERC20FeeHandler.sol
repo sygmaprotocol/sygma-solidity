@@ -5,6 +5,7 @@ pragma solidity 0.8.11;
 import "../../interfaces/IBridge.sol";
 import "../../interfaces/IERCHandler.sol";
 import "../../ERC20Safe.sol";
+import "../../utils/SanityChecks.sol";
 import { BasicFeeHandler } from "./BasicFeeHandler.sol";
 
 /**
@@ -13,6 +14,8 @@ import { BasicFeeHandler } from "./BasicFeeHandler.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract PercentageERC20FeeHandler is BasicFeeHandler, ERC20Safe {
+    using SanityChecks for *;
+
     uint32 public constant HUNDRED_PERCENT = 1e8;
 
     /**
@@ -133,6 +136,7 @@ contract PercentageERC20FeeHandler is BasicFeeHandler, ERC20Safe {
         address tokenHandler = IBridge(_bridgeAddress)._resourceIDToHandlerAddress(resourceID);
         address tokenAddress = IERCHandler(tokenHandler)._resourceIDToTokenContractAddress(resourceID);
         for (uint256 i = 0; i < addrs.length; i++) {
+            addrs[i].mustNotBeZero();
             releaseERC20(tokenAddress, addrs[i], amounts[i]);
             emit FeeDistributed(tokenAddress, addrs[i], amounts[i]);
         }

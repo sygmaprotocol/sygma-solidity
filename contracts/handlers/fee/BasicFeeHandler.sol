@@ -4,6 +4,7 @@ pragma solidity 0.8.11;
 
 import "../../interfaces/IFeeHandler.sol";
 import "../../utils/AccessControl.sol";
+import "../../utils/SanityChecks.sol";
 import "../FeeHandlerRouter.sol";
 
 /**
@@ -12,6 +13,8 @@ import "../FeeHandlerRouter.sol";
     @notice This contract is intended to be used with the Bridge contract.
  */
 contract BasicFeeHandler is IFeeHandler, AccessControl {
+    using SanityChecks for *;
+
     address public immutable _bridgeAddress;
     address public immutable _feeHandlerRouterAddress;
     mapping (uint8 => mapping(bytes32 => uint256)) public _domainResourceIDToFee;
@@ -121,6 +124,7 @@ contract BasicFeeHandler is IFeeHandler, AccessControl {
     function transferFee(address payable[] calldata addrs, uint[] calldata amounts) external onlyAdmin {
         require(addrs.length == amounts.length, "addrs[], amounts[]: diff length");
         for (uint256 i = 0; i < addrs.length; i++) {
+            addrs[i].mustNotBeZero();
             (bool success,) = addrs[i].call{value: amounts[i]}("");
             require(success, "Fee ether transfer failed");
             emit FeeDistributed(address(0), addrs[i], amounts[i]);

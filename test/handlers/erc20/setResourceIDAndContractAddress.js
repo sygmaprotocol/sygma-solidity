@@ -6,6 +6,7 @@ const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract(
@@ -16,6 +17,7 @@ contract(
 
     let BridgeInstance;
     let ERC20MintableInstance1;
+    let DefaultMessageReceiverInstance;
     let ERC20HandlerInstance;
     let initialResourceIDs;
     let initialContractAddresses;
@@ -37,8 +39,10 @@ contract(
       initialContractAddresses = [ERC20MintableInstance1.address];
       burnableContractAddresses = [];
 
+      DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
       ERC20HandlerInstance = await ERC20HandlerContract.new(
-        BridgeInstance.address
+        BridgeInstance.address,
+        DefaultMessageReceiverInstance.address
       );
       await BridgeInstance.adminSetResource(
         ERC20HandlerInstance.address,
@@ -153,7 +157,8 @@ contract(
         "TOK"
       );
       ERC20HandlerInstance2 = await ERC20HandlerContract.new(
-        BridgeInstance.address
+        BridgeInstance.address,
+        DefaultMessageReceiverInstance.address
       );
 
       await BridgeInstance.adminSetResource(

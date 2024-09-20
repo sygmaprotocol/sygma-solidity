@@ -6,6 +6,7 @@ const Ethers = require("ethers");
 const Helpers = require("../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC1155HandlerContract = artifacts.require("ERC1155Handler");
 const ERC1155MintableContract = artifacts.require("ERC1155PresetMinterPauser");
@@ -181,8 +182,13 @@ contract("Bridge - [admin]", async (accounts) => {
       ERC20MintableInstance.address,
       domainID
     );
+    const DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
     const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     assert.equal(
@@ -215,8 +221,13 @@ contract("Bridge - [admin]", async (accounts) => {
       ERC20MintableInstance.address,
       domainID
     );
+    const DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
     const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     await TruffleAssert.passes(
@@ -300,8 +311,13 @@ contract("Bridge - [admin]", async (accounts) => {
       ERC20MintableInstance.address,
       domainID
     );
-    const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
+    ERC20HandlerInstance = await ERC20HandlerContract.new(
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     await TruffleAssert.passes(
@@ -351,8 +367,13 @@ contract("Bridge - [admin]", async (accounts) => {
       ERC20MintableInstance.address,
       domainID
     );
-    const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new(
+      [],
+      100000
+    );
+    ERC20HandlerInstance = await ERC20HandlerContract.new(
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
 
     await TruffleAssert.passes(

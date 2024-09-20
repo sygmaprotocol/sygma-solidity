@@ -7,6 +7,7 @@ const Ethers = require("ethers");
 const Helpers = require("../../helpers");
 
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 
 contract("ERC20Handler - [isWhitelisted]", async (accounts) => {
@@ -14,10 +15,12 @@ contract("ERC20Handler - [isWhitelisted]", async (accounts) => {
   const emptySetResourceData = "0x";
 
   let BridgeInstance;
+  let DefaultMessageReceiverInstance;
   let ERC20MintableInstance1;
   let initialResourceIDs;
 
   beforeEach(async () => {
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
     await Promise.all([
       (BridgeInstance = await Helpers.deployBridge(domainID, accounts[0])),
       ERC20MintableContract.new("token", "TOK").then(
@@ -40,13 +43,14 @@ contract("ERC20Handler - [isWhitelisted]", async (accounts) => {
 
   it("[sanity] contract should be deployed successfully", async () => {
     await TruffleAssert.passes(
-      ERC20HandlerContract.new(BridgeInstance.address)
+      ERC20HandlerContract.new(BridgeInstance.address, DefaultMessageReceiverInstance.address)
     );
   });
 
   it("initialContractAddress should be whitelisted", async () => {
     const ERC20HandlerInstance = await ERC20HandlerContract.new(
-      BridgeInstance.address
+      BridgeInstance.address,
+      DefaultMessageReceiverInstance.address
     );
     await BridgeInstance.adminSetResource(
       ERC20HandlerInstance.address,

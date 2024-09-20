@@ -1,5 +1,6 @@
 // The Licensed Work is (c) 2022 Sygma
 // SPDX-License-Identifier: LGPL-3.0-only
+const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver");
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 const ERC721HandlerContract = artifacts.require("ERC721Handler");
@@ -28,6 +29,7 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
 
   let BridgeInstance;
   let ERC20MintableInstance;
+  let DefaultMessageReceiverInstance;
   let ERC20HandlerInstance;
   let ERC721MintableInstance;
   let ERC721HandlerInstance;
@@ -68,8 +70,10 @@ contract("Gas Benchmark - [Deposits]", async (accounts) => {
       originDomainID
     );
 
+    DefaultMessageReceiverInstance = await DefaultMessageReceiverContract.new([], 100000);
+
     await Promise.all([
-      ERC20HandlerContract.new(BridgeInstance.address).then(
+      ERC20HandlerContract.new(BridgeInstance.address, DefaultMessageReceiverInstance.address).then(
         (instance) => (ERC20HandlerInstance = instance)
       ),
       ERC20MintableInstance.mint(depositorAddress, erc20TokenAmount),

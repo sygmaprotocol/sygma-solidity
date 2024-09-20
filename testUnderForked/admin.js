@@ -86,7 +86,8 @@ contract("TwapFeeHandler - [admin]", async (accounts) => {
     );
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
-      FeeHandlerRouterInstance.address
+      FeeHandlerRouterInstance.address,
+      0
     );
     ADMIN_ROLE = await DynamicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
   });
