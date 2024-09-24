@@ -32,8 +32,8 @@
     "generate-types": "npm run generate-types:ethers",
     "generate-types:ethers": "npx typechain \"build/contracts/*\" --target=ethers-v5 --out-dir src/ethers",
     "test": "echo \\\\\\\"Error: no test specified\\\\\\\" && exit 1",
-    "deploy:local:1": "concurrently --raw --kill-others --success first \"ganache --chainId 1337 -d --db data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test\"",
-    "deploy:local:2": "concurrently --raw --kill-others --success first \"ganache -p 8547 --chainId 1338 -d --db data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test2\"",
+    "deploy:local:1": "concurrently --raw --kill-others --success first \"ganache --chain.chainId 1337 --database.dbPath data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test\"",
+    "deploy:local:2": "concurrently --raw --kill-others --success first \"ganache -p 8547 --chain.chainId 1338 --database.dbPath data/ --m 'black toward wish jar twin produce remember fluid always confirm bacon slush' \" \"truffle migrate --network test2\"",
     "lint": "npm run lint:solidity && npm run lint:js",
     "lint:solidity": "solhint contracts/**/*.sol",
     "lint:js": "eslint --ext .js ."
