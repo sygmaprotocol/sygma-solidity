@@ -4,7 +4,7 @@ pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
 import "./ERCHandlerHelpers.sol";
-import "../ERC1155Safe.sol";
+import { ERC1155Safe } from "../ERC1155Safe.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC165Checker.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/IERC1155MetadataURI.sol";
@@ -94,7 +94,7 @@ contract ERC1155Handler is IHandler, ERCHandlerHelpers, ERC1155Safe, ERC1155Hold
         @param data Consists of ABI-encoded {tokenAddress}, {recipient}, {tokenIDs},
         {amounts}, and {transferData} of types address, address, uint[], uint[], bytes.
      */
-    function withdraw(bytes memory data) external override onlyBridge {
+    function withdraw(bytes memory data) external override onlyAuthorized {
         address tokenAddress;
         address recipient;
         uint[] memory tokenIDs;

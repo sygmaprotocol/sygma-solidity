@@ -4,7 +4,7 @@ pragma solidity 0.8.11;
 
 import "../interfaces/IHandler.sol";
 import "./ERCHandlerHelpers.sol";
-import "../XC20Safe.sol";
+import { XC20Safe } from "../XC20Safe.sol";
 
 /**
     @title Handles XC20 deposits and deposit executions.

@@ -170,7 +170,7 @@ contract("E2E ERC1155 - Same Chain", async (accounts) => {
     );
   });
 
-  it("Handler's withdraw function can be called by only bridge", async () => {
+  it("Handler's withdraw function can be called only by authorized address", async () => {
     const withdrawData = Helpers.createERC1155WithdrawData(
       ERC1155MintableInstance.address,
       depositorAddress,
@@ -179,9 +179,9 @@ contract("E2E ERC1155 - Same Chain", async (accounts) => {
       "0x"
     );
 
-    await Helpers.reverts(
-      ERC1155HandlerInstance.withdraw(withdrawData, {from: depositorAddress}),
-      "sender must be bridge contract"
+    await Helpers.expectToRevertWithCustomError(
+      ERC1155HandlerInstance.withdraw.call(withdrawData, {from: depositorAddress}),
+      "NotAuthorized()"
     );
   });
 

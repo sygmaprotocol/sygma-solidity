@@ -3,7 +3,7 @@
 pragma solidity 0.8.11;
 
 import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
-import "./handlers/ERCHandlerHelpers.sol";
+import { ERCHandlerHelpers } from "./handlers/ERCHandlerHelpers.sol";
 import "./interfaces/IERC20Plus.sol";
 
 contract NoArgument {
