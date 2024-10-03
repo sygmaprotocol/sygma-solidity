@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.11.0](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.10.1...v2.11.0) (2024-10-03)
+
+
+### Features
+
+* allow liquidity withdrawal from EOA or multisig ([#275](https://github.com/sygmaprotocol/sygma-solidity/issues/275)) ([ddac879](https://github.com/sygmaprotocol/sygma-solidity/commit/ddac8798fd8f5338d78b1b5a24d7ddc0afbd2462))
+
 ## [2.10.1](https://github.com/sygmaprotocol/sygma-solidity/compare/v2.10.0...v2.10.1) (2024-09-24)
 
 
