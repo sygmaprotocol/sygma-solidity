@@ -13,6 +13,7 @@ const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler");
 const NativeTokenAdapterContract = artifacts.require("NativeTokenAdapter");  
 const NativeTokenHandlerContract = artifacts.require("NativeTokenHandler");  
 const SwapAdapterContract = artifacts.require("SwapAdapter");
+const ERC20MintableContract = artifacts.require("ERC20PresetMinterPauser");
 
 contract("SwapAdapter", async (accounts) => {
   // Fee handler is mocked by BasicFeeHandler
@@ -37,16 +38,6 @@ contract("SwapAdapter", async (accounts) => {
     originDomainID
   );
   const resourceID_Native = "0x0000000000000000000000000000000000000000000000000000000000000650";
-  
-
-  let usdc_owner;
-  let eth_owner;
-
-  const addressEth = "0x604981db0C06Ea1b37495265EDa4619c8Eb95A3D";
-  
-
-  const addressDai = "0xe5f8086dac91e039b1400febf0ab33ba3487f29a";
-
 
   const addressUsdc = "0x7713974908Be4BEd47172370115e8b1219F4A5f0";
 
@@ -58,14 +49,13 @@ contract("SwapAdapter", async (accounts) => {
   let NativeTokenAdapterInstance;
   let NativeTokenHandlerInstance;
   let SwapAdapterInstance;
-  let depositData;
+  let usdc;
+  let usdcOwner;
 
   beforeEach(async () => {
     const provider = new Ethers.providers.JsonRpcProvider();
-    usdc_owner = await provider.getSigner(USDC_OWNER_ADDRESS);
-    buyerForEth = await provider.getSigner(addressEth);
-    buyerForDai = await provider.getSigner(addressDai);
-    buyerForUsdc = await provider.getSigner(addressUsdc);
+    usdcOwner = await provider.getSigner(USDC_OWNER_ADDRESS);
+
     BridgeInstance = await Helpers.deployBridge(
         originDomainID,
         accounts[0]
@@ -98,10 +88,29 @@ contract("SwapAdapter", async (accounts) => {
       UNISWAP_SWAP_ROUTER_ADDRESS,
       NativeTokenAdapterInstance.address
     );
+    usdc = await ERC20MintableContract.at(USDC_ADDRESS);
+
+    // TODO: Set resourceIds
   });
 
   it.only("should swap tokens to ETH and bridge ETH", async () => {
-
+    const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
+    const pathFees = [500, 500];
+    const amount = 1000000;
+    const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
+    await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
+    // TODO: impersonate account
+    await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
+    const tx = await SwapAdapterInstance.depositTokensToEth(
+      destinationDomainID,
+      recipientAddress.address,
+      USDC_ADDRESS,
+      amount,
+      amountOutMinimum,
+      pathTokens,
+      pathFees,
+      {from: USDC_OWNER_ADDRESS}
+    );
 
   });
 
