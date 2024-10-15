@@ -6,7 +6,7 @@ pragma solidity 0.8.11;
     @title Interface for Bridge contract.
     @author ChainSafe Systems.
  */
-interface IGmpTransferAdapter {
+interface INativeTokenAdapter {
     /**
         @notice Makes a native token deposit with an included message.
         @param destinationDomainID ID of destination chain.

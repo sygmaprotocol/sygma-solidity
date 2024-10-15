@@ -19,6 +19,7 @@ contract SwapAdapter is AccessControl {
     bytes32 public immutable _resourceIDEth;
     address immutable _weth;
     IV3SwapRouter public _swapRouter;
+    INativeTokenAdapter _nativeTokenAdapter;
 
     mapping(address => bytes32) public tokenToResourceID;
 
@@ -37,12 +38,14 @@ contract SwapAdapter is AccessControl {
         IBridge bridge,
         bytes32 resourceIDEth,
         address weth,
-        IV3SwapRouter swapRouter
+        IV3SwapRouter swapRouter,
+        INativeTokenAdapter nativeTokenAdapter
     ) {
         _bridge = bridge;
         _resourceIDEth = resourceIDEth;
         _weth = weth;
         _swapRouter = swapRouter;
+        _nativeTokenAdapter = nativeTokenAdapter;
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -61,7 +64,6 @@ contract SwapAdapter is AccessControl {
     function depositTokensToEth(
         uint8 destinationDomainID,
         address recipient,
-        uint256 gas,
         address token,
         uint256 tokenAmount,
         uint256 amountOutMinimum,
@@ -97,41 +99,12 @@ contract SwapAdapter is AccessControl {
 
         // Make Native Token deposit
         if (amount == 0) revert InsufficientAmount(amount);
-        bytes memory depositDataAfterAmount = abi.encodePacked(
-            uint256(20),
-            recipient
-        );
-        uint256 fee;
-        {
-            address feeHandlerRouter = _bridge._feeHandler();
-            (fee, ) = IFeeHandler(feeHandlerRouter).calculateFee(
-                address(this),
-                _bridge._domainID(),
-                destinationDomainID,
-                _resourceIDEth,
-                abi.encodePacked(amount, depositDataAfterAmount),
-                ""  // feeData - not parsed
-            );
-        }
-
-        if (amount < fee) revert AmountLowerThanFee(amount);
-        amount -= fee;
-
-        bytes memory depositData = abi.encodePacked(
-            amount,
-            depositDataAfterAmount
-        );
-
-        _bridge.deposit{value: fee}(destinationDomainID, _resourceIDEth, depositData, "");
-
-        address nativeHandlerAddress = _bridge._resourceIDToHandlerAddress(_resourceIDEth);
-        (bool success, ) = nativeHandlerAddress.call{value: amount}("");
-        if (!success) revert FailedFundsTransfer();
+        _nativeTokenAdapter.depositToEVM{value: amount}(destinationDomainID, recipient);
 
         // Return unspent fee to msg.sender
         uint256 leftover = address(this).balance;
         if (leftover > 0) {
-            (success, ) = payable(msg.sender).call{value: leftover}("");
+            payable(msg.sender).call{value: leftover}("");
             // Do not revert if sender does not want to receive.
         }
     }
