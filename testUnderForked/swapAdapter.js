@@ -10,6 +10,7 @@ const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver"); 
 const FeeHandlerRouterContract = artifacts.require("FeeHandlerRouter"); 
 const BasicFeeHandlerContract = artifacts.require("BasicFeeHandler"); 
+const NativeTokenAdapterContract = artifacts.require("NativeTokenAdapter");  
 const NativeTokenHandlerContract = artifacts.require("NativeTokenHandler");  
 const SwapAdapterContract = artifacts.require("SwapAdapter");
 
@@ -54,6 +55,7 @@ contract("SwapAdapter", async (accounts) => {
   let DefaultMessageReceiverInstance;
   let BasicFeeHandlerInstance;
   let ERC20HandlerInstance;
+  let NativeTokenAdapterInstance;
   let NativeTokenHandlerInstance;
   let SwapAdapterInstance;
   let depositData;
@@ -80,16 +82,21 @@ contract("SwapAdapter", async (accounts) => {
       BridgeInstance.address,
       FeeHandlerRouterInstance.address
     );
+    NativeTokenAdapterInstance = await NativeTokenAdapterContract.new(
+      BridgeInstance.address,
+      resourceID_Native
+    );
     NativeTokenHandlerInstance = await NativeTokenHandlerContract.new(
       BridgeInstance.address,
-      NativeTokenAdapter, //to deploy
+      NativeTokenAdapterInstance.address,
       DefaultMessageReceiverInstance.address
     );
     SwapAdapterInstance = await SwapAdapterContract.new(
       BridgeInstance.address,
       resourceID_Native,
       WETH_ADDRESS,
-      UNISWAP_SWAP_ROUTER_ADDRESS
+      UNISWAP_SWAP_ROUTER_ADDRESS,
+      NativeTokenAdapterInstance.address
     );
   });
 

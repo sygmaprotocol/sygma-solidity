@@ -16,7 +16,6 @@ contract SwapAdapter is AccessControl {
     using SafeERC20 for IERC20;
 
     IBridge public immutable _bridge;
-    bytes32 public immutable _resourceIDEth;
     address immutable _weth;
     IV3SwapRouter public _swapRouter;
     INativeTokenAdapter _nativeTokenAdapter;
@@ -42,7 +41,6 @@ contract SwapAdapter is AccessControl {
         INativeTokenAdapter nativeTokenAdapter
     ) {
         _bridge = bridge;
-        _resourceIDEth = resourceIDEth;
         _weth = weth;
         _swapRouter = swapRouter;
         _nativeTokenAdapter = nativeTokenAdapter;
@@ -138,7 +136,6 @@ contract SwapAdapter is AccessControl {
                 ""  // feeData - not parsed
             );
         }
-
 
         if (msg.value < fee) revert MsgValueLowerThanFee(msg.value);
         uint256 amountOut;
