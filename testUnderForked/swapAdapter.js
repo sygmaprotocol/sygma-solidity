@@ -97,19 +97,21 @@ contract("SwapAdapter", async (accounts) => {
     const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
     const pathFees = [500, 500];
     const amount = 1000000;
+    const fee = 0;
     const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
     await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
     // TODO: impersonate account
     await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
     const tx = await SwapAdapterInstance.depositTokensToEth(
       destinationDomainID,
-      recipientAddress.address,
+      recipientAddress,
       USDC_ADDRESS,
       amount,
       amountOutMinimum,
       pathTokens,
       pathFees,
-      {from: USDC_OWNER_ADDRESS}
+      {from: USDC_OWNER_ADDRESS,
+      value: fee}
     );
 
   });
