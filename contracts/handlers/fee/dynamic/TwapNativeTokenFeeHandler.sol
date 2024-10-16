@@ -15,13 +15,16 @@ contract TwapNativeTokenFeeHandler is TwapFeeHandler {
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
         @param gasUsed Default gas used for proposal execution in the destination.
+        @param recoverGas Gas used for an optional call fallback.
      */
     constructor(
         address bridgeAddress,
         address feeHandlerRouterAddress,
-        uint32 gasUsed
+        uint32 gasUsed,
+        uint32 recoverGas
     ) TwapFeeHandler(bridgeAddress, feeHandlerRouterAddress) {
-        _setFeeProperties(gasUsed);
+        _setGasUsed(gasUsed);
+        _setRecoverGas(recoverGas);
     }
 
     /**
@@ -38,6 +41,7 @@ contract TwapNativeTokenFeeHandler is TwapFeeHandler {
         if (depositData.length > (pointer + 64)) {
             uint256 gas = abi.decode(depositData[pointer:], (uint256));
             maxFee += gas;
+            maxFee += _recoverGas;
         }
         uint256 destinationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
         if (destinationCoinPrice == 0) revert IncorrectPrice();

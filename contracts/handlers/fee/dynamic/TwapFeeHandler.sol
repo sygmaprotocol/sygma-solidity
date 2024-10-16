@@ -26,6 +26,7 @@ abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
     ProtocolFeeType public protocolFeeType;
 
     uint32 public _gasUsed;
+    uint32 public _recoverGas;
 
     mapping(uint8 => address) public destinationNativeCoinWrap;
     mapping(uint8 => Fee) public destinationFee;
@@ -43,7 +44,8 @@ abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
     }
 
     event FeeOracleAddressSet(TwapOracle feeOracleAddress);
-    event FeePropertySet(uint32 gasUsed);
+    event GasUsedSet(uint32 gasUsed);
+    event RecoverGasSet(uint32 recoverGas);
     event GasPriceSet(uint8 destinationDomainID, uint256 gasPrice);
     event WrapTokenAddressSet(uint8 destinationDomainID, address wrapTokenAddress);
 
@@ -136,16 +138,29 @@ abstract contract TwapFeeHandler is IFeeHandler, AccessControl {
     }
 
     /**
-        @notice Sets the fee properties.
-        @param gasUsed Default gas used for proposal execution in the destination.
+        @notice Sets the recover gas property.
+        @param recoverGas Gas used for an optional call fallback.
      */
-    function setFeeProperties(uint32 gasUsed) external onlyAdmin {
-        _setFeeProperties(gasUsed);
+    function setRecoverGas(uint32 recoverGas) external onlyAdmin {
+        _setRecoverGas(recoverGas);
     }
 
-    function _setFeeProperties(uint32 gasUsed) internal {
+    function _setRecoverGas(uint32 recoverGas) internal {
+        _recoverGas = recoverGas;
+        emit RecoverGasSet(recoverGas);
+    }
+
+    /**
+        @notice Sets the gas used property.
+        @param gasUsed Default gas used for proposal execution in the destination.
+     */
+    function setGasUsed(uint32 gasUsed) external onlyAdmin {
+        _setGasUsed(gasUsed);
+    }
+
+    function _setGasUsed(uint32 gasUsed) internal {
         _gasUsed = gasUsed;
-        emit FeePropertySet(gasUsed);
+        emit GasUsedSet(gasUsed);
     }
 
     /**
