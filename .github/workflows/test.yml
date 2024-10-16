@@ -2,7 +2,8 @@ name: Test
 
 on:
   push:
-    - mpetrun5/add-revert-gas
+    branches:
+      - mpetrun5/add-revert-gas
 
 jobs:
   test:
