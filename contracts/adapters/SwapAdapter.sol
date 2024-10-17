@@ -32,6 +32,7 @@ contract SwapAdapter is AccessControl {
     error AmountLowerThanFee(uint256 amount);
 
     event TokenResourceIDSet(address token, bytes32 resourceID);
+    event TokensSwapped(address token, uint256 amountOut);
 
     constructor(
         IBridge bridge,
@@ -67,7 +68,7 @@ contract SwapAdapter is AccessControl {
         uint256 amountOutMinimum,
         address[] memory pathTokens,
         uint24[] memory pathFees
-    ) external payable {
+    ) external {
         if (tokenToResourceID[token] == bytes32(0)) revert TokenInvalid();
 
         // Swap all tokens to ETH (exact input)
@@ -92,6 +93,8 @@ contract SwapAdapter is AccessControl {
 
             amount = _swapRouter.exactInput(params);
         }
+
+        emit TokensSwapped(_weth, amount);
 
         IWETH(_weth).withdraw(amount);
 
@@ -158,6 +161,7 @@ contract SwapAdapter is AccessControl {
             });
 
             amountOut = _swapRouter.exactInput{value: swapAmount}(params);
+            emit TokensSwapped(token, amountOut);
         }
 
         bytes memory depositData = abi.encodePacked(
@@ -188,14 +192,16 @@ contract SwapAdapter is AccessControl {
         }
 
         tokenIn = tokenIn == address(0) ? address(_weth) : tokenIn;
-        if (tokens[tokens.length - 1]  != tokenIn) revert PathInvalid();
+        if (tokens[0] != tokenIn) revert PathInvalid();
 
         tokenOut = tokenOut == address(0) ? address(_weth) : tokenOut;
-        if (tokens[0] != tokenOut) revert PathInvalid();
+        if (tokens[tokens.length - 1] != tokenOut) revert PathInvalid();
 
         for (uint256 i = 0; i < tokens.length - 1; i++){
             path = abi.encodePacked(path, tokens[i], fees[i]);
         }
         path = abi.encodePacked(path, tokens[tokens.length - 1]);
     }
+
+    receive() external payable {}
 }

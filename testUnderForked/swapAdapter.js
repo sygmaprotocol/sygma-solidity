@@ -5,6 +5,7 @@ const TruffleAssert = require("truffle-assertions");
 const Ethers = require("ethers");
 
 const Helpers = require("../test/helpers");
+const { provider } = require("ganache");
 
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver"); 
@@ -20,8 +21,7 @@ contract("SwapAdapter", async (accounts) => {
   // deploy bridge, ERC20Handler, NativeTokenHandler, BasicFeeHandler, SwapAdapter
   // use SwapRouter, USDC, WETH, user with USDC, user with ETH from mainnet fork
   const recipientAddress = accounts[2];
-  const tokenAmount = Ethers.utils.parseEther("1");
-  const fee = Ethers.utils.parseEther("0.05");
+  const fee = 1000;
   const depositorAddress = accounts[1];
   const emptySetResourceData = "0x";
   const originDomainID = 1;
@@ -50,6 +50,7 @@ contract("SwapAdapter", async (accounts) => {
   let NativeTokenHandlerInstance;
   let SwapAdapterInstance;
   let usdc;
+  let weth;
   let usdcOwner;
 
   beforeEach(async () => {
@@ -89,20 +90,36 @@ contract("SwapAdapter", async (accounts) => {
       NativeTokenAdapterInstance.address
     );
     usdc = await ERC20MintableContract.at(USDC_ADDRESS);
+    weth = await ERC20MintableContract.at(WETH_ADDRESS);
 
-    // TODO: Set resourceIds
+    await BridgeInstance.adminSetResource(
+      NativeTokenHandlerInstance.address,
+      resourceID_Native,
+      NativeTokenHandlerInstance.address,
+      emptySetResourceData
+    );
+    await BasicFeeHandlerInstance.changeFee(destinationDomainID, resourceID_Native, fee);
+    await BridgeInstance.adminChangeFeeHandler(FeeHandlerRouterInstance.address),
+    await FeeHandlerRouterInstance.adminSetResourceHandler(
+      destinationDomainID,
+      resourceID_Native,
+      BasicFeeHandlerInstance.address
+    ),
+
+    // set MPC address to unpause the Bridge
+    await BridgeInstance.endKeygen(Helpers.mpcAddress);
+
   });
 
   it.only("should swap tokens to ETH and bridge ETH", async () => {
     const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
-    const pathFees = [500, 500];
+    const pathFees = [500];
     const amount = 1000000;
-    const fee = 0;
     const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
     await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
     // TODO: impersonate account
     await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
-    const tx = await SwapAdapterInstance.depositTokensToEth(
+    const depositTx = await SwapAdapterInstance.depositTokensToEth(
       destinationDomainID,
       recipientAddress,
       USDC_ADDRESS,
@@ -110,10 +127,38 @@ contract("SwapAdapter", async (accounts) => {
       amountOutMinimum,
       pathTokens,
       pathFees,
-      {from: USDC_OWNER_ADDRESS,
-      value: fee}
+      {from: USDC_OWNER_ADDRESS}
+    );
+    expect(await web3.eth.getBalance(SwapAdapterInstance.address)).to.eq("0");
+    expect(await web3.eth.getBalance(BasicFeeHandlerInstance.address)).to.eq(fee.toString());
+    expect(await web3.eth.getBalance(NativeTokenHandlerInstance.address)).to.not.eq("0");
+
+    const depositCount = await BridgeInstance._depositCounts.call(
+      destinationDomainID
+    );
+    const expectedDepositNonce = 1;
+    assert.strictEqual(depositCount.toNumber(), expectedDepositNonce);
+
+    const internalTx = await TruffleAssert.createTransactionResult(
+      BridgeInstance,
+      depositTx.tx
     );
 
+    const events = await SwapAdapterInstance.getPastEvents("TokensSwapped", { fromBlock: depositTx.receipt.blockNumber });
+    const amountOut = events[events.length - 1].args.amountOut;
+
+    const depositData = await Helpers.createERCDepositData(amountOut - fee, 20, recipientAddress);
+
+    TruffleAssert.eventEmitted(internalTx, "Deposit", (event) => {
+      return (
+        event.destinationDomainID.toNumber() === destinationDomainID &&
+        event.resourceID === resourceID_Native.toLowerCase() &&
+        event.depositNonce.toNumber() === expectedDepositNonce &&
+        event.user === NativeTokenAdapterInstance.address &&
+        event.data === depositData.toLowerCase() &&
+        event.handlerResponse === null
+      );
+    });
   });
 
   it("should swap ETH to tokens and bridge tokens", async () => {
