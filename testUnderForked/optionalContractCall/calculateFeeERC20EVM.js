@@ -49,6 +49,7 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
   const higherExecutionGasAmount = 30000000;
   const lowerExecutionGasAmount = 3000000;
   const feeData = "0x";
+  const feePercentage = 1000; // 10%
 
   let UniswapFactoryInstance;
   let TwapOracleInstance;
@@ -175,5 +176,57 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
     );
 
     expect(higherExecutionGasAmountRes.fee.toNumber()).to.be.gt(lowerExecutionGasAmountRes.fee.toNumber())
+  });
+
+  it("[percentage protocol fee] should calculate in recover gas for tx cost", async () => {
+    const mintableERC20Iface = new Ethers.utils.Interface(["function mint(address to, uint256 amount)"]);
+    const actions = [{
+      nativeValue: 0,
+      callTo: ERC20MintableInstance.address,
+      approveTo: Ethers.constants.AddressZero,
+      tokenSend: Ethers.constants.AddressZero,
+      tokenReceive: Ethers.constants.AddressZero,
+      data: mintableERC20Iface.encodeFunctionData("mint", [recipientAddress, "20"]),
+    }]
+    const message = Helpers.createMessageCallData(
+      transactionId,
+      actions,
+      recipientAddress
+    );
+
+    const depositData = Helpers.createOptionalContractCallDepositData(
+      transferredAmount,
+      Ethers.constants.AddressZero,
+      higherExecutionGasAmount,
+      message
+    );
+
+    await DynamicFeeHandlerInstance.setGasPrice(
+      destinationDomainID,
+      gasPrice,  // Polygon gas price is 200 Gwei
+      ProtocolFeeType.Percentage,
+      feePercentage
+    );
+
+    const resWithoutRecoverGas = await FeeHandlerRouterInstance.calculateFee.call(
+      sender,
+      originDomainID,
+      destinationDomainID,
+      resourceID,
+      depositData,
+      "0x00"
+    );
+
+    await DynamicFeeHandlerInstance.setRecoverGas(gasUsed);
+
+    const resWithRecoverGas = await FeeHandlerRouterInstance.calculateFee.call(
+      sender,
+      originDomainID,
+      destinationDomainID,
+      resourceID,
+      depositData,
+      "0x00"
+    );
+    expect(resWithRecoverGas.fee.toNumber()).to.be.gt(resWithoutRecoverGas.fee.toNumber());
   });
 });

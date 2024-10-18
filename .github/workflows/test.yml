@@ -1,9 +1,8 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - mpetrun5/add-revert-gas
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   test:

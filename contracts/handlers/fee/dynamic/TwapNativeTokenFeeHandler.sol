@@ -41,7 +41,7 @@ contract TwapNativeTokenFeeHandler is TwapFeeHandler {
         if (depositData.length > (pointer + 64)) {
             uint256 gas = abi.decode(depositData[pointer:], (uint256));
             maxFee += gas;
-            maxFee += _recoverGas;
+            maxFee += uint256(_recoverGas);
         }
         uint256 destinationCoinPrice = twapOracle.getPrice(destinationNativeCoinWrap[destinationDomainID]);
         if (destinationCoinPrice == 0) revert IncorrectPrice();
