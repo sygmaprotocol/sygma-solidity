@@ -217,7 +217,7 @@ contract("TwapGenericFeeHandler - [collectFee]", async (accounts) => {
     const fee = Ethers.BigNumber.from(expectedFee.toString()).div(2);
 
     const errorValues = await Helpers.expectToRevertWithCustomError(
-      BridgeInstance.deposit(
+      BridgeInstance.deposit.call(
         destinationDomainID,
         resourceID,
         depositData,
@@ -238,7 +238,7 @@ contract("TwapGenericFeeHandler - [collectFee]", async (accounts) => {
     await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0);
 
     await Helpers.expectToRevertWithCustomError(
-      BridgeInstance.deposit(
+      BridgeInstance.deposit.call(
         destinationDomainID,
         resourceID,
         depositData,

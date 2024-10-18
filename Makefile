@@ -23,7 +23,7 @@ start-forkedMainnet:
 
 test-forked:
 	@echo " > \033[32mTesting contracts... \033[0m "
-	truffle test --stacktrace testUnderForked/*
+	npx truffle test --stacktrace testUnderForked/*
 
 start-geth:
 	@echo " > \033[32mStarting geth... \033[0m "

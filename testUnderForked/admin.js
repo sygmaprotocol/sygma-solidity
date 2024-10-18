@@ -87,6 +87,7 @@ contract("TwapFeeHandler - [admin]", async (accounts) => {
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address,
+      0,
       0
     );
     ADMIN_ROLE = await DynamicFeeHandlerInstance.DEFAULT_ADMIN_ROLE();
@@ -119,21 +120,40 @@ contract("TwapFeeHandler - [admin]", async (accounts) => {
     );
   });
 
-  it("should set fee properties and emit 'FeePropertySet' event", async () => {
+  it("should set gas used property and emit 'GasUsedSet' event", async () => {
     assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), "0");
-    const setFeeOraclePropertiesTx = await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
+    const setFeeOraclePropertiesTx = await DynamicFeeHandlerInstance.setGasUsed(gasUsed);
     assert.equal(await DynamicFeeHandlerInstance._gasUsed.call(), gasUsed);
 
-    TruffleAssert.eventEmitted(setFeeOraclePropertiesTx, "FeePropertySet", (event) => {
+    TruffleAssert.eventEmitted(setFeeOraclePropertiesTx, "GasUsedSet", (event) => {
       return (
         event.gasUsed.toNumber() === gasUsed
       );
     });
   });
 
-  it("should require admin role to change fee properties", async () => {
+  it("should require admin role to set gas used", async () => {
     await assertOnlyAdmin(
-      DynamicFeeHandlerInstance.setFeeProperties,
+      DynamicFeeHandlerInstance.setGasUsed,
+      gasUsed
+    );
+  });
+
+  it("should set revert gas property and emit 'RecoverGasSet' event", async () => {
+    assert.equal(await DynamicFeeHandlerInstance._recoverGas.call(), "0");
+    const setRecoverGasTx = await DynamicFeeHandlerInstance.setRecoverGas(gasUsed);
+    assert.equal(await DynamicFeeHandlerInstance._recoverGas.call(), gasUsed);
+
+    TruffleAssert.eventEmitted(setRecoverGasTx, "RecoverGasSet", (event) => {
+      return (
+        event.recoverGas.toNumber() === gasUsed
+      );
+    });
+  });
+
+  it("should require admin role to set recover gas", async () => {
+    await assertOnlyAdmin(
+      DynamicFeeHandlerInstance.setRecoverGas,
       gasUsed
     );
   });

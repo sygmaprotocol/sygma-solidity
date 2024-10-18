@@ -81,6 +81,7 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address,
+      0,
       0
     );
 
@@ -127,7 +128,7 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
       fixedProtocolFee
     );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
-    await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
+    await DynamicFeeHandlerInstance.setGasUsed(gasUsed);
 
     await BridgeInstance.adminSetResource(
       ERC20HandlerInstance.address,
@@ -221,7 +222,7 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
     const fee = Ethers.BigNumber.from(expectedFee.toString()).div(2);
 
     const errorValues = await Helpers.expectToRevertWithCustomError(
-      BridgeInstance.deposit(
+      BridgeInstance.deposit.call(
         destinationDomainID,
         resourceID,
         depositData,
@@ -242,7 +243,7 @@ contract("TwapNativeTokenFeeHandler - [collectFee]", async (accounts) => {
     await TwapOracleInstance.setPrice(MATIC_ADDRESS, 0);
 
     await Helpers.expectToRevertWithCustomError(
-      BridgeInstance.deposit(
+      BridgeInstance.deposit.call(
         destinationDomainID,
         resourceID,
         depositData,

@@ -102,6 +102,7 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
     DynamicFeeHandlerInstance = await DynamicFeeHandlerContract.new(
       BridgeInstance.address,
       FeeHandlerRouterInstance.address,
+      0,
       0
     );
     FeeHandlerRouterInstance.adminSetResourceHandler(
@@ -117,7 +118,7 @@ contract("TwapFeeHandler - [calculateFee]", async (accounts) => {
       fixedProtocolFee
     );
     await DynamicFeeHandlerInstance.setWrapTokenAddress(destinationDomainID, MATIC_ADDRESS);
-    await DynamicFeeHandlerInstance.setFeeProperties(gasUsed);
+    await DynamicFeeHandlerInstance.setGasUsed(gasUsed);
 
     depositData = Helpers.createERCDepositData(
       100,

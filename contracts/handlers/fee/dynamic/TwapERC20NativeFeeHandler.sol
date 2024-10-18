@@ -15,11 +15,13 @@ contract TwapERC20NativeFeeHandler is TwapNativeTokenFeeHandler {
         @param bridgeAddress Contract address of previously deployed Bridge.
         @param feeHandlerRouterAddress Contract address of previously deployed FeeHandlerRouter.
         @param gasUsed Default gas used for proposal execution in the destination.
+        @param recoverGas Gas used for an optional call fallback.
      */
     constructor(
         address bridgeAddress,
         address feeHandlerRouterAddress,
-        uint32 gasUsed
-    ) TwapNativeTokenFeeHandler(bridgeAddress, feeHandlerRouterAddress, gasUsed) {
+        uint32 gasUsed,
+        uint32 recoverGas
+    ) TwapNativeTokenFeeHandler(bridgeAddress, feeHandlerRouterAddress, gasUsed, recoverGas) {
     }
 }
