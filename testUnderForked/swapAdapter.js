@@ -84,7 +84,6 @@ contract("SwapAdapter", async (accounts) => {
     );
     SwapAdapterInstance = await SwapAdapterContract.new(
       BridgeInstance.address,
-      resourceID_Native,
       WETH_ADDRESS,
       UNISWAP_SWAP_ROUTER_ADDRESS,
       NativeTokenAdapterInstance.address

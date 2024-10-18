@@ -36,7 +36,6 @@ contract SwapAdapter is AccessControl {
 
     constructor(
         IBridge bridge,
-        bytes32 resourceIDEth,
         address weth,
         IV3SwapRouter swapRouter,
         INativeTokenAdapter nativeTokenAdapter
@@ -94,12 +93,12 @@ contract SwapAdapter is AccessControl {
             amount = _swapRouter.exactInput(params);
         }
 
-        emit TokensSwapped(_weth, amount);
-
         IWETH(_weth).withdraw(amount);
 
         // Make Native Token deposit
         if (amount == 0) revert InsufficientAmount(amount);
+        emit TokensSwapped(_weth, amount);
+        
         _nativeTokenAdapter.depositToEVM{value: amount}(destinationDomainID, recipient);
 
         // Return unspent fee to msg.sender
