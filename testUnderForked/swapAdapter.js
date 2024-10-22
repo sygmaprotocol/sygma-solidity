@@ -227,5 +227,120 @@ contract("SwapAdapter", async (accounts) => {
       );
     });
   });
-});
 
+  it("should fail if no approve", async () => {
+    const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
+    const pathFees = [500];
+    const amount = 1000000;
+    const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
+    await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
+    await Helpers.reverts(
+      SwapAdapterInstance.depositTokensToEth(
+        destinationDomainID,
+        recipientAddress,
+        USDC_ADDRESS,
+        amount,
+        amountOutMinimum,
+        pathTokens,
+        pathFees,
+        {from: USDC_OWNER_ADDRESS}
+      )
+    );
+  });
+
+  it("should fail if invalid path [tokens length and fees length]", async () => {
+    const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
+    const pathFees = [500, 300];
+    const amount = 1000000;
+    const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
+    await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
+    await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
+    const errorValues = await Helpers.expectToRevertWithCustomError(
+      SwapAdapterInstance.depositTokensToEth(
+        destinationDomainID,
+        recipientAddress,
+        USDC_ADDRESS,
+        amount,
+        amountOutMinimum,
+        pathTokens,
+        pathFees,
+        {from: USDC_OWNER_ADDRESS}
+      ),
+      "PathInvalid()"
+    );
+    // await Helpers.reverts(
+    //   SwapAdapterInstance.depositTokensToEth(
+    //     destinationDomainID,
+    //     recipientAddress,
+    //     USDC_ADDRESS,
+    //     amount,
+    //     amountOutMinimum,
+    //     pathTokens,
+    //     pathFees,
+    //     {from: USDC_OWNER_ADDRESS}
+    //   )
+    // );
+  });
+
+  it("should fail if invalid path [tokenIn is not token0]", async () => {
+    const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
+    const pathFees = [500];
+    const amount = 1000000;
+    const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
+    await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
+    await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
+    await Helpers.reverts(
+      SwapAdapterInstance.depositTokensToEth(
+        destinationDomainID,
+        recipientAddress,
+        WETH_ADDRESS,
+        amount,
+        amountOutMinimum,
+        pathTokens,
+        pathFees,
+        {from: USDC_OWNER_ADDRESS}
+      )
+    );
+  });
+
+  it("should fail if invalid path [tokenOut is not weth]", async () => {
+    const pathTokens = [USDC_ADDRESS, USDC_ADDRESS];
+    const pathFees = [500];
+    const amount = 1000000;
+    const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
+    await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
+    await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
+    await Helpers.reverts(
+      SwapAdapterInstance.depositTokensToEth(
+        destinationDomainID,
+        recipientAddress,
+        USDC_ADDRESS,
+        amount,
+        amountOutMinimum,
+        pathTokens,
+        pathFees,
+        {from: USDC_OWNER_ADDRESS}
+      )
+    );
+  });
+
+  it("should fail if resource id is not configured", async () => {
+    const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
+    const pathFees = [500];
+    const amount = 1000000;
+    const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
+    await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
+    await Helpers.reverts(
+      SwapAdapterInstance.depositTokensToEth(
+        destinationDomainID,
+        recipientAddress,
+        USDC_ADDRESS,
+        amount,
+        amountOutMinimum,
+        pathTokens,
+        pathFees,
+        {from: USDC_OWNER_ADDRESS}
+      )
+    );
+  });
+});
