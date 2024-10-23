@@ -6,6 +6,8 @@ const Ethers = require("ethers");
 
 const Helpers = require("../test/helpers");
 const { provider } = require("ganache");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const ERC20HandlerContract = artifacts.require("ERC20Handler");
 const DefaultMessageReceiverContract = artifacts.require("DefaultMessageReceiver"); 
@@ -26,21 +28,18 @@ contract("SwapAdapter", async (accounts) => {
   const emptySetResourceData = "0x";
   const originDomainID = 1;
   const destinationDomainID = 3;
-  const gasUsed = 100000;
-  const gasPrice = 200000000000;
-  const sender = accounts[0];
   const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
   const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-  const USDC_OWNER_ADDRESS =  "0x7713974908Be4BEd47172370115e8b1219F4A5f0";
+  const USDC_OWNER_ADDRESS =  process.env.USDC_OWNER_ADDRESS;
+  // const USDC_OWNER_ADDRESS =  "0x7713974908Be4BEd47172370115e8b1219F4A5f0";
+  // console.log(USDC_OWNER_ADDRESS);
+  // console.log(process.env.USDC_OWNER_ADDRESS);
   const UNISWAP_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
   const resourceID_USDC = Helpers.createResourceID(
     USDC_ADDRESS,
     originDomainID
   );
   const resourceID_Native = "0x0000000000000000000000000000000000000000000000000000000000000650";
-
-  const addressUsdc = "0x7713974908Be4BEd47172370115e8b1219F4A5f0";
-
 
   let BridgeInstance;
   let DefaultMessageReceiverInstance;
@@ -50,13 +49,8 @@ contract("SwapAdapter", async (accounts) => {
   let NativeTokenHandlerInstance;
   let SwapAdapterInstance;
   let usdc;
-  let weth;
-  let usdcOwner;
 
   beforeEach(async () => {
-    const provider = new Ethers.providers.JsonRpcProvider();
-    usdcOwner = await provider.getSigner(USDC_OWNER_ADDRESS);
-
     BridgeInstance = await Helpers.deployBridge(
         originDomainID,
         accounts[0]
@@ -89,7 +83,6 @@ contract("SwapAdapter", async (accounts) => {
       NativeTokenAdapterInstance.address
     );
     usdc = await ERC20MintableContract.at(USDC_ADDRESS);
-    weth = await ERC20MintableContract.at(WETH_ADDRESS);
 
     await BridgeInstance.adminSetResource(
       NativeTokenHandlerInstance.address,
@@ -255,8 +248,8 @@ contract("SwapAdapter", async (accounts) => {
     const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
     await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
     await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
-    const errorValues = await Helpers.expectToRevertWithCustomError(
-      SwapAdapterInstance.depositTokensToEth(
+    await Helpers.expectToRevertWithCustomError(
+      SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
         USDC_ADDRESS,
@@ -268,38 +261,27 @@ contract("SwapAdapter", async (accounts) => {
       ),
       "PathInvalid()"
     );
-    // await Helpers.reverts(
-    //   SwapAdapterInstance.depositTokensToEth(
-    //     destinationDomainID,
-    //     recipientAddress,
-    //     USDC_ADDRESS,
-    //     amount,
-    //     amountOutMinimum,
-    //     pathTokens,
-    //     pathFees,
-    //     {from: USDC_OWNER_ADDRESS}
-    //   )
-    // );
   });
 
   it("should fail if invalid path [tokenIn is not token0]", async () => {
-    const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
+    const pathTokens = [WETH_ADDRESS, USDC_ADDRESS];
     const pathFees = [500];
     const amount = 1000000;
     const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
     await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
     await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
-    await Helpers.reverts(
-      SwapAdapterInstance.depositTokensToEth(
+    await Helpers.expectToRevertWithCustomError(
+      SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
-        WETH_ADDRESS,
+        USDC_ADDRESS,
         amount,
         amountOutMinimum,
         pathTokens,
         pathFees,
         {from: USDC_OWNER_ADDRESS}
-      )
+      ),
+      "PathInvalid()"
     );
   });
 
@@ -310,8 +292,8 @@ contract("SwapAdapter", async (accounts) => {
     const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
     await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
     await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
-    await Helpers.reverts(
-      SwapAdapterInstance.depositTokensToEth(
+    await Helpers.expectToRevertWithCustomError(
+      SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
         USDC_ADDRESS,
@@ -320,7 +302,8 @@ contract("SwapAdapter", async (accounts) => {
         pathTokens,
         pathFees,
         {from: USDC_OWNER_ADDRESS}
-      )
+      ),
+      "PathInvalid()"
     );
   });
 
@@ -330,8 +313,8 @@ contract("SwapAdapter", async (accounts) => {
     const amount = 1000000;
     const amountOutMinimum = Ethers.utils.parseUnits("200000", "gwei");
     await usdc.approve(SwapAdapterInstance.address, amount, {from: USDC_OWNER_ADDRESS});
-    await Helpers.reverts(
-      SwapAdapterInstance.depositTokensToEth(
+    await Helpers.expectToRevertWithCustomError(
+      SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
         USDC_ADDRESS,
@@ -340,7 +323,8 @@ contract("SwapAdapter", async (accounts) => {
         pathTokens,
         pathFees,
         {from: USDC_OWNER_ADDRESS}
-      )
+      ),
+      "TokenInvalid()"
     );
   });
 });

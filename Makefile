@@ -1,3 +1,8 @@
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 URL?=http://localhost:8545
 
 install-deps:
@@ -19,7 +24,7 @@ start-ganache:
 
 start-forkedMainnet:
 	@echo " > \033[32mStarting forked environment... \033[0m "
-	ganache -f $(FORKED_TESTS_PROVIDER) -u "0x7713974908Be4BEd47172370115e8b1219F4A5f0" & sleep 3
+	ganache -f $(FORKED_TESTS_PROVIDER) -u ${USDC_OWNER_ADDRESS} & sleep 3
 
 test-forked:
 	@echo " > \033[32mTesting contracts... \033[0m "
