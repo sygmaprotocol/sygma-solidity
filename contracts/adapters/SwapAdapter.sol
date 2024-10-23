@@ -11,6 +11,11 @@ import "../../contracts/adapters/interfaces/INativeTokenAdapter.sol";
 import "../../contracts/adapters/interfaces/IWETH.sol";
 import "../../contracts/adapters/interfaces/IV3SwapRouter.sol";
 
+/**
+    @title Contract that swaps tokens to ETH or ETH to tokens using Uniswap
+        and then makes a deposit to the Bridge.
+    @author ChainSafe Systems.
+ */
 contract SwapAdapter is AccessControl {
 
     using SafeERC20 for IERC20;
@@ -59,6 +64,16 @@ contract SwapAdapter is AccessControl {
         emit TokenResourceIDSet(token, resourceID);
     }
 
+    /**
+        @notice Function for depositing tokens, performing swap to ETH and bridging the ETH.
+        @param destinationDomainID  ID of chain deposit will be bridged to.
+        @param recipient Recipient of the deposit.
+        @param  token Input token to be swapped.
+        @param  tokenAmount Amount of tokens to be swapped.
+        @param amountOutMinimum Minimal amount of ETH to be accepted as a swap output.
+        @param pathTokens Addresses of the tokens for Uniswap swap. WETH address is used for ETH.
+        @param pathFees Fees for Uniswap pools.
+    */
     function depositTokensToEth(
         uint8 destinationDomainID,
         address recipient,
@@ -109,6 +124,15 @@ contract SwapAdapter is AccessControl {
         }
     }
 
+    /**
+        @notice Function for depositing tokens, performing swap to ETH and bridging the ETH.
+        @param destinationDomainID  ID of chain deposit will be bridged to.
+        @param recipient Recipient of the deposit.
+        @param  token Output token to be deposited after swapping.
+        @param amountOutMinimum Minimal amount of tokens to be accepted as a swap output.
+        @param pathTokens Addresses of the tokens for Uniswap swap. WETH address is used for ETH.
+        @param pathFees Fees for Uniswap pools.
+    */
    function depositEthToTokens(
         uint8 destinationDomainID,
         address recipient,
