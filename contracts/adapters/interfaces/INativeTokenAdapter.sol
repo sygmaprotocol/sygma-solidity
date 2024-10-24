@@ -7,14 +7,11 @@ pragma solidity 0.8.11;
     @author ChainSafe Systems.
  */
 interface INativeTokenAdapter {
-    /**
-        @notice Makes a native token deposit with an included message.
-        @param destinationDomainID ID of destination chain.
-        @param recipientAddress Address that will receive native tokens on destination chain.
-     */
 
-    function depositToEVM(
+    function depositToEVMWithMessage(
         uint8 destinationDomainID,
-        address recipientAddress
+        address recipient, 
+        uint256 gas, 
+        bytes calldata message
     ) external payable;
 }

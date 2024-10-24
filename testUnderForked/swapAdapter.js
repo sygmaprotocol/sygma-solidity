@@ -28,27 +28,29 @@ contract("SwapAdapter", async (accounts) => {
   const emptySetResourceData = "0x";
   const originDomainID = 1;
   const destinationDomainID = 3;
+  const executionGasAmount = 30000000;
+  const expectedDepositNonce = 1;
   const WETH_ADDRESS = "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2";
   const USDC_ADDRESS = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
   const USDC_OWNER_ADDRESS =  process.env.USDC_OWNER_ADDRESS;
-  // const USDC_OWNER_ADDRESS =  "0x7713974908Be4BEd47172370115e8b1219F4A5f0";
-  // console.log(USDC_OWNER_ADDRESS);
-  // console.log(process.env.USDC_OWNER_ADDRESS);
   const UNISWAP_SWAP_ROUTER_ADDRESS = "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45";
   const resourceID_USDC = Helpers.createResourceID(
     USDC_ADDRESS,
     originDomainID
   );
   const resourceID_Native = "0x0000000000000000000000000000000000000000000000000000000000000650";
+  const transactionId = "0x0000000000000000000000000000000000000000000000000000000000000001";
 
   let BridgeInstance;
   let DefaultMessageReceiverInstance;
   let BasicFeeHandlerInstance;
   let ERC20HandlerInstance;
+  let ERC20MintableInstance;
   let NativeTokenAdapterInstance;
   let NativeTokenHandlerInstance;
   let SwapAdapterInstance;
   let usdc;
+  let message;
 
   beforeEach(async () => {
     BridgeInstance = await Helpers.deployBridge(
@@ -59,6 +61,10 @@ contract("SwapAdapter", async (accounts) => {
     ERC20HandlerInstance = await ERC20HandlerContract.new(
       BridgeInstance.address,
       DefaultMessageReceiverInstance.address
+    );
+    ERC20MintableInstance = await ERC20MintableContract.new(
+      "token",
+      "TOK"
     );
     FeeHandlerRouterInstance = await FeeHandlerRouterContract.new(
       BridgeInstance.address
@@ -105,13 +111,28 @@ contract("SwapAdapter", async (accounts) => {
       destinationDomainID,
       resourceID_Native,
       BasicFeeHandlerInstance.address
-    ),
+    );
 
     await FeeHandlerRouterInstance.adminSetResourceHandler(
       destinationDomainID,
       resourceID_USDC,
       BasicFeeHandlerInstance.address
-    ),
+    );
+
+    const mintableERC20Iface = new Ethers.utils.Interface(["function mint(address to, uint256 amount)"]);
+    const actions = [{
+      nativeValue: 0,
+      callTo: ERC20MintableInstance.address,
+      approveTo: Ethers.constants.AddressZero,
+      tokenSend: Ethers.constants.AddressZero,
+      tokenReceive: Ethers.constants.AddressZero,
+      data: mintableERC20Iface.encodeFunctionData("mint", [recipientAddress, "20"]),
+    }];
+    message = Helpers.createMessageCallData(
+      transactionId,
+      actions,
+      DefaultMessageReceiverInstance.address
+    );
 
     // set MPC address to unpause the Bridge
     await BridgeInstance.endKeygen(Helpers.mpcAddress);
@@ -128,6 +149,8 @@ contract("SwapAdapter", async (accounts) => {
     const depositTx = await SwapAdapterInstance.depositTokensToEth(
       destinationDomainID,
       recipientAddress,
+      executionGasAmount,
+      message,
       USDC_ADDRESS,
       amount,
       amountOutMinimum,
@@ -142,7 +165,6 @@ contract("SwapAdapter", async (accounts) => {
     const depositCount = await BridgeInstance._depositCounts.call(
       destinationDomainID
     );
-    const expectedDepositNonce = 1;
     assert.strictEqual(depositCount.toNumber(), expectedDepositNonce);
 
     const internalTx = await TruffleAssert.createTransactionResult(
@@ -153,7 +175,8 @@ contract("SwapAdapter", async (accounts) => {
     const events = await SwapAdapterInstance.getPastEvents("TokensSwapped", { fromBlock: depositTx.receipt.blockNumber });
     const amountOut = events[events.length - 1].args.amountOut;
 
-    const depositData = await Helpers.createERCDepositData(amountOut - fee, 20, recipientAddress);
+    const depositData = await Helpers.createOptionalContractCallDepositData(amountOut - fee, recipientAddress, executionGasAmount,
+      message);
 
     TruffleAssert.eventEmitted(internalTx, "Deposit", (event) => {
       return (
@@ -176,6 +199,8 @@ contract("SwapAdapter", async (accounts) => {
     const depositTx = await SwapAdapterInstance.depositEthToTokens(
       destinationDomainID,
       recipientAddress,
+      executionGasAmount,
+      message,
       USDC_ADDRESS,
       amountOutMinimum,
       pathTokens,
@@ -207,7 +232,8 @@ contract("SwapAdapter", async (accounts) => {
     const amountOut = events[events.length - 1].args.amountOut;
     expect((await usdc.balanceOf(ERC20HandlerInstance.address)).toString()).to.eq(amountOut.toString());
 
-    const depositData = await Helpers.createERCDepositData(amountOut.toNumber(), 20, recipientAddress);
+    const depositData = await Helpers.createOptionalContractCallDepositData(amountOut.toNumber(), recipientAddress, executionGasAmount,
+    message);
 
     TruffleAssert.eventEmitted(internalTx, "Deposit", (event) => {
       return (
@@ -231,6 +257,8 @@ contract("SwapAdapter", async (accounts) => {
       SwapAdapterInstance.depositTokensToEth(
         destinationDomainID,
         recipientAddress,
+        executionGasAmount,
+        message,
         USDC_ADDRESS,
         amount,
         amountOutMinimum,
@@ -241,7 +269,7 @@ contract("SwapAdapter", async (accounts) => {
     );
   });
 
-  it("should fail if invalid path [tokens length and fees length]", async () => {
+  it("should fail if the path is invalid [tokens length and fees length]", async () => {
     const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
     const pathFees = [500, 300];
     const amount = 1000000;
@@ -252,6 +280,8 @@ contract("SwapAdapter", async (accounts) => {
       SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
+        executionGasAmount,
+        message,
         USDC_ADDRESS,
         amount,
         amountOutMinimum,
@@ -263,7 +293,7 @@ contract("SwapAdapter", async (accounts) => {
     );
   });
 
-  it("should fail if invalid path [tokenIn is not token0]", async () => {
+  it("should fail if the path is invalid [tokenIn is not token0]", async () => {
     const pathTokens = [WETH_ADDRESS, USDC_ADDRESS];
     const pathFees = [500];
     const amount = 1000000;
@@ -274,6 +304,8 @@ contract("SwapAdapter", async (accounts) => {
       SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
+        executionGasAmount,
+        message,
         USDC_ADDRESS,
         amount,
         amountOutMinimum,
@@ -285,7 +317,7 @@ contract("SwapAdapter", async (accounts) => {
     );
   });
 
-  it("should fail if invalid path [tokenOut is not weth]", async () => {
+  it("should fail if the path is invalid  [tokenOut is not weth]", async () => {
     const pathTokens = [USDC_ADDRESS, USDC_ADDRESS];
     const pathFees = [500];
     const amount = 1000000;
@@ -296,6 +328,8 @@ contract("SwapAdapter", async (accounts) => {
       SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
+        executionGasAmount,
+        message,
         USDC_ADDRESS,
         amount,
         amountOutMinimum,
@@ -307,7 +341,7 @@ contract("SwapAdapter", async (accounts) => {
     );
   });
 
-  it("should fail if resource id is not configured", async () => {
+  it("should fail if the resource id is not configured", async () => {
     const pathTokens = [USDC_ADDRESS, WETH_ADDRESS];
     const pathFees = [500];
     const amount = 1000000;
@@ -317,6 +351,8 @@ contract("SwapAdapter", async (accounts) => {
       SwapAdapterInstance.depositTokensToEth.call(
         destinationDomainID,
         recipientAddress,
+        executionGasAmount,
+        message,
         USDC_ADDRESS,
         amount,
         amountOutMinimum,
@@ -325,6 +361,56 @@ contract("SwapAdapter", async (accounts) => {
         {from: USDC_OWNER_ADDRESS}
       ),
       "TokenInvalid()"
+    );
+  });
+
+  it("should fail if no msg.value supplied", async () => {
+    const pathTokens = [WETH_ADDRESS, USDC_ADDRESS];
+    const pathFees = [500];
+    const amount = Ethers.utils.parseEther("1");
+    const amountOutMinimum = 2000000000;
+    await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
+    await Helpers.expectToRevertWithCustomError(
+        SwapAdapterInstance.depositEthToTokens.call(
+        destinationDomainID,
+        recipientAddress,
+        executionGasAmount,
+        message,
+        USDC_ADDRESS,
+        amountOutMinimum,
+        pathTokens,
+        pathFees,
+        {
+          value: 0,
+          from: depositorAddress
+        }
+      ),
+      "InsufficientAmount(uint256)"
+    );
+  });
+
+  it("should fail if msg.value is less than fee", async () => {
+    const pathTokens = [WETH_ADDRESS, USDC_ADDRESS];
+    const pathFees = [500];
+    const amount = Ethers.utils.parseEther("1");
+    const amountOutMinimum = 2000000000;
+    await SwapAdapterInstance.setTokenResourceID(USDC_ADDRESS, resourceID_USDC);
+    await Helpers.expectToRevertWithCustomError(
+        SwapAdapterInstance.depositEthToTokens.call(
+        destinationDomainID,
+        recipientAddress,
+        executionGasAmount,
+        message,
+        USDC_ADDRESS,
+        amountOutMinimum,
+        pathTokens,
+        pathFees,
+        {
+          value: 5,
+          from: depositorAddress
+        }
+      ),
+      "MsgValueLowerThanFee(uint256)"
     );
   });
 });
